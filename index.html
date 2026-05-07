@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2D Stage Lighting Simulator - TS</title>
+    <style>
+        :root { --sidebar-width: 320px; --header-height: 60px; --bg-panel: #f8f9fa; --border-color: #dee2e6; }
+        body { margin: 0; display: flex; height: 100vh; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow: hidden; background: #222; }
+        
+        #ui-left { width: 260px; background: var(--bg-panel); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; z-index: 10;}
+        #ui-right { width: var(--sidebar-width); background: var(--bg-panel); border-left: 1px solid var(--border-color); display: flex; flex-direction: column; z-index: 10;}
+        #main-container { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+        #header { height: var(--header-height); background: #fff; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; padding: 0 20px; gap: 15px; font-size: 0.9em; flex-shrink: 0; z-index: 10;}
+        
+        #canvas-wrapper { flex: 1; position: relative; overflow: hidden; background: #222; }
+        canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: block; cursor: crosshair; touch-action: none; }
+        .grabbing { cursor: grabbing !important; }
+
+        .panel-header { padding: 15px; background: #e9ecef; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; font-weight: bold; }
+        .panel-content { padding: 15px; overflow-y: auto; flex: 1; }
+        .panel-section { border-bottom: 1px solid var(--border-color); display: flex; flex-direction: column; flex: 1; min-height: 0;}
+        
+        .list-item { padding: 10px; background: #fff; border: 1px solid var(--border-color); margin-bottom: 8px; border-radius: 4px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 5px; }
+        .list-item:hover { border-color: #adb5bd; }
+        .list-item.active { background: #e7f1ff; border-color: #0d6efd; box-shadow: 0 0 0 1px #0d6efd; }
+        
+        .btn { padding: 6px 12px; background: #0d6efd; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85em; display: flex; align-items: center; gap: 5px;}
+        .btn:hover { background: #0b5ed7; }
+        .btn-success { background: #198754; } .btn-success:hover { background: #157347; }
+        .btn-secondary { background: #6c757d; } .btn-secondary:hover { background: #5c636a; }
+        
+        .btn-icon { background: none; border: 1px solid transparent; cursor: pointer; font-size: 1.1em; padding: 2px 4px; border-radius: 3px; }
+        .btn-icon:hover { background: #e9ecef; border-color: #ccc; }
+        .btn-danger { background: #dc3545; color: white; border: none; padding: 4px 8px; font-size: 0.8em; border-radius: 3px; cursor: pointer; }
+        .btn-danger:hover { background: #bb2d3b; }
+
+        .control-group { margin-bottom: 15px; background: #fff; padding: 12px; border: 1px solid var(--border-color); border-radius: 4px; }
+        .control-group label { display: block; font-size: 0.85em; color: #495057; margin-bottom: 8px; font-weight: 600; }
+        .control-row { display: flex; gap: 10px; margin-bottom: 8px; align-items: center; }
+        .control-row input { flex: 1; width: 100%; padding: 4px; border: 1px solid #ccc; border-radius: 3px; }
+        input[type="range"] { width: 100%; }
+        select { width: 100%; padding: 6px; border: 1px solid #ccc; border-radius: 3px; }
+        
+        .top-input { width: 60px; padding: 4px; border: 1px solid #ccc; border-radius: 3px; }
+        .toggle-row { display: flex; align-items: center; margin-bottom: 8px; font-size: 0.9em; cursor: pointer; }
+        .toggle-row input { margin-right: 8px; cursor: pointer; }
+
+        #error-screen { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); color: #ff5555; z-index: 9999; padding: 40px; box-sizing: border-box; overflow-y: auto; }
+    </style>
+</head>
+<body>
+
+<div id="error-screen"></div>
+
+<aside id="ui-left">
+    <div class="panel-section">
+        <div class="panel-header">
+            <span>Scenes</span>
+            <button class="btn" onclick="addCue()">+ Add</button>
+        </div>
+        <div class="panel-content" id="cue-list"></div>
+    </div>
+    <div style="flex: 0 0 auto; border-top: 1px solid var(--border-color); background: #fff;">
+        <div class="panel-header" style="background: #f1f3f5; padding: 10px 15px;">Global View Options</div>
+        <div style="padding: 15px;">
+            <label class="toggle-row"><input type="checkbox" id="tg-floor"> Show Floor Area (z=0)</label>
+            <label class="toggle-row"><input type="checkbox" id="tg-face"> Show Face Area (z=Actor)</label>
+            <hr style="border: 0; border-top: 1px solid #eee; margin: 10px 0;">
+            <label class="toggle-row"><input type="checkbox" id="tg-beam"> Show Beam Angle</label>
+            <label class="toggle-row"><input type="checkbox" id="tg-field"> Show Field Angle</label>
+        </div>
+    </div>
+</aside>
+
+<main id="main-container">
+    <header id="header">
+        <strong style="font-size: 1.1em; margin-right: 10px;">Lighting Sim v2.3 (TS)</strong>
+        <div>W (m): <input type="number" id="stage-w" class="top-input" value="10"></div>
+        <div>D (m): <input type="number" id="stage-d" class="top-input" value="10"></div>
+        <div>Actor H (m): <input type="number" id="actor-h" class="top-input" value="1.67" step="0.1"></div>
+        <div>Default Z (m): <input type="number" id="default-z" class="top-input" value="5.67" step="0.1"></div>
+        
+        <div style="margin-left: auto; display: flex; gap: 10px;">
+            <button class="btn btn-secondary" onclick="document.getElementById('file-upload').click()">📂 Load</button>
+            <button class="btn btn-success" onclick="saveFile()">💾 Save</button>
+            <input type="file" id="file-upload" accept=".json" style="display:none" onchange="loadFile(event)">
+        </div>
+    </header>
+    <div id="canvas-wrapper">
+        <canvas id="stageCanvas"></canvas>
+    </div>
+</main>
+
+<aside id="ui-right">
+    <div class="panel-header" style="flex: 0 0 auto;">
+        <span>Fixtures</span>
+        <button class="btn" onclick="addFixture()">+ Add</button>
+    </div>
+    <!-- 목록 영역: 스크롤 발생 -->
+    <div class="panel-content" style="padding-bottom: 0;">
+        <div id="fixture-list"></div>
+    </div>
+    <!-- 속성 패널 영역: 하단에 항상 고정 -->
+    <div id="fixture-properties" style="flex: 0 0 auto; border-top: 1px solid var(--border-color); padding: 15px; background: #fff; max-height: 50vh; overflow-y: auto;">
+        <!-- 속성 컨트롤들이 여기에 렌더링됨 -->
+    </div>
+</aside>
+
+<script type="module" src="/src/main.ts"></script>
+</body>
+</html>
