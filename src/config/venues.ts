@@ -26,6 +26,7 @@ export interface VenueReferenceLayerConfig {
   id: string;
   label: string;
   image: string;
+  blendMode?: GlobalCompositeOperation;
   x: number;
   y: number;
   width: number;
@@ -127,6 +128,7 @@ export const HUMANITIES_VENUE: VenuePreset = {
       id: 'humanities-floor-plan',
       label: '인문소극장 평면도',
       image: '/venues/humanities/humanities_floor_plan.png',
+      blendMode: 'multiply',
       x: 0,
       y: 0,
       width: 12.0,
@@ -139,11 +141,12 @@ export const HUMANITIES_VENUE: VenuePreset = {
       id: 'humanities-catwalk',
       label: '인문소극장 캣워크',
       image: '/venues/humanities/humanities_catwalk.png',
+      blendMode: 'multiply',
       x: 0,
       y: 0,
       width: 12.0,
       height: 22.7,
-      opacity: 0.3,
+      opacity: 1,
       defaultVisible: true,
       note: '상부 조명/캣워크 참고 오버레이. 바텐 설치 제한으로 쓰지 않고 시각 참고용으로만 사용한다.'
     }

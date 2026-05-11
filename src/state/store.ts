@@ -8,6 +8,7 @@ const humanitiesReferenceLayers = HUMANITIES_VENUE.referenceLayers.map(layer => 
   id: layer.id,
   label: layer.label,
   image: layer.image,
+  blend_mode: layer.blendMode,
   x: layer.x,
   y: layer.y,
   width: layer.width,

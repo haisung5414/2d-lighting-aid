@@ -65,6 +65,7 @@ export interface ReferenceLayer {
   id: string;
   label: string;
   image: string;
+  blend_mode?: GlobalCompositeOperation;
   x: number;
   y: number;
   width: number;

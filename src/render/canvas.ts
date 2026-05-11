@@ -10,6 +10,13 @@ let canvasWrapper: HTMLElement | null = null;
 let scale = 1;
 let offsetX = 0;
 let offsetY = 0;
+let viewZoom = 1;
+let viewPanX = 0;
+let viewPanY = 0;
+let isViewPanning = false;
+let lastPanX = 0;
+let lastPanY = 0;
+let lastViewPanEndAt = 0;
 
 const imageCache = new Map<string, HTMLImageElement>();
 
@@ -29,7 +36,8 @@ const drawImageLayer = (
   opacity: number,
   currentScale: number,
   currentOffsetX: number,
-  currentOffsetY: number
+  currentOffsetY: number,
+  blendMode: GlobalCompositeOperation = 'source-over'
 ) => {
   let img = imageCache.get(source);
 
@@ -43,6 +51,7 @@ const drawImageLayer = (
   if (img.complete && img.naturalWidth !== 0) {
     targetCtx.save();
     targetCtx.globalAlpha = opacity;
+    targetCtx.globalCompositeOperation = blendMode;
     targetCtx.drawImage(
       img,
       currentOffsetX + toPx(x, currentScale),
@@ -195,7 +204,7 @@ export const generateThumbnail = (cue: Cue, stageConfig: StageConfig, toggles: U
   const offCtx = offCanvas.getContext('2d');
   if (!offCtx) return '';
 
-  offCtx.fillStyle = '#222';
+  offCtx.fillStyle = '#f2f4f6';
   offCtx.fillRect(0, 0, 160, 160);
 
   const sw = stageConfig.width;
@@ -208,6 +217,23 @@ export const generateThumbnail = (cue: Cue, stageConfig: StageConfig, toggles: U
   drawCueToContext(offCtx, cue, thumbScale, thumbOffsetX, thumbOffsetY, toggles, stageConfig, null);
 
   return offCanvas.toDataURL('image/jpeg', 0.5);
+};
+
+const zoomCanvasAt = (screenX: number, screenY: number, factor: number) => {
+  if (!canvas) return;
+
+  const worldBefore = toWorld(screenX, screenY);
+  viewZoom = Math.min(6, Math.max(0.35, viewZoom * factor));
+
+  const state = getState();
+  const fitScale = Math.min(canvas.width / state.stage_config.width, canvas.height / state.stage_config.depth) * 0.85;
+  const nextScale = fitScale * viewZoom;
+  const baseOffsetX = (canvas.width - state.stage_config.width * nextScale) / 2;
+  const baseOffsetY = (canvas.height - state.stage_config.depth * nextScale) / 2;
+
+  viewPanX = screenX - worldBefore.x * nextScale - baseOffsetX;
+  viewPanY = screenY - worldBefore.y * nextScale - baseOffsetY;
+  renderCanvas();
 };
 
 export const renderCanvas = () => {
@@ -223,16 +249,19 @@ export const renderCanvas = () => {
   const sw = state.stage_config.width;
   const sd = state.stage_config.depth;
 
-  scale = Math.min(canvas.width / sw, canvas.height / sd) * 0.85;
-  offsetX = (canvas.width - sw * scale) / 2;
-  offsetY = (canvas.height - sd * scale) / 2;
+  const fitScale = Math.min(canvas.width / sw, canvas.height / sd) * 0.85;
+  scale = fitScale * viewZoom;
+  offsetX = (canvas.width - sw * scale) / 2 + viewPanX;
+  offsetY = (canvas.height - sd * scale) / 2 + viewPanY;
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = "#f2f4f6";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   state.stage_config.reference_layers
     .filter(layer => layer.is_visible)
     .forEach(layer => {
-      drawImageLayer(ctx!, layer.image, layer.x, layer.y, layer.width, layer.height, layer.opacity, scale, offsetX, offsetY);
+      drawImageLayer(ctx!, layer.image, layer.x, layer.y, layer.width, layer.height, layer.opacity, scale, offsetX, offsetY, layer.blend_mode);
     });
 
   ctx.strokeStyle = "#444";
@@ -274,6 +303,8 @@ export const initCanvas = (canvasEl: HTMLCanvasElement, wrapperEl: HTMLElement) 
   subscribe(renderCanvas);
 
   canvas.addEventListener('mousedown', (e: MouseEvent) => {
+    if (e.button !== 0) return;
+
     const rect = canvas!.getBoundingClientRect();
     const worldPos = toWorld(e.clientX - rect.left, e.clientY - rect.top);
     const state = getState();
@@ -321,9 +352,30 @@ export const initCanvas = (canvasEl: HTMLCanvasElement, wrapperEl: HTMLElement) 
         return;
       }
     }
+
+    isViewPanning = true;
+    lastPanX = e.clientX;
+    lastPanY = e.clientY;
+    canvas!.classList.add('grabbing');
   });
 
   canvas.addEventListener('mousemove', (e: MouseEvent) => {
+    if (isViewPanning) {
+      if ((e.buttons & 1) === 0) {
+        isViewPanning = false;
+        lastViewPanEndAt = performance.now();
+        canvas!.classList.remove('grabbing');
+        return;
+      }
+
+      viewPanX += e.clientX - lastPanX;
+      viewPanY += e.clientY - lastPanY;
+      lastPanX = e.clientX;
+      lastPanY = e.clientY;
+      renderCanvas();
+      return;
+    }
+
     const state = getState();
     const { dragMode, draggedIndex } = state.interaction;
     if (!dragMode) return;
@@ -350,13 +402,43 @@ export const initCanvas = (canvasEl: HTMLCanvasElement, wrapperEl: HTMLElement) 
     });
   });
 
+  canvas.addEventListener('wheel', (e: WheelEvent) => {
+    e.preventDefault();
+    if (isViewPanning || performance.now() - lastViewPanEndAt < 180) return;
+
+    const rect = canvas!.getBoundingClientRect();
+    const screenX = e.clientX - rect.left;
+    const screenY = e.clientY - rect.top;
+    zoomCanvasAt(screenX, screenY, e.deltaY < 0 ? 1.15 : 1 / 1.15);
+  }, { passive: false });
+
   window.addEventListener('mouseup', () => {
     const state = getState();
     if (state.interaction.dragMode !== null) {
       setState(s => { s.interaction.dragMode = null; });
       canvas!.classList.remove('grabbing');
     }
+    if (isViewPanning) {
+      isViewPanning = false;
+      lastViewPanEndAt = performance.now();
+      canvas!.classList.remove('grabbing');
+    }
   });
 
+  renderCanvas();
+};
+
+export const zoomCanvas = (factor: number) => {
+  if (!canvas) return;
+
+  const centerX = canvas.width / 2;
+  const centerY = canvas.height / 2;
+  zoomCanvasAt(centerX, centerY, factor);
+};
+
+export const resetCanvasZoom = () => {
+  viewZoom = 1;
+  viewPanX = 0;
+  viewPanY = 0;
   renderCanvas();
 };

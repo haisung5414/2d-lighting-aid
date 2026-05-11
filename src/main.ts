@@ -1,5 +1,5 @@
 // src/main.ts
-import { initCanvas } from './render/canvas';
+import { initCanvas, resetCanvasZoom, zoomCanvas } from './render/canvas';
 import { initManagerUI } from './ui/manager';
 import { initSceneUI } from './ui/scene';
 import { initFixtureUI } from './ui/fixture';
@@ -20,6 +20,9 @@ document.addEventListener('DOMContentLoaded', () => {
     console.error("🚨 필수 DOM 요소를 찾을 수 없습니다.");
   }
 });
+
+(window as any).zoomCanvas = zoomCanvas;
+(window as any).resetCanvasZoom = resetCanvasZoom;
 
 // 글로벌 단축키 등록 (Undo/Redo)
 window.addEventListener('keydown', (e: KeyboardEvent) => {

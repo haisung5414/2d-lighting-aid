@@ -83,6 +83,11 @@
         <div>D (m): <input type="number" id="stage-d" class="top-input" value="22.7"></div>
         <div>Actor H (m): <input type="number" id="actor-h" class="top-input" value="1.67" step="0.1"></div>
         <div>Default Z (m): <input type="number" id="default-z" class="top-input" value="5.74" step="0.1"></div>
+        <div style="display: flex; gap: 4px; align-items: center;">
+            <button class="btn btn-secondary" onclick="zoomCanvas(1.2)">+</button>
+            <button class="btn btn-secondary" onclick="zoomCanvas(1 / 1.2)">-</button>
+            <button class="btn btn-secondary" onclick="resetCanvasZoom()">Reset</button>
+        </div>
         
         <div style="margin-left: auto; display: flex; gap: 10px;">
             <button class="btn btn-secondary" onclick="document.getElementById('file-upload').click()">📂 Load</button>
