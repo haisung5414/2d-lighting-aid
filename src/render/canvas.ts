@@ -204,7 +204,7 @@ export const generateThumbnail = (cue: Cue, stageConfig: StageConfig, toggles: U
   const offCtx = offCanvas.getContext('2d');
   if (!offCtx) return '';
 
-  offCtx.fillStyle = '#f2f4f6';
+  offCtx.fillStyle = '#bbbbbb';
   offCtx.fillRect(0, 0, 160, 160);
 
   const sw = stageConfig.width;
@@ -255,7 +255,7 @@ export const renderCanvas = () => {
   offsetY = (canvas.height - sd * scale) / 2 + viewPanY;
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = "#f2f4f6";
+  ctx.fillStyle = "#535353";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   state.stage_config.reference_layers
