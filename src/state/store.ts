@@ -2,9 +2,28 @@
 
 import type { AppState, Cue, Fixture } from '../types';
 import { generateThumbnail } from '../render/canvas';
+import { HUMANITIES_VENUE } from '../config/venues';
+
+const humanitiesReferenceLayers = HUMANITIES_VENUE.referenceLayers.map(layer => ({
+  id: layer.id,
+  label: layer.label,
+  image: layer.image,
+  x: layer.x,
+  y: layer.y,
+  width: layer.width,
+  height: layer.height,
+  opacity: layer.opacity,
+  is_visible: layer.defaultVisible
+}));
 
 let state: AppState = {
-  stage_config: { width: 10, depth: 10, actor_height: 1.67, default_z: 5.67 },
+  stage_config: {
+    width: HUMANITIES_VENUE.stage.width,
+    depth: HUMANITIES_VENUE.stage.depth,
+    actor_height: HUMANITIES_VENUE.stage.actorHeight,
+    default_z: HUMANITIES_VENUE.stage.defaultFixtureZ,
+    reference_layers: humanitiesReferenceLayers
+  },
   ui_toggles: { show_floor: true, show_face: true, show_beam: true, show_field: true },
   cues: [
     {
@@ -15,8 +34,8 @@ let state: AppState = {
           id: "fixture_1",
           label: "L1 (Center)",
           lens_type: "36deg",
-          position: { x: 5, y: 1, z: 5.67 },
-          target: { x: 5, y: 5 },
+          position: { x: HUMANITIES_VENUE.stage.width / 2, y: 1, z: HUMANITIES_VENUE.stage.defaultFixtureZ },
+          target: { x: HUMANITIES_VENUE.stage.width / 2, y: HUMANITIES_VENUE.stage.depth / 2 },
           shutter_active: false,
           is_visible: true,
           shutter_polygon: [

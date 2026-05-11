@@ -61,6 +61,18 @@ export interface BackgroundImage {
   opacity: number; // 0.0 ~ 1.0 투명도
 }
 
+export interface ReferenceLayer {
+  id: string;
+  label: string;
+  image: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  opacity: number;
+  is_visible: boolean;
+}
+
 /** 
  * 씬 (Scene/Cue) 모델
  */
@@ -80,6 +92,7 @@ export interface StageConfig {
   depth: number;
   actor_height: number;
   default_z : number;
+  reference_layers: ReferenceLayer[];
 }
 
 export interface UIToggles {

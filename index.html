@@ -69,6 +69,9 @@
             <hr style="border: 0; border-top: 1px solid #eee; margin: 10px 0;">
             <label class="toggle-row"><input type="checkbox" id="tg-beam"> Show Beam Angle</label>
             <label class="toggle-row"><input type="checkbox" id="tg-field"> Show Field Angle</label>
+            <hr style="border: 0; border-top: 1px solid #eee; margin: 10px 0;">
+            <label class="toggle-row"><input type="checkbox" id="tg-ref-humanities-floor-plan"> Show Venue Floor Plan</label>
+            <label class="toggle-row"><input type="checkbox" id="tg-ref-humanities-catwalk"> Show Catwalk Overlay</label>
         </div>
     </div>
 </aside>
@@ -76,10 +79,10 @@
 <main id="main-container">
     <header id="header">
         <strong style="font-size: 1.1em; margin-right: 10px;">Lighting Sim v2.3 (TS)</strong>
-        <div>W (m): <input type="number" id="stage-w" class="top-input" value="10"></div>
-        <div>D (m): <input type="number" id="stage-d" class="top-input" value="10"></div>
+        <div>W (m): <input type="number" id="stage-w" class="top-input" value="12"></div>
+        <div>D (m): <input type="number" id="stage-d" class="top-input" value="22.7"></div>
         <div>Actor H (m): <input type="number" id="actor-h" class="top-input" value="1.67" step="0.1"></div>
-        <div>Default Z (m): <input type="number" id="default-z" class="top-input" value="5.67" step="0.1"></div>
+        <div>Default Z (m): <input type="number" id="default-z" class="top-input" value="5.74" step="0.1"></div>
         
         <div style="margin-left: auto; display: flex; gap: 10px;">
             <button class="btn btn-secondary" onclick="document.getElementById('file-upload').click()">📂 Load</button>

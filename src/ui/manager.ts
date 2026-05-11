@@ -3,6 +3,8 @@ import { getState, setState } from '../state/store';
 import type { AppState } from '../types';
 
 export const initManagerUI = () => {
+  syncStageInputs();
+
   // 전역 토글 이벤트 바인딩
   const toggleMap: Record<string, keyof AppState['ui_toggles']> = {
     'tg-floor': 'show_floor',
@@ -26,11 +28,44 @@ export const initManagerUI = () => {
     }
   });
 
+  getState().stage_config.reference_layers.forEach(layer => {
+    const el = document.getElementById(`tg-ref-${layer.id}`) as HTMLInputElement;
+    if (!el) return;
+
+    el.checked = layer.is_visible;
+    el.addEventListener('change', (e) => {
+      const target = e.target as HTMLInputElement;
+      setState(state => {
+        const targetLayer = state.stage_config.reference_layers.find(item => item.id === layer.id);
+        if (targetLayer) {
+          targetLayer.is_visible = target.checked;
+        }
+      });
+    });
+  });
+
   // 무대 크기 입력 이벤트 바인딩
   ['stage-w', 'stage-d', 'actor-h', 'default-z'].forEach(id => {
     const el = document.getElementById(id) as HTMLInputElement;
     if (el) {
       el.addEventListener('change', () => updateStageConfig());
+    }
+  });
+};
+
+const syncStageInputs = () => {
+  const { stage_config } = getState();
+  const inputMap: Record<string, number> = {
+    'stage-w': stage_config.width,
+    'stage-d': stage_config.depth,
+    'actor-h': stage_config.actor_height,
+    'default-z': stage_config.default_z
+  };
+
+  Object.entries(inputMap).forEach(([id, value]) => {
+    const el = document.getElementById(id) as HTMLInputElement;
+    if (el) {
+      el.value = value.toString();
     }
   });
 };
@@ -92,13 +127,18 @@ const updateStageConfig = () => {
       parsed.interaction = { dragMode: null, draggedIndex: -1 };
       
       setState(state => {
+        const currentReferenceLayers = state.stage_config.reference_layers;
         Object.assign(state, parsed);
+        if (!state.stage_config.reference_layers) {
+          state.stage_config.reference_layers = currentReferenceLayers;
+        }
       });
 
       // UI 입력창 동기화
       (document.getElementById('stage-w') as HTMLInputElement).value = parsed.stage_config.width.toString();
       (document.getElementById('stage-d') as HTMLInputElement).value = parsed.stage_config.depth.toString();
       (document.getElementById('actor-h') as HTMLInputElement).value = parsed.stage_config.actor_height.toString();
+      (document.getElementById('default-z') as HTMLInputElement).value = parsed.stage_config.default_z.toString();
     } catch (err) {
       alert("파일 파싱 오류. 올바른 JSON 파일인지 확인해주세요.");
     }

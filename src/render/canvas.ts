@@ -19,6 +19,41 @@ const toWorld = (px: number, py: number): Position2D => ({
   y: (py - offsetY) / scale
 });
 
+const drawImageLayer = (
+  targetCtx: CanvasRenderingContext2D,
+  source: string,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  opacity: number,
+  currentScale: number,
+  currentOffsetX: number,
+  currentOffsetY: number
+) => {
+  let img = imageCache.get(source);
+
+  if (!img) {
+    img = new Image();
+    img.src = source;
+    imageCache.set(source, img);
+    img.onload = () => requestAnimationFrame(renderCanvas);
+  }
+
+  if (img.complete && img.naturalWidth !== 0) {
+    targetCtx.save();
+    targetCtx.globalAlpha = opacity;
+    targetCtx.drawImage(
+      img,
+      currentOffsetX + toPx(x, currentScale),
+      currentOffsetY + toPx(y, currentScale),
+      toPx(width, currentScale),
+      toPx(height, currentScale)
+    );
+    targetCtx.restore();
+  }
+};
+
 // [추가됨] 순수하게 캔버스 Context에 조명만 그리는 헬퍼 함수
 export const drawCueToContext = (
   targetCtx: CanvasRenderingContext2D,
@@ -35,34 +70,7 @@ export const drawCueToContext = (
   // --- 배경 이미지 렌더링 로직 시작 ---
   if (cue.background) {
     const bg = cue.background;
-    let img = imageCache.get(bg.dataUrl);
-
-    // 캐시에 없으면 새로 로드
-    if (!img) {
-      img = new Image();
-      img.src = bg.dataUrl;
-      imageCache.set(bg.dataUrl, img);
-      
-      // 이미지가 비동기적으로 로드된 후 화면을 다시 그리도록 트리거
-      img.onload = () => requestAnimationFrame(renderCanvas);
-    }
-
-    // 이미지가 완전히 로드되었을 때만 렌더링 (깜빡임 방지)
-    if (img.complete && img.naturalWidth !== 0) {
-      targetCtx.save();
-      targetCtx.globalAlpha = bg.opacity; // 투명도 적용
-      
-      // 미터(m) 단위를 캔버스 픽셀(px) 단위로 변환하여 렌더링
-      targetCtx.drawImage(
-        img,
-        currentOffsetX + toPx(bg.x, currentScale),
-        currentOffsetY + toPx(bg.y, currentScale),
-        toPx(bg.width, currentScale),
-        toPx(bg.height, currentScale)
-      );
-      
-      targetCtx.restore(); // 투명도 복구
-    }
+    drawImageLayer(targetCtx, bg.dataUrl, bg.x, bg.y, bg.width, bg.height, bg.opacity, currentScale, currentOffsetX, currentOffsetY);
   }
   // --- 배경 이미지 렌더링 로직 끝 ---
 
@@ -220,6 +228,12 @@ export const renderCanvas = () => {
   offsetY = (canvas.height - sd * scale) / 2;
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  state.stage_config.reference_layers
+    .filter(layer => layer.is_visible)
+    .forEach(layer => {
+      drawImageLayer(ctx!, layer.image, layer.x, layer.y, layer.width, layer.height, layer.opacity, scale, offsetX, offsetY);
+    });
 
   ctx.strokeStyle = "#444";
   ctx.lineWidth = 1;
