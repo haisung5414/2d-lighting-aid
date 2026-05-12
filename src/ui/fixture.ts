@@ -23,11 +23,11 @@ const renderList = () => {
 
   let html = "";
   currentCue.fixtures.forEach(fix => {
-    const isActive = fix.id === state.selected_fixture_id ? 'active' : '';
+    const isActive = state.selected_fixture_ids.includes(fix.id) ? 'active' : '';
     const eyeIcon = fix.is_visible !== false ? '👁️' : '🕶️';
     const opacity = fix.is_visible !== false ? '1' : '0.5';
 
-    html += `<div class='list-item ${isActive}' style='opacity:${opacity}' onclick="selectFixture('${fix.id}')">
+    html += `<div class='list-item ${isActive}' style='opacity:${opacity}' onclick="selectFixture('${fix.id}', event)">
                <span style='flex:1'>${fix.label}</span>
                <div style='display:flex; gap:2px;'>
                  <button class='btn-icon' title='Toggle Visibility' onclick="toggleFixVis('${fix.id}', event)">${eyeIcon}</button>
@@ -109,11 +109,28 @@ const renderProperties = () => {
       edge_softness: 5
     });
     state.selected_fixture_id = newId;
+    state.selected_fixture_ids = [newId];
   });
 };
 
-(window as any).selectFixture = (id: string) => {
-  setState(state => { state.selected_fixture_id = id; });
+(window as any).selectFixture = (id: string, event?: MouseEvent) => {
+  setState(state => {
+    if (event?.ctrlKey || event?.metaKey) {
+      if (state.selected_fixture_ids.includes(id)) {
+        state.selected_fixture_ids = state.selected_fixture_ids.filter(selectedId => selectedId !== id);
+        if (state.selected_fixture_id === id) {
+          state.selected_fixture_id = state.selected_fixture_ids[0] ?? null;
+        }
+      } else {
+        state.selected_fixture_ids.push(id);
+        state.selected_fixture_id = id;
+      }
+      return;
+    }
+
+    state.selected_fixture_id = id;
+    state.selected_fixture_ids = [id];
+  });
 };
 
 (window as any).toggleFixVis = (id: string, event: Event) => {
@@ -135,8 +152,10 @@ const renderProperties = () => {
     const cue = state.cues[state.active_cue_index];
     if (!cue) return;
     cue.fixtures = cue.fixtures.filter(f => f.id !== id);
+    state.selected_fixture_ids = state.selected_fixture_ids.filter(selectedId => selectedId !== id);
     if (state.selected_fixture_id === id) {
       state.selected_fixture_id = cue.fixtures.length > 0 ? cue.fixtures[0].id : null;
+      state.selected_fixture_ids = state.selected_fixture_id ? [state.selected_fixture_id] : [];
     }
   });
 };

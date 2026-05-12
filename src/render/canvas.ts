@@ -72,7 +72,8 @@ export const drawCueToContext = (
   currentOffsetY: number,
   toggles: UIToggles,
   stageConfig: StageConfig,
-  selectedFixtureId: string | null = null
+  selectedFixtureIds: string[] = [],
+  activeFixtureId: string | null = null
 ) => {
   const actorH = stageConfig.actor_height;
 
@@ -86,7 +87,8 @@ export const drawCueToContext = (
   cue.fixtures.forEach(fix => {
     if (fix.is_visible === false) return;
 
-    const isSelected = (fix.id === selectedFixtureId);
+    const isSelected = selectedFixtureIds.includes(fix.id) || fix.id === activeFixtureId;
+    const isActiveFixture = fix.id === activeFixtureId;
     
     const floorPolygons = fix.shutter_polygon.map(p => ({
       x: fix.target.x + p.dx,
@@ -180,7 +182,7 @@ export const drawCueToContext = (
     targetCtx.fill();
     targetCtx.stroke();
 
-    if (isSelected && fix.shutter_active) {
+    if (isActiveFixture && fix.shutter_active) {
       targetCtx.fillStyle = "red";
       floorPolygons.forEach(p => {
         targetCtx.beginPath();
@@ -214,7 +216,7 @@ export const generateThumbnail = (cue: Cue, stageConfig: StageConfig, toggles: U
   const thumbOffsetY = (offCanvas.height - sd * thumbScale) / 2;
 
   // 썸네일에서는 선택 마커 하이라이트를 주지 않기 위해 selectedFixtureId 인자를 null로 넘김
-  drawCueToContext(offCtx, cue, thumbScale, thumbOffsetX, thumbOffsetY, toggles, stageConfig, null);
+  drawCueToContext(offCtx, cue, thumbScale, thumbOffsetX, thumbOffsetY, toggles, stageConfig, [], null);
 
   return offCanvas.toDataURL('image/jpeg', 0.5);
 };
@@ -283,7 +285,7 @@ export const renderCanvas = () => {
   if (!currentCue) return;
 
   // 분리된 그리기 함수 호출
-  drawCueToContext(ctx, currentCue, scale, offsetX, offsetY, state.ui_toggles, state.stage_config, state.selected_fixture_id);
+  drawCueToContext(ctx, currentCue, scale, offsetX, offsetY, state.ui_toggles, state.stage_config, state.selected_fixture_ids, state.selected_fixture_id);
 };
 
 export const initCanvas = (canvasEl: HTMLCanvasElement, wrapperEl: HTMLElement) => {
@@ -314,7 +316,7 @@ export const initCanvas = (canvasEl: HTMLCanvasElement, wrapperEl: HTMLElement) 
 
     const selectedFix = cue.fixtures.find(f => f.id === state.selected_fixture_id);
     
-    if (selectedFix && selectedFix.is_visible !== false) {
+    if (selectedFix && selectedFix.is_visible !== false && !e.ctrlKey && !e.metaKey) {
       if (Math.hypot(worldPos.x - selectedFix.position.x, worldPos.y - selectedFix.position.y) < 0.6) {
         commitHistory();
         setState(s => { s.interaction.dragMode = 'position'; });
@@ -348,7 +350,22 @@ export const initCanvas = (canvasEl: HTMLCanvasElement, wrapperEl: HTMLElement) 
       const fix = cue.fixtures[j];
       if (fix.is_visible === false) continue;
       if (Math.hypot(worldPos.x - fix.position.x, worldPos.y - fix.position.y) < 0.8) {
-        setState(s => { s.selected_fixture_id = fix.id; });
+        setState(s => {
+          if (e.ctrlKey || e.metaKey) {
+            if (s.selected_fixture_ids.includes(fix.id)) {
+              s.selected_fixture_ids = s.selected_fixture_ids.filter(id => id !== fix.id);
+              if (s.selected_fixture_id === fix.id) {
+                s.selected_fixture_id = s.selected_fixture_ids[0] ?? null;
+              }
+            } else {
+              s.selected_fixture_ids.push(fix.id);
+              s.selected_fixture_id = fix.id;
+            }
+          } else {
+            s.selected_fixture_id = fix.id;
+            s.selected_fixture_ids = [fix.id];
+          }
+        });
         return;
       }
     }

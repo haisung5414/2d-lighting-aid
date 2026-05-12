@@ -117,5 +117,6 @@ export interface AppState {
   cues: Cue[];
   active_cue_index: number;
   selected_fixture_id: string | null;
+  selected_fixture_ids: string[];
   interaction: InteractionState;
 }

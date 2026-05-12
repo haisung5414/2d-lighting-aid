@@ -55,6 +55,7 @@ const createInitialState = (venue: VenuePreset): AppState => {
     ],
     active_cue_index: 0,
     selected_fixture_id: "fixture_1",
+    selected_fixture_ids: ["fixture_1"],
     interaction: { dragMode: null, draggedIndex: -1 }
   };
 };
@@ -114,8 +115,28 @@ export const notify = () => {
 
 export const getState = (): AppState => state;
 
+const normalizeFixtureSelection = () => {
+  const cue = state.cues[state.active_cue_index];
+  const validIds = new Set(cue?.fixtures.map(f => f.id) ?? []);
+
+  if (!Array.isArray(state.selected_fixture_ids)) {
+    state.selected_fixture_ids = state.selected_fixture_id ? [state.selected_fixture_id] : [];
+  }
+
+  state.selected_fixture_ids = state.selected_fixture_ids.filter(id => validIds.has(id));
+
+  if (state.selected_fixture_id && !validIds.has(state.selected_fixture_id)) {
+    state.selected_fixture_id = state.selected_fixture_ids[0] ?? cue?.fixtures[0]?.id ?? null;
+  }
+
+  if (state.selected_fixture_id && !state.selected_fixture_ids.includes(state.selected_fixture_id)) {
+    state.selected_fixture_ids.push(state.selected_fixture_id);
+  }
+};
+
 export const setState = (updater: (draft: AppState) => void) => {
   updater(state);
+  normalizeFixtureSelection();
 
   // 상태 변경이 완료된 직후, 현재 활성화된 씬의 썸네일을 재생성하여 덮어씌움
   const currentCue = state.cues[state.active_cue_index];

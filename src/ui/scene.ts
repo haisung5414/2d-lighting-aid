@@ -115,6 +115,7 @@ export const renderSceneList = () => {
     state.active_cue_index = idx;
     const currentCue = state.cues[idx];
     state.selected_fixture_id = (currentCue && currentCue.fixtures.length > 0) ? currentCue.fixtures[0].id : null;
+    state.selected_fixture_ids = state.selected_fixture_id ? [state.selected_fixture_id] : [];
   });
 };
 
@@ -129,6 +130,8 @@ export const renderSceneList = () => {
       fixtures: []
     });
     state.active_cue_index = state.cues.length - 1;
+    state.selected_fixture_id = null;
+    state.selected_fixture_ids = [];
   });
 };
 
@@ -145,6 +148,8 @@ export const renderSceneList = () => {
     
     state.cues.splice(idx + 1, 0, newCue);
     state.active_cue_index = idx + 1;
+    state.selected_fixture_id = newCue.fixtures[0]?.id ?? null;
+    state.selected_fixture_ids = state.selected_fixture_id ? [state.selected_fixture_id] : [];
   });
 };
 
