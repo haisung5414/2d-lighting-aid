@@ -1,8 +1,10 @@
 // src/ui/manager.ts
-import { getState, setState } from '../state/store';
+import { getState, initVenue, setState } from '../state/store';
 import type { AppState } from '../types';
+import type { VenueKey } from '../config/venues';
 
 export const initManagerUI = () => {
+  initLandingUI();
   syncStageInputs();
 
   // 전역 토글 이벤트 바인딩
@@ -51,6 +53,27 @@ export const initManagerUI = () => {
       el.addEventListener('change', () => updateStageConfig());
     }
   });
+};
+
+const initLandingUI = () => {
+  document.querySelectorAll<HTMLButtonElement>('[data-venue-key]').forEach(button => {
+    button.addEventListener('click', () => {
+      const venueKey = button.dataset.venueKey as VenueKey | undefined;
+      if (venueKey) initVenue(venueKey);
+    });
+  });
+
+  const landingLoadButton = document.getElementById('landing-load-file') as HTMLButtonElement | null;
+  const fileUploadInput = document.getElementById('file-upload') as HTMLInputElement | null;
+  landingLoadButton?.addEventListener('click', () => fileUploadInput?.click());
+};
+
+const showEditorScreen = () => {
+  const landingScreen = document.getElementById('landing-screen');
+  const editorScreen = document.getElementById('editor-screen');
+
+  if (landingScreen) landingScreen.style.display = 'none';
+  if (editorScreen) editorScreen.style.display = 'flex';
 };
 
 const syncStageInputs = () => {
@@ -139,6 +162,7 @@ const updateStageConfig = () => {
       (document.getElementById('stage-d') as HTMLInputElement).value = parsed.stage_config.depth.toString();
       (document.getElementById('actor-h') as HTMLInputElement).value = parsed.stage_config.actor_height.toString();
       (document.getElementById('default-z') as HTMLInputElement).value = parsed.stage_config.default_z.toString();
+      showEditorScreen();
     } catch (err) {
       alert("파일 파싱 오류. 올바른 JSON 파일인지 확인해주세요.");
     }

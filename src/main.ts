@@ -1,4 +1,5 @@
 // src/main.ts
+import './style.css';
 import { initCanvas, resetCanvasZoom, zoomCanvas } from './render/canvas';
 import { initManagerUI } from './ui/manager';
 import { initSceneUI } from './ui/scene';

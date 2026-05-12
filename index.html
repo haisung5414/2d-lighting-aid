@@ -47,12 +47,38 @@
         .toggle-row input { margin-right: 8px; cursor: pointer; }
 
         #error-screen { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); color: #ff5555; z-index: 9999; padding: 40px; box-sizing: border-box; overflow-y: auto; }
+        #editor-screen { display: none; width: 100%; height: 100vh; min-width: 0; }
     </style>
 </head>
 <body>
 
 <div id="error-screen"></div>
 
+<section id="landing-screen" aria-labelledby="landing-title">
+    <div class="landing-card">
+        <div class="landing-title-row">
+            <div>
+                <p class="landing-kicker">2D Stage Lighting Simulator</p>
+                <h1 id="landing-title">Choose a workspace</h1>
+            </div>
+        </div>
+        <div class="venue-grid" aria-label="Venue presets">
+            <button class="venue-card" id="venue-sandbox" type="button" data-venue-key="sandbox">
+                <span class="venue-card-title">Sandbox</span>
+                <span class="venue-card-meta">Blank 10m x 10m stage</span>
+            </button>
+            <button class="venue-card venue-card-primary" id="venue-humanities" type="button" data-venue-key="humanities">
+                <span class="venue-card-title">Humanities</span>
+                <span class="venue-card-meta">12m x 22.7m venue plan</span>
+            </button>
+        </div>
+        <div class="landing-actions">
+            <button class="btn btn-secondary" id="landing-load-file" type="button">Load File</button>
+        </div>
+    </div>
+</section>
+
+<div id="editor-screen" aria-label="Lighting editor">
 <aside id="ui-left">
     <div class="panel-section">
         <div class="panel-header">
@@ -114,6 +140,8 @@
         <!-- 속성 컨트롤들이 여기에 렌더링됨 -->
     </div>
 </aside>
+
+</div>
 
 <script type="module" src="/src/main.ts"></script>
 </body>

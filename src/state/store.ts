@@ -1,57 +1,65 @@
 // src/state/store.ts
 
-import type { AppState, Cue, Fixture } from '../types';
+import type { AppState, Cue, Fixture, ReferenceLayer } from '../types';
 import { generateThumbnail } from '../render/canvas';
-import { HUMANITIES_VENUE } from '../config/venues';
+import { HUMANITIES_VENUE, VENUES, type VenueKey, type VenuePreset } from '../config/venues';
 
-const humanitiesReferenceLayers = HUMANITIES_VENUE.referenceLayers.map(layer => ({
-  id: layer.id,
-  label: layer.label,
-  image: layer.image,
-  blend_mode: layer.blendMode,
-  x: layer.x,
-  y: layer.y,
-  width: layer.width,
-  height: layer.height,
-  opacity: layer.opacity,
-  is_visible: layer.defaultVisible
-}));
+const mapReferenceLayers = (venue: VenuePreset): ReferenceLayer[] => (
+  venue.referenceLayers.map(layer => ({
+    id: layer.id,
+    label: layer.label,
+    image: layer.image,
+    blend_mode: layer.blendMode,
+    x: layer.x,
+    y: layer.y,
+    width: layer.width,
+    height: layer.height,
+    opacity: layer.opacity,
+    is_visible: layer.defaultVisible
+  }))
+);
 
-let state: AppState = {
-  stage_config: {
-    width: HUMANITIES_VENUE.stage.width,
-    depth: HUMANITIES_VENUE.stage.depth,
-    actor_height: HUMANITIES_VENUE.stage.actorHeight,
-    default_z: HUMANITIES_VENUE.stage.defaultFixtureZ,
-    reference_layers: humanitiesReferenceLayers
-  },
-  ui_toggles: { show_floor: true, show_face: true, show_beam: true, show_field: true },
-  cues: [
-    {
-      cue_id: "cue_1",
-      label: "Scene 1",
-      fixtures: [
-        {
-          id: "fixture_1",
-          label: "L1 (Center)",
-          lens_type: "36deg",
-          position: { x: HUMANITIES_VENUE.stage.width / 2, y: 1, z: HUMANITIES_VENUE.stage.defaultFixtureZ },
-          target: { x: HUMANITIES_VENUE.stage.width / 2, y: HUMANITIES_VENUE.stage.depth / 2 },
-          shutter_active: false,
-          is_visible: true,
-          shutter_polygon: [
-            { dx: -1.5, dy: -1.5 }, { dx: 1.5, dy: -1.5 },
-            { dx: 1.5, dy: 1.5 }, { dx: -1.5, dy: 1.5 }
-          ],
-          edge_softness: 5
-        }
-      ]
-    }
-  ],
-  active_cue_index: 0,
-  selected_fixture_id: "fixture_1",
-  interaction: { dragMode: null, draggedIndex: -1 }
+const createInitialState = (venue: VenuePreset): AppState => {
+  const fixtureX = venue.stage.width / 2;
+
+  return {
+    stage_config: {
+      width: venue.stage.width,
+      depth: venue.stage.depth,
+      actor_height: venue.stage.actorHeight,
+      default_z: venue.stage.defaultFixtureZ,
+      reference_layers: mapReferenceLayers(venue)
+    },
+    ui_toggles: { show_floor: true, show_face: true, show_beam: true, show_field: true },
+    cues: [
+      {
+        cue_id: "cue_1",
+        label: "Scene 1",
+        fixtures: [
+          {
+            id: "fixture_1",
+            label: "L1 (Center)",
+            lens_type: "36deg",
+            position: { x: fixtureX, y: 1, z: venue.stage.defaultFixtureZ },
+            target: { x: fixtureX, y: venue.stage.depth / 2 },
+            shutter_active: false,
+            is_visible: true,
+            shutter_polygon: [
+              { dx: -1.5, dy: -1.5 }, { dx: 1.5, dy: -1.5 },
+              { dx: 1.5, dy: 1.5 }, { dx: -1.5, dy: 1.5 }
+            ],
+            edge_softness: 5
+          }
+        ]
+      }
+    ],
+    active_cue_index: 0,
+    selected_fixture_id: "fixture_1",
+    interaction: { dragMode: null, draggedIndex: -1 }
+  };
 };
+
+let state: AppState = createInitialState(HUMANITIES_VENUE);
 
 // --- Undo / Redo System (History Stack) ---
 const MAX_HISTORY = 30;
@@ -126,4 +134,52 @@ export const getSelectedFixture = (): Fixture | undefined => {
   const cue = getCurrentCue();
   if (!cue) return undefined;
   return cue.fixtures.find(f => f.id === state.selected_fixture_id);
+};
+
+const resetHistory = () => {
+  past = [];
+  future = [];
+};
+
+const showEditorScreen = () => {
+  const landingScreen = document.getElementById('landing-screen');
+  const editorScreen = document.getElementById('editor-screen');
+
+  if (landingScreen) landingScreen.style.display = 'none';
+  if (editorScreen) editorScreen.style.display = 'flex';
+};
+
+const syncVenueFormControls = () => {
+  const inputMap: Record<string, number> = {
+    'stage-w': state.stage_config.width,
+    'stage-d': state.stage_config.depth,
+    'actor-h': state.stage_config.actor_height,
+    'default-z': state.stage_config.default_z
+  };
+
+  Object.entries(inputMap).forEach(([id, value]) => {
+    const el = document.getElementById(id) as HTMLInputElement | null;
+    if (el) el.value = value.toString();
+  });
+
+  document.querySelectorAll<HTMLInputElement>('input[id^="tg-ref-"]').forEach(el => {
+    el.checked = false;
+  });
+
+  state.stage_config.reference_layers.forEach(layer => {
+    const el = document.getElementById(`tg-ref-${layer.id}`) as HTMLInputElement | null;
+    if (el) el.checked = layer.is_visible;
+  });
+};
+
+export const initVenue = (venueKey: VenueKey) => {
+  const venue = VENUES[venueKey];
+  if (!venue) return;
+
+  state = createInitialState(venue);
+  resetHistory();
+  commitHistory();
+  syncVenueFormControls();
+  showEditorScreen();
+  notify();
 };
