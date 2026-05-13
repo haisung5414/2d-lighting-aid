@@ -56,25 +56,28 @@ const renderProperties = () => {
 
   // 변경점 1: 체크박스의 인라인 속성(onchange)을 제거하고 고유 id('prop-shutter') 부여
   propsPanel.innerHTML = `
-    <div class='control-group'>
-      <label>Position (X, Y, Z m)</label>
+    <details class='control-group collapsible-control'>
+      <summary class='collapsible-control-summary'>조명 위치 (X, Y, Z m)</summary>
       <div class='control-row'>
         <input type='number' step='0.5' value='${selectedFix.position.x.toFixed(2)}' onchange="updateFixProp('position', 'x', this.value)">
         <input type='number' step='0.5' value='${selectedFix.position.y.toFixed(2)}' onchange="updateFixProp('position', 'y', this.value)">
         <input type='number' step='0.5' value='${selectedFix.position.z}' onchange="updateFixProp('position', 'z', this.value)">
       </div>
-    </div>
-    <div class='control-group'>
-      <label>DMX Channel</label>
-      <input type='number' min='0' max='91' value='${selectedFix.channel ?? ""}' onchange="updateFixProp('channel', null, this.value)">
-    </div>
-    <div class='control-group'>
-      <label>Lens Type</label>
-      <select onchange="updateFixProp('lens_type', null, this.value)">${lensOptions}</select>
-    </div>
+    </details>
+    <details class='control-group collapsible-control'>
+      <summary class='collapsible-control-summary'>조명 연결 채널 / 조명 종류</summary>
+      <div class='inline-control-row'>
+        <label class='inline-control-field'>조명 연결 채널
+          <input type='number' min='0' max='91' value='${selectedFix.channel ?? ""}' onchange="updateFixProp('channel', null, this.value)">
+        </label>
+        <label class='inline-control-field'>조명 종류
+          <select onchange="updateFixProp('lens_type', null, this.value)">${lensOptions}</select>
+        </label>
+      </div>
+    </details>
     <div class='control-group' style='background: #e7f1ff; border-color: #b6d4fe;'>
       <label class='toggle-row' style='margin:0; font-weight:bold; color:#084298;'>
-        <input type='checkbox' id='prop-shutter' ${selectedFix.shutter_active ? "checked" : ""}> Enable Shutter (Masking)
+        <input type='checkbox' id='prop-shutter' ${selectedFix.shutter_active ? "checked" : ""}> 셔터 컷 사용하기
       </label>
     </div>
   `;

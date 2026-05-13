@@ -99,6 +99,52 @@
   min-width: 0;
 }
 
+.collapsible-section,
+.collapsible-control {
+  overflow: hidden;
+}
+
+.collapsible-summary,
+.collapsible-control-summary {
+  cursor: pointer;
+  user-select: none;
+}
+
+.collapsible-summary {
+  list-style-position: inside;
+}
+
+.collapsible-body {
+  padding: 15px;
+}
+
+.collapsible-control-summary {
+  color: #495057;
+  font-size: 0.85em;
+  font-weight: 600;
+}
+
+.collapsible-control[open] > .collapsible-control-summary {
+  margin-bottom: 8px;
+}
+
+.inline-control-row {
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.inline-control-field {
+  flex: 1 1 110px;
+  min-width: 0;
+}
+
+.inline-control-field input,
+.inline-control-field select {
+  margin-top: 6px;
+}
+
 #patch-bay-panel {
   flex: 0 0 auto;
   max-height: 42vh;
@@ -152,7 +198,7 @@
 
 .patch-cell {
   min-width: 0;
-  min-height: 36px;
+  min-height: 32px;
   padding: 4px;
   border: 1px solid #ced4da;
   border-radius: 4px;

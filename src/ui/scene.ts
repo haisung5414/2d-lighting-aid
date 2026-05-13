@@ -24,7 +24,7 @@ const renderBackgroundUI = () => {
   if (!cue) return;
 
   const bg = cue.background;
-  let html = `<div class="panel-header" style="font-size: 0.9em; padding: 10px 15px;">배경 이미지 크기 및 위치 조절</div><div style="padding: 15px;">`;
+  let html = `<details class="collapsible-section"><summary class="panel-header collapsible-summary" style="font-size: 0.9em; padding: 10px 15px;">배경 이미지 크기 및 위치 조절</summary><div class="collapsible-body">`;
 
   if (bg) {
     // 배경이 존재할 때: 조절 UI 표시
@@ -51,7 +51,7 @@ const renderBackgroundUI = () => {
     `;
   }
   
-  html += `</div>`;
+  html += `</div></details>`;
   bgContainer.innerHTML = html;
 };
 
