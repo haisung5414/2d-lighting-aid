@@ -65,6 +65,10 @@ const renderProperties = () => {
       </div>
     </div>
     <div class='control-group'>
+      <label>DMX Channel</label>
+      <input type='number' min='0' max='91' value='${selectedFix.channel ?? ""}' onchange="updateFixProp('channel', null, this.value)">
+    </div>
+    <div class='control-group'>
       <label>Lens Type</label>
       <select onchange="updateFixProp('lens_type', null, this.value)">${lensOptions}</select>
     </div>
@@ -72,10 +76,6 @@ const renderProperties = () => {
       <label class='toggle-row' style='margin:0; font-weight:bold; color:#084298;'>
         <input type='checkbox' id='prop-shutter' ${selectedFix.shutter_active ? "checked" : ""}> Enable Shutter (Masking)
       </label>
-    </div>
-    <div class='control-group'>
-      <label>Edge Softness: ${selectedFix.edge_softness}</label>
-      <input type='range' min='0' max='30' value='${selectedFix.edge_softness}' oninput="updateFixProp('edge_softness', null, this.value)">
     </div>
   `;
 
@@ -100,13 +100,14 @@ const renderProperties = () => {
     cue.fixtures.push({
       id: newId,
       label: `L${cue.fixtures.length + 1} (New)`,
+      channel: 0,
       lens_type: "36deg",
       position: { x: state.stage_config.width / 2, y: 1, z: state.stage_config.default_z },
       target: { x: state.stage_config.width / 2, y: state.stage_config.depth / 2 },
       shutter_active: false,
       is_visible: true,
       shutter_polygon: [{ dx: -1.5, dy: -1.5 }, { dx: 1.5, dy: -1.5 }, { dx: 1.5, dy: 1.5 }, { dx: -1.5, dy: 1.5 }],
-      edge_softness: 5
+      edge_softness: 0
     });
     state.selected_fixture_id = newId;
     state.selected_fixture_ids = [newId];
@@ -170,12 +171,13 @@ const renderProperties = () => {
 
     if (prop === 'shutter_active' || prop === 'lens_type') {
       (fix as any)[prop] = value;
+    } else if (prop === 'channel') {
+      const channel = parseInt(value, 10);
+      fix.channel = Number.isFinite(channel) ? Math.min(91, Math.max(0, channel)) : undefined;
     } else {
       const numVal = parseFloat(value);
       if (subProp && prop === 'position') {
         fix.position[subProp] = numVal;
-      } else if (prop === 'edge_softness') {
-        fix.edge_softness = numVal;
       }
     }
   });

@@ -121,11 +121,9 @@ export const drawCueToContext = (
         targetCtx.ellipse(toPx(floorField.cx, currentScale), toPx(floorField.cy, currentScale), toPx(floorField.radiusX, currentScale), toPx(floorField.radiusY, currentScale), floorField.rotation, 0, Math.PI * 2);
         targetCtx.fillStyle = isSelected ? "rgba(255, 255, 180, 0.2)" : "rgba(200, 200, 200, 0.1)";
         targetCtx.fill();
-        targetCtx.filter = `blur(${fix.edge_softness}px)`;
         targetCtx.strokeStyle = isSelected ? "rgba(255, 255, 200, 0.6)" : "rgba(200, 200, 200, 0.4)";
         targetCtx.lineWidth = 1;
         targetCtx.stroke();
-        targetCtx.filter = "none";
       }
       if (floorBeam) {
         targetCtx.beginPath();

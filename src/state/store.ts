@@ -39,6 +39,7 @@ const createInitialState = (venue: VenuePreset): AppState => {
           {
             id: "fixture_1",
             label: "L1 (Center)",
+            channel: 1,
             lens_type: "36deg",
             position: { x: fixtureX, y: 1, z: venue.stage.defaultFixtureZ },
             target: { x: fixtureX, y: venue.stage.depth / 2 },
@@ -48,7 +49,7 @@ const createInitialState = (venue: VenuePreset): AppState => {
               { dx: -1.5, dy: -1.5 }, { dx: 1.5, dy: -1.5 },
               { dx: 1.5, dy: 1.5 }, { dx: -1.5, dy: 1.5 }
             ],
-            edge_softness: 5
+            edge_softness: 0
           }
         ]
       }
@@ -118,6 +119,12 @@ export const getState = (): AppState => state;
 const normalizeFixtureSelection = () => {
   const cue = state.cues[state.active_cue_index];
   const validIds = new Set(cue?.fixtures.map(f => f.id) ?? []);
+
+  state.cues.forEach(item => {
+    item.fixtures.forEach(fixture => {
+      fixture.edge_softness = 0;
+    });
+  });
 
   if (!Array.isArray(state.selected_fixture_ids)) {
     state.selected_fixture_ids = state.selected_fixture_id ? [state.selected_fixture_id] : [];

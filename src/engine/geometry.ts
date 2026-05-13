@@ -18,9 +18,42 @@ export interface EllipseResult {
   rotation: number;
 }
 
+export interface FixtureAngles {
+  /**
+   * Degrees from straight down toward the target point on the floor.
+   * 0 means straight down, 90 means horizontal.
+   */
+  tilt: number;
+  /**
+   * Degrees on the stage plane. 0 is +X, 90 is +Y.
+   */
+  pan: number;
+}
+
 export class GeometryEngine {
   static toRad(deg: number): number {
     return deg * Math.PI / 180;
+  }
+
+  static toDeg(rad: number): number {
+    return rad * 180 / Math.PI;
+  }
+
+  static calculateAngles(fixture: Fixture): FixtureAngles {
+    const { x: x0, y: y0, z: z0 } = fixture.position;
+    const { x: targetX, y: targetY } = fixture.target;
+
+    const dx = targetX - x0;
+    const dy = targetY - y0;
+    const horizontalDistance = Math.hypot(dx, dy);
+    const verticalDrop = Math.max(0.0001, z0);
+
+    const rawPan = this.toDeg(Math.atan2(dy, dx));
+
+    return {
+      tilt: this.toDeg(Math.atan2(horizontalDistance, verticalDrop)),
+      pan: (rawPan + 360) % 360
+    };
   }
 
   static calculateEllipse(fixture: Fixture, targetZ: number, angleType: 'beam' | 'field'): EllipseResult | null {

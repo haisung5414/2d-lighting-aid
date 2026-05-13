@@ -42,6 +42,7 @@ export type LensDataMap = Record<LensType, LensSpec>;
 export interface Fixture {
   id: string;
   label: string;
+  channel?: number;
   lens_type: LensType;
   position: Position3D;
   target: Position2D;

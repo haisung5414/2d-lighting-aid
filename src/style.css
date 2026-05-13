@@ -99,6 +99,134 @@
   min-width: 0;
 }
 
+#patch-bay-panel {
+  flex: 0 0 auto;
+  max-height: 42vh;
+  overflow-y: auto;
+  border-top: 1px solid var(--border-color);
+  background: #f8f9fa;
+}
+
+.patch-header {
+  width: 100%;
+  padding: 10px 15px;
+  border: 0;
+  border-bottom: 1px solid var(--border-color);
+  background: #f1f3f5;
+  color: #1f2933;
+  cursor: pointer;
+}
+
+.patch-toggle {
+  justify-content: space-between;
+  font: inherit;
+}
+
+.patch-note {
+  padding: 10px 12px 4px;
+  color: #5f6b77;
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
+.patch-grid {
+  padding: 8px 12px 12px;
+}
+
+.patch-row {
+  margin-bottom: 10px;
+}
+
+.patch-row-label {
+  margin-bottom: 4px;
+  color: #343a40;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.patch-row-cells {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(26px, 1fr));
+  gap: 2px;
+}
+
+.patch-cell {
+  min-width: 0;
+  min-height: 36px;
+  padding: 4px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  background: #fff;
+  color: #1f2933;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+
+.patch-cell:hover {
+  border-color: #0d6efd;
+}
+
+.patch-cell.selected {
+  outline: 2px solid #0d6efd;
+  outline-offset: 1px;
+}
+
+.patch-cell.used {
+  background: #e7f1ff;
+  border-color: #9ec5fe;
+}
+
+.patch-cell.over {
+  background: #f8d7da;
+  border-color: #f1aeb5;
+}
+
+.patch-channel {
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.patch-count {
+  min-width: 18px;
+  padding: 1px 4px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.08);
+  font-size: 0.72rem;
+  line-height: 1.2;
+}
+
+.patch-detail {
+  margin: 8px 12px 4px;
+  padding: 10px;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.patch-detail-title {
+  margin-bottom: 4px;
+  font-weight: 700;
+}
+
+.patch-detail-meta,
+.patch-detail-empty {
+  color: #5f6b77;
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
+.patch-detail-list {
+  margin: 8px 0 0;
+  padding-left: 18px;
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
 @media (max-width: 700px) {
   #landing-screen {
     padding: 18px;

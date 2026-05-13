@@ -4,6 +4,7 @@ import { initCanvas, resetCanvasZoom, zoomCanvas } from './render/canvas';
 import { initManagerUI } from './ui/manager';
 import { initSceneUI } from './ui/scene';
 import { initFixtureUI } from './ui/fixture';
+import { initPatchUI } from './ui/patch';
 import { undo, redo } from './state/store';
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -15,6 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initManagerUI();
     initSceneUI();
     initFixtureUI();
+    initPatchUI();
     
     console.log("✅ 애플리케이션 초기화 완료");
   } else {
