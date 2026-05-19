@@ -1,6 +1,6 @@
 // src/engine/geometry.ts
 
-import type { Fixture, LensDataMap, Position2D } from '../types';
+import type { Fixture, FresnelDataMap, LensDataMap, LensSpec, ParDataMap, Position2D } from '../types';
 
 export const LensData: LensDataMap = {
   "19deg": { beam: 7.5, field: 9.5 },
@@ -9,7 +9,21 @@ export const LensData: LensDataMap = {
   "51deg": { beam: 18, field: 25.5 }
 };
 
-// calculateEllipse의 반환값 타입 정의
+export const ZoomAngleRange = { min: 15, max: 30 };
+
+export const FresnelData: FresnelDataMap = {
+  narrow: { beam: 4.5, field: 10 },
+  medium: { beam: 10.5, field: 20 },
+  flood: { beam: 26, field: 32.5 }
+};
+
+export const ParData: ParDataMap = {
+  VNSP: { beamX: 6, beamY: 6, fieldX: 8, fieldY: 8 },
+  NSP: { beamX: 8, beamY: 8, fieldX: 12, fieldY: 12 },
+  MFL: { beamX: 12, beamY: 18, fieldX: 15, fieldY: 24 },
+  WFL: { beamX: 15, beamY: 25, fieldX: 20, fieldY: 30 }
+};
+
 export interface EllipseResult {
   cx: number;
   cy: number;
@@ -19,14 +33,7 @@ export interface EllipseResult {
 }
 
 export interface FixtureAngles {
-  /**
-   * Degrees from straight down toward the target point on the floor.
-   * 0 means straight down, 90 means horizontal.
-   */
   tilt: number;
-  /**
-   * Degrees on the stage plane. 0 is +X, 90 is +Y.
-   */
   pan: number;
 }
 
@@ -47,7 +54,6 @@ export class GeometryEngine {
     const dy = targetY - y0;
     const horizontalDistance = Math.hypot(dx, dy);
     const verticalDrop = Math.max(0.0001, z0);
-
     const rawPan = this.toDeg(Math.atan2(dy, dx));
 
     return {
@@ -56,47 +62,92 @@ export class GeometryEngine {
     };
   }
 
-  static calculateEllipse(fixture: Fixture, targetZ: number, angleType: 'beam' | 'field'): EllipseResult | null {
-    const { x: x0, y: y0, z: z0 } = fixture.position;
-    const { x: XT, y: YT } = fixture.target;
-    
-    const dx_target = XT - x0;
-    const dy_target = YT - y0;
-    const d_floor = Math.sqrt(dx_target * dx_target + dy_target * dy_target);
-    
-    const pan = Math.atan2(dy_target, dx_target);
-    const tilt = Math.atan2(d_floor, z0);
-    
-    const z_drop = z0 - targetZ;
-    if (z_drop <= 0.1) return null; // 빛이 타겟 평면보다 아래 있거나 같으면 렌더링 불가
+  static fixtureHasShutters(fixture: Fixture): fixture is Extract<Fixture, { type: 'ellipsoidal' | 'zoom' }> {
+    return fixture.type === 'ellipsoidal' || fixture.type === 'zoom';
+  }
 
-    const theta = this.toRad(LensData[fixture.lens_type][angleType]);
-    const denom = Math.pow(Math.cos(tilt), 2) - Math.pow(Math.sin(theta), 2);
-    
-    if (denom <= 0) return null; // 타원이 무한대로 퍼지는 경우 (렌더링 불가)
+  static getFixtureAngleSpec(fixture: Fixture): LensSpec {
+    if (fixture.type === 'ellipsoidal') {
+      return LensData[fixture.lens_type];
+    }
 
-    const r_near = z_drop * Math.tan(tilt - theta);
-    const r_far = z_drop * Math.tan(tilt + theta);
-    const d_center = (r_near + r_far) / 2;
-    
+    if (fixture.type === 'zoom') {
+      const halfAngle = fixture.zoom_angle / 2;
+      return { beam: Math.max(1, halfAngle * 0.72), field: halfAngle };
+    }
+
+    if (fixture.type === 'fresnel') {
+      const level = Math.min(1, Math.max(0, fixture.focus_level));
+      const start = level <= 0.5 ? FresnelData.narrow : FresnelData.medium;
+      const end = level <= 0.5 ? FresnelData.medium : FresnelData.flood;
+      const t = level <= 0.5 ? level * 2 : (level - 0.5) * 2;
+
+      return {
+        beam: start.beam + (end.beam - start.beam) * t,
+        field: start.field + (end.field - start.field) * t
+      };
+    }
+
+    const par = ParData[fixture.lamp_type];
     return {
-      cx: x0 + d_center * Math.cos(pan),
-      cy: y0 + d_center * Math.sin(pan),
-      radiusX: Math.abs(r_far - r_near) / 2,
-      radiusY: Math.abs((z_drop * Math.sin(theta)) / Math.sqrt(denom)),
-      rotation: pan
+      beam: (par.beamX + par.beamY) / 2,
+      field: (par.fieldX + par.fieldY) / 2
     };
   }
 
+  static calculateEllipse(fixture: Fixture, targetZ: number, angleType: 'beam' | 'field'): EllipseResult | null {
+    const { x: x0, y: y0, z: z0 } = fixture.position;
+    const { x: XT, y: YT } = fixture.target;
+
+    const dxTarget = XT - x0;
+    const dyTarget = YT - y0;
+    const dFloor = Math.hypot(dxTarget, dyTarget);
+
+    const pan = Math.atan2(dyTarget, dxTarget);
+    const tilt = Math.atan2(dFloor, z0);
+
+    const zDrop = z0 - targetZ;
+    if (zDrop <= 0.1) return null;
+
+    const angleSpec = this.getFixtureAngleSpec(fixture);
+    const theta = this.toRad(angleSpec[angleType]);
+    const denom = Math.pow(Math.cos(tilt), 2) - Math.pow(Math.sin(theta), 2);
+
+    if (denom <= 0) return null;
+
+    const rNear = zDrop * Math.tan(tilt - theta);
+    const rFar = zDrop * Math.tan(tilt + theta);
+    const dCenter = (rNear + rFar) / 2;
+
+    const result: EllipseResult = {
+      cx: x0 + dCenter * Math.cos(pan),
+      cy: y0 + dCenter * Math.sin(pan),
+      radiusX: Math.abs(rFar - rNear) / 2,
+      radiusY: Math.abs((zDrop * Math.sin(theta)) / Math.sqrt(denom)),
+      rotation: pan
+    };
+
+    if (fixture.type === 'par') {
+      const par = ParData[fixture.lamp_type];
+      const xAngle = angleType === 'beam' ? par.beamX : par.fieldX;
+      const yAngle = angleType === 'beam' ? par.beamY : par.fieldY;
+      const average = Math.max(0.0001, (xAngle + yAngle) / 2);
+      result.radiusX *= xAngle / average;
+      result.radiusY *= yAngle / average;
+      result.rotation = pan + this.toRad(fixture.rotation_angle);
+    }
+
+    return result;
+  }
+
   static projectFloorToFace(
-    floorX: number, 
-    floorY: number, 
-    fixtureZ: number, 
-    actorH: number, 
-    fixtureX: number, 
+    floorX: number,
+    floorY: number,
+    fixtureZ: number,
+    actorH: number,
+    fixtureX: number,
     fixtureY: number
   ): Position2D {
-    // 바닥 좌표를 배우 얼굴 높이 평면으로 역투영
     const k = (fixtureZ - actorH) / Math.max(0.01, fixtureZ);
     return {
       x: fixtureX + (floorX - fixtureX) * k,

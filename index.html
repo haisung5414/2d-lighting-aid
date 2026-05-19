@@ -145,7 +145,15 @@
 <aside id="ui-right">
     <div class="panel-header" style="flex: 0 0 auto;">
         <span>조명 기구</span>
-        <button class="btn" onclick="addFixture()">+ 추가</button>
+        <div class="fixture-add-controls">
+            <select id="fixture-add-type" title="Fixture type">
+                <option value="ellipsoidal">Fixed</option>
+                <option value="zoom">Zoom</option>
+                <option value="fresnel">Fresnel</option>
+                <option value="par">PAR</option>
+            </select>
+            <button class="btn" onclick="addFixture()">+ 추가</button>
+        </div>
     </div>
     <!-- 목록 영역: 스크롤 발생 -->
     <div class="panel-content" style="padding-bottom: 0;">

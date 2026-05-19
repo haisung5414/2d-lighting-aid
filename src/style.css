@@ -156,6 +156,19 @@
   margin-top: 6px;
 }
 
+.fixture-add-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.fixture-add-controls select {
+  width: 96px;
+  min-height: 30px;
+  font-size: 0.8rem;
+}
+
 .empty-state {
   padding: 18px 12px;
   color: var(--text-muted);

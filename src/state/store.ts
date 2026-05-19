@@ -40,6 +40,7 @@ const createInitialState = (venue: VenuePreset): AppState => {
             id: "fixture_1",
             label: "L1 (Center)",
             channel: 1,
+            type: "ellipsoidal",
             lens_type: "36deg",
             position: { x: fixtureX, y: 1, z: venue.stage.defaultFixtureZ },
             target: { x: fixtureX, y: venue.stage.depth / 2 },
@@ -121,7 +122,26 @@ const normalizeFixtureSelection = () => {
   const validIds = new Set(cue?.fixtures.map(f => f.id) ?? []);
 
   state.cues.forEach(item => {
-    item.fixtures.forEach(fixture => {
+    item.fixtures.forEach((fixture: any) => {
+      if (!fixture.type) fixture.type = 'ellipsoidal';
+      if (fixture.type === 'ellipsoidal' && !fixture.lens_type) fixture.lens_type = '36deg';
+      if (fixture.type === 'zoom' && !Number.isFinite(fixture.zoom_angle)) fixture.zoom_angle = 26;
+      if (fixture.type === 'fresnel') {
+        if (!fixture.focus) fixture.focus = 'medium';
+        if (!Number.isFinite(fixture.focus_level)) fixture.focus_level = 0.5;
+        fixture.shutter_active = false;
+      }
+      if (fixture.type === 'par') {
+        if (!fixture.lamp_type) fixture.lamp_type = 'MFL';
+        if (!Number.isFinite(fixture.rotation_angle)) fixture.rotation_angle = 0;
+        fixture.shutter_active = false;
+      }
+      if ((fixture.type === 'ellipsoidal' || fixture.type === 'zoom') && !fixture.shutter_polygon) {
+        fixture.shutter_polygon = [
+          { dx: -1.5, dy: -1.5 }, { dx: 1.5, dy: -1.5 },
+          { dx: 1.5, dy: 1.5 }, { dx: -1.5, dy: 1.5 }
+        ];
+      }
       fixture.edge_softness = 0;
     });
   });

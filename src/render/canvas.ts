@@ -90,11 +90,12 @@ export const drawCueToContext = (
     const isSelected = selectedFixtureIds.includes(fix.id) || fix.id === activeFixtureId;
     const isActiveFixture = fix.id === activeFixtureId;
     
-    const floorPolygons = fix.shutter_polygon.map(p => ({
+    const hasShutters = GeometryEngine.fixtureHasShutters(fix);
+    const floorPolygons = hasShutters ? fix.shutter_polygon.map(p => ({
       x: fix.target.x + p.dx,
       y: fix.target.y + p.dy
-    }));
-    const facePolygons = floorPolygons.map(p => 
+    })) : [];
+    const facePolygons = floorPolygons.map(p =>
       GeometryEngine.projectFloorToFace(p.x, p.y, fix.position.z, actorH, fix.position.x, fix.position.y)
     );
 
@@ -109,7 +110,7 @@ export const drawCueToContext = (
     /* Floor Render */
     if (toggles.show_floor && (floorField || floorBeam)) {
       targetCtx.save();
-      if (fix.shutter_active) {
+      if (hasShutters && fix.shutter_active) {
         targetCtx.beginPath();
         targetCtx.moveTo(toPx(floorPolygons[0].x, currentScale), toPx(floorPolygons[0].y, currentScale));
         for (let k = 1; k < 4; k++) targetCtx.lineTo(toPx(floorPolygons[k].x, currentScale), toPx(floorPolygons[k].y, currentScale));
@@ -140,7 +141,7 @@ export const drawCueToContext = (
     /* Face Render */
     if (toggles.show_face && (faceField || faceBeam)) {
       targetCtx.save();
-      if (fix.shutter_active) {
+      if (hasShutters && fix.shutter_active) {
         targetCtx.beginPath();
         targetCtx.moveTo(toPx(facePolygons[0].x, currentScale), toPx(facePolygons[0].y, currentScale));
         for (let m = 1; m < 4; m++) targetCtx.lineTo(toPx(facePolygons[m].x, currentScale), toPx(facePolygons[m].y, currentScale));
@@ -180,7 +181,7 @@ export const drawCueToContext = (
     targetCtx.fill();
     targetCtx.stroke();
 
-    if (isActiveFixture && fix.shutter_active) {
+    if (isActiveFixture && hasShutters && fix.shutter_active) {
       targetCtx.fillStyle = "red";
       floorPolygons.forEach(p => {
         targetCtx.beginPath();
@@ -327,7 +328,7 @@ export const initCanvas = (canvasEl: HTMLCanvasElement, wrapperEl: HTMLElement) 
         canvas!.classList.add('grabbing');
         return;
       }
-      if (selectedFix.shutter_active) {
+      if (GeometryEngine.fixtureHasShutters(selectedFix) && selectedFix.shutter_active) {
         for (let i = 0; i < 4; i++) {
           const absX = selectedFix.target.x + selectedFix.shutter_polygon[i].dx;
           const absY = selectedFix.target.y + selectedFix.shutter_polygon[i].dy;
@@ -410,7 +411,7 @@ export const initCanvas = (canvasEl: HTMLCanvasElement, wrapperEl: HTMLElement) 
       } else if (dragMode === 'target') {
         fix.target.x = worldPos.x;
         fix.target.y = worldPos.y;
-      } else if (dragMode === 'shutter') {
+      } else if (dragMode === 'shutter' && GeometryEngine.fixtureHasShutters(fix)) {
         fix.shutter_polygon[draggedIndex].dx = worldPos.x - fix.target.x;
         fix.shutter_polygon[draggedIndex].dy = worldPos.y - fix.target.y;
       }
