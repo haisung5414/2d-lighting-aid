@@ -2,7 +2,7 @@
 
 import { getState, setState, getCurrentCue, subscribe, commitHistory } from '../state/store';
 import { GeometryEngine } from '../engine/geometry';
-import type { Position2D, Cue, UIToggles, StageConfig } from '../types';
+import type { Position2D, Cue, UIToggles, StageConfig, ProbeState } from '../types';
 
 let canvas: HTMLCanvasElement | null = null;
 let ctx: CanvasRenderingContext2D | null = null;
@@ -73,7 +73,8 @@ export const drawCueToContext = (
   toggles: UIToggles,
   stageConfig: StageConfig,
   selectedFixtureIds: string[] = [],
-  activeFixtureId: string | null = null
+  activeFixtureId: string | null = null,
+  probe: ProbeState | null = null
 ) => {
   const actorH = stageConfig.actor_height;
 
@@ -195,6 +196,33 @@ export const drawCueToContext = (
     
     targetCtx.restore();
   });
+
+  if (probe?.is_visible) {
+    targetCtx.save();
+    targetCtx.translate(currentOffsetX, currentOffsetY);
+    const px = toPx(probe.x, currentScale);
+    const py = toPx(probe.y, currentScale);
+
+    targetCtx.fillStyle = "rgba(45, 122, 82, 0.18)";
+    targetCtx.strokeStyle = "#2d7a52";
+    targetCtx.lineWidth = 2;
+    targetCtx.beginPath();
+    targetCtx.arc(px, py, 9, 0, Math.PI * 2);
+    targetCtx.fill();
+    targetCtx.stroke();
+
+    targetCtx.beginPath();
+    targetCtx.moveTo(px - 13, py);
+    targetCtx.lineTo(px + 13, py);
+    targetCtx.moveTo(px, py - 13);
+    targetCtx.lineTo(px, py + 13);
+    targetCtx.stroke();
+
+    targetCtx.fillStyle = "#ffffff";
+    targetCtx.font = "12px Segoe UI, sans-serif";
+    targetCtx.fillText("Probe", px + 12, py - 10);
+    targetCtx.restore();
+  }
 };
 
 // [추가됨] 썸네일 생성 함수
@@ -215,7 +243,7 @@ export const generateThumbnail = (cue: Cue, stageConfig: StageConfig, toggles: U
   const thumbOffsetY = (offCanvas.height - sd * thumbScale) / 2;
 
   // 썸네일에서는 선택 마커 하이라이트를 주지 않기 위해 selectedFixtureId 인자를 null로 넘김
-  drawCueToContext(offCtx, cue, thumbScale, thumbOffsetX, thumbOffsetY, toggles, stageConfig, [], null);
+  drawCueToContext(offCtx, cue, thumbScale, thumbOffsetX, thumbOffsetY, toggles, stageConfig, [], null, null);
 
   return offCanvas.toDataURL('image/jpeg', 0.5);
 };
@@ -284,7 +312,7 @@ export const renderCanvas = () => {
   if (!currentCue) return;
 
   // 분리된 그리기 함수 호출
-  drawCueToContext(ctx, currentCue, scale, offsetX, offsetY, state.ui_toggles, state.stage_config, state.selected_fixture_ids, state.selected_fixture_id);
+  drawCueToContext(ctx, currentCue, scale, offsetX, offsetY, state.ui_toggles, state.stage_config, state.selected_fixture_ids, state.selected_fixture_id, state.probe);
 };
 
 export const initCanvas = (canvasEl: HTMLCanvasElement, wrapperEl: HTMLElement) => {
@@ -314,6 +342,13 @@ export const initCanvas = (canvasEl: HTMLCanvasElement, wrapperEl: HTMLElement) 
     if (!cue) return;
 
     const selectedFix = cue.fixtures.find(f => f.id === state.selected_fixture_id);
+
+    if (state.probe?.is_visible && Math.hypot(worldPos.x - state.probe.x, worldPos.y - state.probe.y) < 0.6) {
+      commitHistory();
+      setState(s => { s.interaction.dragMode = 'probe'; });
+      canvas!.classList.add('grabbing');
+      return;
+    }
     
     if (selectedFix && selectedFix.is_visible !== false && !e.ctrlKey && !e.metaKey) {
       if (Math.hypot(worldPos.x - selectedFix.position.x, worldPos.y - selectedFix.position.y) < 0.6) {
@@ -400,6 +435,12 @@ export const initCanvas = (canvasEl: HTMLCanvasElement, wrapperEl: HTMLElement) 
     const worldPos = toWorld(e.clientX - rect.left, e.clientY - rect.top);
 
     setState(s => {
+      if (dragMode === 'probe') {
+        s.probe.x = Math.min(s.stage_config.width, Math.max(0, worldPos.x));
+        s.probe.y = Math.min(s.stage_config.depth, Math.max(0, worldPos.y));
+        return;
+      }
+
       const activeCue = s.cues[s.active_cue_index];
       const fix = activeCue?.fixtures.find(f => f.id === s.selected_fixture_id);
       

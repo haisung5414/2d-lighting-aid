@@ -59,15 +59,13 @@ export const renderPatchUI = () => {
   if (!isPatchPanelOpen) {
     panelEl.innerHTML = `
       <button class="panel-header patch-header patch-toggle" type="button" aria-expanded="false">
-        <span>채널 사용 현황</span>
-        <span>열기</span>
+        <span class="patch-header-title">채널 사용 현황</span>
       </button>
     `;
   } else {
     panelEl.innerHTML = `
       <button class="panel-header patch-header patch-toggle" type="button" aria-expanded="true">
-        <span>채널 사용 현황</span>
-        <span>닫기</span>
+        <span class="patch-header-title">채널 사용 현황</span>
       </button>
       <div class="patch-note">전체 씬 기준 참조 수입니다. 복사된 조명도 별도 항목으로 집계됩니다.</div>
       <div id="patch-detail" class="patch-detail">

@@ -2,9 +2,10 @@
 
 export type LensType = '19deg' | '26deg' | '36deg' | '51deg';
 export type FixtureType = 'ellipsoidal' | 'zoom' | 'fresnel' | 'par';
+export type ZoomRangeType = 'narrow' | 'medium';
 export type FresnelFocus = 'narrow' | 'medium' | 'flood';
 export type ParLampType = 'VNSP' | 'NSP' | 'MFL' | 'WFL';
-export type DragMode = 'position' | 'target' | 'shutter' | null;
+export type DragMode = 'position' | 'target' | 'shutter' | 'probe' | null;
 
 export interface Position3D {
   x: number;
@@ -59,6 +60,7 @@ export interface FixedEllipsoidalFixture extends BaseFixture, ShutterFixtureFiel
 
 export interface ZoomEllipsoidalFixture extends BaseFixture, ShutterFixtureFields {
   type: 'zoom';
+  zoom_range: ZoomRangeType;
   zoom_angle: number;
 }
 
@@ -126,6 +128,12 @@ export interface InteractionState {
   draggedIndex: number;
 }
 
+export interface ProbeState {
+  x: number;
+  y: number;
+  is_visible: boolean;
+}
+
 export interface AppState {
   stage_config: StageConfig;
   ui_toggles: UIToggles;
@@ -134,4 +142,5 @@ export interface AppState {
   selected_fixture_id: string | null;
   selected_fixture_ids: string[];
   interaction: InteractionState;
+  probe: ProbeState;
 }

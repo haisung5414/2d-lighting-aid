@@ -1,8 +1,8 @@
 // src/ui/fixture.ts
 
 import { getState, setState, getCurrentCue, getSelectedFixture, subscribe, commitHistory } from '../state/store';
-import { GeometryEngine, LensData, ParData, ZoomAngleRange } from '../engine/geometry';
-import type { Fixture, FixtureType, FresnelFocus, LensType, ParLampType, ShutterPoint } from '../types';
+import { GeometryEngine, LensData, ParData, ZoomAngleRanges } from '../engine/geometry';
+import type { Fixture, FixtureType, FresnelFocus, LensType, ParLampType, ShutterPoint, ZoomRangeType } from '../types';
 
 const generateId = (prefix: string) => `${prefix}_${Math.random().toString(36).substring(2, 11)}`;
 
@@ -41,7 +41,7 @@ const createFixture = (type: FixtureType, index: number): Fixture => {
   };
 
   if (type === 'zoom') {
-    return { ...base, type, zoom_angle: 26, shutter_active: false, shutter_polygon: shutterPolygon() };
+    return { ...base, type, zoom_range: 'narrow', zoom_angle: 26, shutter_active: false, shutter_polygon: shutterPolygon() };
   }
 
   if (type === 'fresnel') {
@@ -101,11 +101,22 @@ const renderFixedLensControl = (selectedFix: Extract<Fixture, { type: 'ellipsoid
   `;
 };
 
-const renderZoomControl = (selectedFix: Extract<Fixture, { type: 'zoom' }>) => `
-  <label class='inline-control-field'>Zoom Angle (${selectedFix.zoom_angle.toFixed(0)} deg)
-    <input type='range' min='${ZoomAngleRange.min}' max='${ZoomAngleRange.max}' step='1' value='${selectedFix.zoom_angle}' onchange="updateFixProp('zoom_angle', null, this.value)">
-  </label>
-`;
+const renderZoomControl = (selectedFix: Extract<Fixture, { type: 'zoom' }>) => {
+  const range = ZoomAngleRanges[selectedFix.zoom_range];
+  const rangeOptions = (Object.keys(ZoomAngleRanges) as ZoomRangeType[]).map(rangeType => {
+    const sel = selectedFix.zoom_range === rangeType ? "selected" : "";
+    return `<option value='${rangeType}' ${sel}>${ZoomAngleRanges[rangeType].label}</option>`;
+  }).join('');
+
+  return `
+    <label class='inline-control-field'>Zoom Range
+      <select onchange="updateFixProp('zoom_range', null, this.value)">${rangeOptions}</select>
+    </label>
+    <label class='inline-control-field'>Field Angle (${selectedFix.zoom_angle.toFixed(0)} deg)
+      <input type='range' min='${range.min}' max='${range.max}' step='1' value='${selectedFix.zoom_angle}' onchange="updateFixProp('zoom_angle', null, this.value)">
+    </label>
+  `;
+};
 
 const renderFresnelControl = (selectedFix: Extract<Fixture, { type: 'fresnel' }>) => {
   const spec = GeometryEngine.getFixtureAngleSpec(selectedFix);
@@ -163,7 +174,7 @@ const renderProperties = () => {
     : "";
 
   propsPanel.innerHTML = `
-    <details class='control-group collapsible-control' open>
+    <details class='control-group collapsible-control'>
       <summary class='collapsible-control-summary'>위치 (X, Y, Z m)</summary>
       <div class='control-row'>
         <input type='number' step='0.5' value='${selectedFix.position.x.toFixed(2)}' onchange="updateFixProp('position', 'x', this.value)">
@@ -171,7 +182,7 @@ const renderProperties = () => {
         <input type='number' step='0.5' value='${selectedFix.position.z}' onchange="updateFixProp('position', 'z', this.value)">
       </div>
     </details>
-    <details class='control-group collapsible-control' open>
+    <details class='control-group collapsible-control'>
       <summary class='collapsible-control-summary'>채널 / 타입 / 광학</summary>
       <div class='inline-control-row'>
         <label class='inline-control-field'>Channel
@@ -288,7 +299,15 @@ const renderProperties = () => {
     }
 
     if (prop === 'lens_type' && fix.type === 'ellipsoidal') fix.lens_type = value as LensType;
-    if (prop === 'zoom_angle' && fix.type === 'zoom') fix.zoom_angle = parseFloat(value);
+    if (prop === 'zoom_range' && fix.type === 'zoom') {
+      fix.zoom_range = value as ZoomRangeType;
+      const range = ZoomAngleRanges[fix.zoom_range];
+      fix.zoom_angle = Math.min(range.max, Math.max(range.min, fix.zoom_angle));
+    }
+    if (prop === 'zoom_angle' && fix.type === 'zoom') {
+      const range = ZoomAngleRanges[fix.zoom_range];
+      fix.zoom_angle = Math.min(range.max, Math.max(range.min, parseFloat(value)));
+    }
     if (prop === 'focus_level' && fix.type === 'fresnel') {
       fix.focus_level = Math.min(1, Math.max(0, parseFloat(value)));
       fix.focus = focusLabel(fix.focus_level);

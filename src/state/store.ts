@@ -58,7 +58,12 @@ const createInitialState = (venue: VenuePreset): AppState => {
     active_cue_index: 0,
     selected_fixture_id: "fixture_1",
     selected_fixture_ids: ["fixture_1"],
-    interaction: { dragMode: null, draggedIndex: -1 }
+    interaction: { dragMode: null, draggedIndex: -1 },
+    probe: {
+      x: fixtureX,
+      y: venue.stage.depth / 2,
+      is_visible: true
+    }
   };
 };
 
@@ -121,11 +126,26 @@ const normalizeFixtureSelection = () => {
   const cue = state.cues[state.active_cue_index];
   const validIds = new Set(cue?.fixtures.map(f => f.id) ?? []);
 
+  if (!state.probe) {
+    state.probe = {
+      x: state.stage_config.width / 2,
+      y: state.stage_config.depth / 2,
+      is_visible: true
+    };
+  }
+
   state.cues.forEach(item => {
     item.fixtures.forEach((fixture: any) => {
       if (!fixture.type) fixture.type = 'ellipsoidal';
       if (fixture.type === 'ellipsoidal' && !fixture.lens_type) fixture.lens_type = '36deg';
-      if (fixture.type === 'zoom' && !Number.isFinite(fixture.zoom_angle)) fixture.zoom_angle = 26;
+      if (fixture.type === 'zoom') {
+        if (!fixture.zoom_range) fixture.zoom_range = 'narrow';
+        if (!Number.isFinite(fixture.zoom_angle)) fixture.zoom_angle = fixture.zoom_range === 'medium' ? 35 : 26;
+        const zoomRange = fixture.zoom_range === 'medium'
+          ? { min: 25, max: 50 }
+          : { min: 15, max: 30 };
+        fixture.zoom_angle = Math.min(zoomRange.max, Math.max(zoomRange.min, fixture.zoom_angle));
+      }
       if (fixture.type === 'fresnel') {
         if (!fixture.focus) fixture.focus = 'medium';
         if (!Number.isFinite(fixture.focus_level)) fixture.focus_level = 0.5;
