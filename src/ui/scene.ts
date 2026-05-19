@@ -14,8 +14,6 @@ const renderBackgroundUI = () => {
     const cueListEl = document.getElementById('cue-list');
     bgContainer = document.createElement('div');
     bgContainer.id = 'bg-settings-container';
-    bgContainer.style.borderTop = "1px solid var(--border-color)";
-    bgContainer.style.background = "#f1f3f5";
     cueListEl?.parentElement?.appendChild(bgContainer);
   }
 
@@ -41,13 +39,13 @@ const renderBackgroundUI = () => {
         <label>Opacity: ${bg.opacity}</label>
         <input type="range" min="0" max="1" step="0.05" value="${bg.opacity}" oninput="updateBgProp('opacity', this.value)">
       </div>
-      <button class="btn btn-danger" style="width: 100%; justify-content: center;" onclick="deleteBackground()">🗑️ 이미지 삭제</button>
+      <button class="btn btn-danger full-width-action" onclick="deleteBackground()">이미지 삭제</button>
     `;
   } else {
     // 배경이 없을 때: 업로드 버튼 표시
     html += `
       <input type="file" id="bg-upload" accept="image/png, image/jpeg, image/webp" style="display:none" onchange="uploadBackground(event)">
-      <button class="btn btn-secondary" style="width: 100%; justify-content: center;" onclick="document.getElementById('bg-upload').click()">🖼️ 배경 이미지 업로드</button>
+      <button class="btn btn-secondary full-width-action" onclick="document.getElementById('bg-upload').click()">배경 이미지 업로드</button>
     `;
   }
   

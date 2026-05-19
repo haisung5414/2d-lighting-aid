@@ -18,9 +18,9 @@ document.addEventListener('DOMContentLoaded', () => {
     initFixtureUI();
     initPatchUI();
     
-    console.log("✅ 애플리케이션 초기화 완료");
+    console.log("애플리케이션 초기화 완료");
   } else {
-    console.error("🚨 필수 DOM 요소를 찾을 수 없습니다.");
+    console.error("필수 DOM 요소를 찾을 수 없습니다.");
   }
 });
 

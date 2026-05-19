@@ -24,13 +24,13 @@ const renderList = () => {
   let html = "";
   currentCue.fixtures.forEach(fix => {
     const isActive = state.selected_fixture_ids.includes(fix.id) ? 'active' : '';
-    const eyeIcon = fix.is_visible !== false ? '👁️' : '🕶️';
+    const visibilityLabel = fix.is_visible !== false ? '보기' : '숨김';
     const opacity = fix.is_visible !== false ? '1' : '0.5';
 
     html += `<div class='list-item ${isActive}' style='opacity:${opacity}' onclick="selectFixture('${fix.id}', event)">
                <span style='flex:1'>${fix.label}</span>
                <div style='display:flex; gap:2px;'>
-                 <button class='btn-icon' title='Toggle Visibility' onclick="toggleFixVis('${fix.id}', event)">${eyeIcon}</button>
+                 <button class='btn-icon' title='표시 전환' onclick="toggleFixVis('${fix.id}', event)">${visibilityLabel}</button>
                  <button class='btn-danger' onclick="deleteFixture('${fix.id}', event)">X</button>
                </div>
              </div>`;
@@ -44,7 +44,7 @@ const renderProperties = () => {
 
   const selectedFix = getSelectedFixture();
   if (!selectedFix) {
-    propsPanel.innerHTML = "<div style='color: #888; text-align: center; padding: 20px;'>조명을 선택해주세요.</div>";
+    propsPanel.innerHTML = "<div class='empty-state'>조명을 선택해주세요.</div>";
     return;
   }
 
@@ -75,8 +75,8 @@ const renderProperties = () => {
         </label>
       </div>
     </details>
-    <div class='control-group' style='background: #e7f1ff; border-color: #b6d4fe;'>
-      <label class='toggle-row' style='margin:0; font-weight:bold; color:#084298;'>
+    <div class='control-group shutter-control'>
+      <label class='toggle-row'>
         <input type='checkbox' id='prop-shutter' ${selectedFix.shutter_active ? "checked" : ""}> 셔터 컷 사용하기
       </label>
     </div>

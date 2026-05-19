@@ -5,49 +5,65 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>조명 시뮬레이터 2D v3.0</title>
     <style>
-        :root { --sidebar-width: 320px; --header-height: 60px; --bg-panel: #f8f9fa; --border-color: #dee2e6; }
-        body { margin: 0; display: flex; height: 100vh; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow: hidden; background: #222; }
+        :root {
+            --left-sidebar-width: 280px;
+            --sidebar-width: 360px;
+            --header-height: 56px;
+            --bg-panel: #f5f6f8;
+            --bg-surface: #ffffff;
+            --bg-surface-muted: #eef1f4;
+            --border-color: #d7dce2;
+            --text-main: #20242a;
+            --text-muted: #64707d;
+            --accent: #2f6fed;
+            --accent-soft: #e8f0ff;
+            --danger: #d64545;
+        }
+        * { box-sizing: border-box; }
+        body { margin: 0; display: flex; height: 100vh; font-family: "Segoe UI", "Noto Sans KR", system-ui, sans-serif; overflow: hidden; background: #1c2026; color: var(--text-main); }
         
-        #ui-left { width: 260px; background: var(--bg-panel); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; z-index: 10;}
+        #ui-left { width: var(--left-sidebar-width); background: var(--bg-panel); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; z-index: 10;}
         #ui-right { width: var(--sidebar-width); background: var(--bg-panel); border-left: 1px solid var(--border-color); display: flex; flex-direction: column; z-index: 10;}
         #main-container { flex: 1; display: flex; flex-direction: column; min-width: 0; }
-        #header { height: var(--header-height); background: #fff; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; padding: 0 20px; gap: 15px; font-size: 0.9em; flex-shrink: 0; z-index: 10;}
+        #header { height: var(--header-height); background: var(--bg-surface); border-bottom: 1px solid var(--border-color); display: flex; align-items: center; padding: 0 16px; gap: 12px; font-size: 0.84rem; flex-shrink: 0; z-index: 10; box-shadow: 0 1px 0 rgba(32, 36, 42, 0.04);}
         
-        #canvas-wrapper { flex: 1; position: relative; overflow: hidden; background: #222; }
+        #canvas-wrapper { flex: 1; position: relative; overflow: hidden; background: #1f2329; }
         canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: block; cursor: crosshair; touch-action: none; }
         .grabbing { cursor: grabbing !important; }
 
-        .panel-header { padding: 15px; background: #e9ecef; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; font-weight: bold; }
-        .panel-content { padding: 15px; overflow-y: auto; flex: 1; }
+        .panel-header { min-height: 48px; padding: 12px 14px; background: var(--bg-surface); border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; gap: 10px; font-weight: 700; }
+        .panel-content { padding: 12px; overflow-y: auto; flex: 1; }
         .panel-section { border-bottom: 1px solid var(--border-color); display: flex; flex-direction: column; flex: 1; min-height: 0;}
         
-        .list-item { padding: 10px; background: #fff; border: 1px solid var(--border-color); margin-bottom: 8px; border-radius: 4px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 5px; }
-        .list-item:hover { border-color: #adb5bd; }
-        .list-item.active { background: #e7f1ff; border-color: #0d6efd; box-shadow: 0 0 0 1px #0d6efd; }
+        .list-item { padding: 10px; background: var(--bg-surface); border: 1px solid var(--border-color); margin-bottom: 8px; border-radius: 6px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 8px; box-shadow: 0 1px 2px rgba(20, 26, 34, 0.04); }
+        .list-item:hover { border-color: #aeb8c4; background: #fbfcfd; }
+        .list-item.active { background: var(--accent-soft); border-color: var(--accent); box-shadow: inset 3px 0 0 var(--accent); }
         
-        .btn { padding: 6px 12px; background: #0d6efd; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85em; display: flex; align-items: center; gap: 5px;}
-        .btn:hover { background: #0b5ed7; }
-        .btn-success { background: #198754; } .btn-success:hover { background: #157347; }
-        .btn-secondary { background: #6c757d; } .btn-secondary:hover { background: #5c636a; }
+        .btn { min-height: 30px; padding: 6px 11px; background: var(--accent); color: white; border: 1px solid transparent; border-radius: 6px; cursor: pointer; font-size: 0.82rem; font-weight: 650; display: flex; align-items: center; justify-content: center; gap: 5px; white-space: nowrap;}
+        .btn:hover { background: #255fcf; }
+        .btn-success { background: #2d7a52; } .btn-success:hover { background: #256744; }
+        .btn-secondary { background: var(--bg-surface); color: var(--text-main); border-color: #c5ccd5; } .btn-secondary:hover { background: #edf1f5; }
         
-        .btn-icon { background: none; border: 1px solid transparent; cursor: pointer; font-size: 1.1em; padding: 2px 4px; border-radius: 3px; }
-        .btn-icon:hover { background: #e9ecef; border-color: #ccc; }
-        .btn-danger { background: #dc3545; color: white; border: none; padding: 4px 8px; font-size: 0.8em; border-radius: 3px; cursor: pointer; }
-        .btn-danger:hover { background: #bb2d3b; }
+        .btn-icon { min-width: 28px; min-height: 28px; background: transparent; border: 1px solid transparent; cursor: pointer; font-size: 0.86rem; padding: 2px 6px; border-radius: 5px; color: var(--text-muted); }
+        .btn-icon:hover { background: #e9edf2; border-color: #c6ced8; color: var(--text-main); }
+        .btn-danger { background: #fff; color: var(--danger); border: 1px solid #e3b3b3; padding: 4px 8px; font-size: 0.78rem; border-radius: 5px; cursor: pointer; font-weight: 700; }
+        .btn-danger:hover { background: #fff1f1; border-color: var(--danger); }
 
-        .control-group { margin-bottom: 15px; background: #fff; padding: 12px; border: 1px solid var(--border-color); border-radius: 4px; }
-        .control-group label { display: block; font-size: 0.85em; color: #495057; margin-bottom: 8px; font-weight: 600; }
-        .control-row { display: flex; gap: 10px; margin-bottom: 8px; align-items: center; }
-        .control-row input { flex: 1; width: 100%; padding: 4px; border: 1px solid #ccc; border-radius: 3px; }
+        .control-group { margin-bottom: 10px; background: var(--bg-surface); padding: 11px; border: 1px solid var(--border-color); border-radius: 6px; box-shadow: 0 1px 2px rgba(20, 26, 34, 0.03); }
+        .control-group label { display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 7px; font-weight: 650; }
+        .control-row { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; }
+        .control-row input { flex: 1; min-width: 0; width: 100%; padding: 6px 7px; border: 1px solid #c5ccd5; border-radius: 5px; background: #fff; color: var(--text-main); }
         input[type="range"] { width: 100%; }
-        select { width: 100%; padding: 6px; border: 1px solid #ccc; border-radius: 3px; }
+        select { width: 100%; padding: 6px 7px; border: 1px solid #c5ccd5; border-radius: 5px; background: #fff; color: var(--text-main); }
+        input:focus, select:focus, button:focus-visible { outline: 2px solid rgba(47, 111, 237, 0.28); outline-offset: 1px; border-color: var(--accent); }
         
-        .top-input { width: 60px; padding: 4px; border: 1px solid #ccc; border-radius: 3px; }
-        .toggle-row { display: flex; align-items: center; margin-bottom: 8px; font-size: 0.9em; cursor: pointer; }
+        .top-input { width: 64px; padding: 5px 6px; border: 1px solid #c5ccd5; border-radius: 5px; background: #fff; }
+        .toggle-row { display: flex; align-items: center; margin-bottom: 8px; font-size: 0.84rem; cursor: pointer; color: var(--text-main); }
         .toggle-row input { margin-right: 8px; cursor: pointer; }
 
         #error-screen { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); color: #ff5555; z-index: 9999; padding: 40px; box-sizing: border-box; overflow-y: auto; }
         #editor-screen { display: none; width: 100%; height: 100vh; min-width: 0; }
+        #fixture-properties { flex: 0 0 auto; border-top: 1px solid var(--border-color); padding: 12px; background: #eef1f4; max-height: 48vh; overflow-y: auto; }
     </style>
 </head>
 <body>
@@ -87,8 +103,8 @@
         </div>
         <div class="panel-content" id="cue-list"></div>
     </div>
-    <details class="collapsible-section" style="flex: 0 0 auto; border-top: 1px solid var(--border-color); background: #fff;">
-        <summary class="panel-header collapsible-summary" style="background: #f1f3f5; padding: 10px 15px;">전체 보기 옵션</summary>
+    <details class="collapsible-section view-options">
+        <summary class="panel-header collapsible-summary">전체 보기 옵션</summary>
         <div class="collapsible-body">
             <label class="toggle-row"><input type="checkbox" id="tg-floor"> 바닥 영역 보기 (z=0)</label>
             <label class="toggle-row"><input type="checkbox" id="tg-face"> 얼굴 높이 영역 보기 (z=Actor)</label>
@@ -136,7 +152,7 @@
         <div id="fixture-list"></div>
     </div>
     <!-- 속성 패널 영역: 하단에 항상 고정 -->
-    <div id="fixture-properties" style="flex: 0 0 auto; border-top: 1px solid var(--border-color); padding: 15px; background: #fff; max-height: 50vh; overflow-y: auto;">
+    <div id="fixture-properties">
         <!-- 속성 컨트롤들이 여기에 렌더링됨 -->
     </div>
     <div id="patch-bay-panel"></div>
