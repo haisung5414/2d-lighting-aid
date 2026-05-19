@@ -2,6 +2,7 @@ import { GeometryEngine } from '../engine/geometry';
 import { getCurrentCue, getState, setState, subscribe, commitHistory } from '../state/store';
 
 const formatNumber = (value: number, digits = 1) => Number.isFinite(value) ? value.toFixed(digits) : '0.0';
+let isProbePanelOpen = true;
 
 const ensureProbePanel = (): HTMLElement | null => {
   let panel = document.getElementById('probe-panel');
@@ -49,7 +50,7 @@ export const renderProbeUI = () => {
   const blockedCount = result.contributions.filter(item => item.blockedByShutter).length;
 
   panel.innerHTML = `
-    <details class="probe-panel-body" open>
+    <details class="probe-panel-body" ${isProbePanelOpen ? 'open' : ''}>
       <summary class="panel-header probe-header">밝기 Probe (Prototype)</summary>
       <div class="probe-content">
         <label class="toggle-row probe-toggle">
@@ -72,6 +73,11 @@ export const renderProbeUI = () => {
     setState(s => {
       s.probe.is_visible = target.checked;
     });
+  });
+
+  panel.querySelector<HTMLDetailsElement>('.probe-panel-body')?.addEventListener('toggle', event => {
+    const details = event.currentTarget as HTMLDetailsElement;
+    isProbePanelOpen = details.open;
   });
 };
 

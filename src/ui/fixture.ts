@@ -20,6 +20,11 @@ const fixtureTypeLabels: Record<FixtureType, string> = {
   par: 'PAR'
 };
 
+const fixturePropertySectionsOpen = {
+  position: false,
+  optics: false
+};
+
 const focusLabel = (level: number): FresnelFocus => {
   if (level < 0.25) return 'narrow';
   if (level > 0.75) return 'flood';
@@ -31,7 +36,7 @@ const createFixture = (type: FixtureType, index: number): Fixture => {
   const id = generateId('fixture');
   const base = {
     id,
-    label: `L${index} (${fixtureTypeLabels[type]})`,
+    label: `L${index}`,
     channel: 0,
     type,
     position: { x: state.stage_config.width / 2, y: 1, z: state.stage_config.default_z },
@@ -174,7 +179,7 @@ const renderProperties = () => {
     : "";
 
   propsPanel.innerHTML = `
-    <details class='control-group collapsible-control'>
+    <details class='control-group collapsible-control' data-section='position' ${fixturePropertySectionsOpen.position ? 'open' : ''}>
       <summary class='collapsible-control-summary'>위치 (X, Y, Z m)</summary>
       <div class='control-row'>
         <input type='number' step='0.5' value='${selectedFix.position.x.toFixed(2)}' onchange="updateFixProp('position', 'x', this.value)">
@@ -182,7 +187,7 @@ const renderProperties = () => {
         <input type='number' step='0.5' value='${selectedFix.position.z}' onchange="updateFixProp('position', 'z', this.value)">
       </div>
     </details>
-    <details class='control-group collapsible-control'>
+    <details class='control-group collapsible-control' data-section='optics' ${fixturePropertySectionsOpen.optics ? 'open' : ''}>
       <summary class='collapsible-control-summary'>채널 / 타입 / 광학</summary>
       <div class='inline-control-row'>
         <label class='inline-control-field'>Channel
@@ -201,6 +206,15 @@ const renderProperties = () => {
   shutterCheck?.addEventListener('change', (e) => {
     const target = e.target as HTMLInputElement;
     (window as any).updateFixProp('shutter_active', null, target.checked);
+  });
+
+  propsPanel.querySelectorAll<HTMLDetailsElement>('.collapsible-control[data-section]').forEach(details => {
+    details.addEventListener('toggle', () => {
+      const section = details.dataset.section;
+      if (section === 'position' || section === 'optics') {
+        fixturePropertySectionsOpen[section] = details.open;
+      }
+    });
   });
 };
 
