@@ -9,7 +9,7 @@
   padding: 32px;
   background:
     linear-gradient(135deg, rgba(23, 27, 34, 0.9), rgba(48, 52, 57, 0.86)),
-    url('/venues/humanities/humanities_floor_plan.png') center / cover no-repeat;
+    var(--landing-bg-image) center / cover no-repeat;
 }
 
 .landing-card {

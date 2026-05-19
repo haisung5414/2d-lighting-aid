@@ -9,6 +9,11 @@ import { initProbeUI } from './ui/probe';
 import { undo, redo } from './state/store';
 
 document.addEventListener('DOMContentLoaded', () => {
+  document.documentElement.style.setProperty(
+    '--landing-bg-image',
+    `url("${import.meta.env.BASE_URL}venues/humanities/humanities_floor_plan.png")`
+  );
+
   const canvasEl = document.getElementById('stageCanvas') as HTMLCanvasElement;
   const wrapperEl = document.getElementById('canvas-wrapper') as HTMLElement;
 

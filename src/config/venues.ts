@@ -6,6 +6,8 @@ export interface VenueSourceDocument {
   note: string;
 }
 
+const assetPath = (path: string) => `${import.meta.env.BASE_URL}${path.replace(/^\/+/, '')}`;
+
 export interface VenueMapConfig {
   /**
    * Browser-usable asset path or data URL.
@@ -113,7 +115,7 @@ export const HUMANITIES_VENUE: VenuePreset = {
     yAxis: '도면의 아래쪽 방향'
   },
   venueMap: {
-    image: '/venues/humanities/humanities_floor_plan.png',
+    image: assetPath('venues/humanities/humanities_floor_plan.png'),
     sourceDocument: '인문소극장 무대 평면도.pdf',
     x: 0,
     y: 0,
@@ -127,7 +129,7 @@ export const HUMANITIES_VENUE: VenuePreset = {
     {
       id: 'humanities-floor-plan',
       label: '인문소극장 평면도',
-      image: '/venues/humanities/humanities_floor_plan.png',
+      image: assetPath('venues/humanities/humanities_floor_plan.png'),
       blendMode: 'multiply',
       x: 0,
       y: 0,
@@ -140,7 +142,7 @@ export const HUMANITIES_VENUE: VenuePreset = {
     {
       id: 'humanities-catwalk',
       label: '인문소극장 캣워크',
-      image: '/venues/humanities/humanities_catwalk.png',
+      image: assetPath('venues/humanities/humanities_catwalk.png'),
       blendMode: 'multiply',
       x: 0,
       y: 0,

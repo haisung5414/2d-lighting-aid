@@ -126,6 +126,12 @@ const normalizeFixtureSelection = () => {
   const cue = state.cues[state.active_cue_index];
   const validIds = new Set(cue?.fixtures.map(f => f.id) ?? []);
 
+  state.stage_config.reference_layers?.forEach(layer => {
+    if (layer.image.startsWith('/venues/')) {
+      layer.image = `${import.meta.env.BASE_URL}${layer.image.replace(/^\/+/, '')}`;
+    }
+  });
+
   if (!state.probe) {
     state.probe = {
       x: state.stage_config.width / 2,
