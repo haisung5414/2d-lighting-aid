@@ -2,7 +2,7 @@
 
 > 입력: `01-sketchup-web-ui-analysis.md`, `02-lighting-aid-current-analysis.md`
 > 디자인 시안(Artifact, 비공개): https://claude.ai/artifact/2ipsoq4gMdhpMJY7YWwMxY
-> 시안 원본 파일: `docs/design/sketchup-redesign/` (`.dc.html` 4종 + `canvas.json`)
+> 시안 원본 파일: `docs/design/sketchup-redesign/` (`.dc.html` 5종 + `canvas.json`)
 
 ---
 
@@ -40,19 +40,25 @@
 | 02 | 에디터 기본 상태 | 파일 헤더, 상단 중앙 보기 토글(바닥/얼굴/빔/필드/도면/캣워크), 좌측 도구 레일(조준 활성), 우측 트레이 + 조명 속성 패널(종류 세그먼트, XYZ, 렌즈·채널, Beam/Field 크기, Tilt/Pan 다이어그램, 셔터), 하단 씬 스트립, 상태 바(도구 안내 + Tilt/Pan 입력) |
 | 03 | 에디터 패널 상태 | 파일 메뉴 슬라이드, 명령 검색(Ctrl+K) 결과, 채널 패치 패널(초과 경고 배너, 캣워크별 채널 그리드) |
 
-### 디자인 토큰 (시안 기준)
+### 디자인 토큰 (시안 v2: SketchUp 톤 기준)
+
+v2에서는 SketchUp에 더 가깝게 정리했다: 밝은 회색 캔버스, 모서리 2px의 평평한 흰 바, 약한 그림자, 파란 도구 아이콘 + 빨간 포인트, 상단 파일 바와 우측 트레이를 화면 모서리에 붙임, 보기 토글은 우측 트레이의 "표시" 패널로 이동, 씬은 상단 탭으로 이동.
 
 | 토큰 | 값 | 용도 |
 |---|---|---|
-| `--stage-bg` | `#15181D` | 캔버스 배경 |
-| `--surface` | `#FFFFFF` | 플로팅 카드 |
-| `--border` | `#DDE1E6` | 카드 테두리 |
-| `--text` / `--text-muted` | `#1B1F24` / `#5B6470` | 본문 / 보조 |
-| `--primary` | `#1F5FD6` | 주요 버튼, 활성 도구, 선택 조명 |
-| `--light-amber` | `#F5B841` | 빛, 타겟, 강조(캔버스 위) |
-| `--face-red` | `#FF6B6B` | 얼굴 높이 투사(점선) |
-| `--probe-green` | `#4ADE80` | Probe |
-| 글꼴 | IBM Plex Sans KR / IBM Plex Mono(수치) | |
+| `--canvas-bg` | `#E6E8EB` (어두운 무대: `#15181D`) | 캔버스 배경 |
+| `--stage-floor` | `#F2F3F5` | 무대 바닥면 |
+| `--surface` | `#FFFFFF` | 바, 패널 |
+| `--panel-header` | `#F4F5F7` | 패널 제목 띠 |
+| `--border` | `#D5D8DD` | 구분선, 알약 라벨 |
+| `--text` / `--text-muted` | `#222831` / `#5E6670` | 본문 / 보조 |
+| `--primary` | `#0B5CAD` | 주요 버튼, 활성 도구, 선택 조명, 도구 아이콘 |
+| `--accent-red` | `#D93025` | 도구 아이콘 포인트, 조준 타겟, 얼굴 높이 투사 |
+| `--light-amber` | `#F5B841` / 선 `#C98A12` | 빛 영역 |
+| `--probe-green` | `#1E8E3E` | Probe |
+| 글꼴 | 기본 Noto Sans KR. 후보: IBM Plex Sans KR, Nanum Gothic, Gothic A1. 수치는 IBM Plex Mono | |
+
+시안의 각 화면은 Tweaks에서 글꼴을 바꿔 볼 수 있고, 에디터 화면은 "밝은 무대 / 어두운 무대"도 전환할 수 있다. "글꼴 비교" 아트보드에서 네 글꼴을 나란히 비교할 수 있다.
 
 ---
 

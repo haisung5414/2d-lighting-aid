@@ -9,127 +9,96 @@
 <x-dc>
 <helmet>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&amp;family=IBM+Plex+Sans+KR:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&amp;family=IBM+Plex+Sans+KR:wght@400;500;700&amp;family=Nanum+Gothic:wght@400;700&amp;family=Gothic+A1:wght@400;500;700&amp;display=swap" rel="stylesheet">
 <style>
-body{margin:0;background:#F3F4F7}
-a{color:#1F5FD6}a:hover{color:#16479F}
-.nav{display:flex;align-items:center;gap:12px;padding:12px 20px;font-size:14px;font-weight:500;color:#2A3038;text-decoration:none}
-.nav.on{background:#E8EFFC;color:#1F5FD6;font-weight:700;box-shadow:inset 4px 0 0 #1F5FD6}
-.btn-o{height:40px;padding:0 18px;border:1px solid #1F5FD6;background:#FFFFFF;color:#1F5FD6;border-radius:6px;font:inherit;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:8px}
-.btn-p{height:40px;padding:0 18px;border:1px solid #1F5FD6;background:#1F5FD6;color:#FFFFFF;border-radius:6px;font:inherit;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:8px}
-.icon-btn{width:40px;height:40px;border:0;background:transparent;border-radius:6px;color:#2A3038;display:flex;align-items:center;justify-content:center;cursor:pointer}
-.icon-btn:hover{background:#E6E9ED}
-.proj{background:#FFFFFF;border:1px solid #E1E4E8;border-radius:8px;overflow:hidden;display:flex;flex-direction:column}
-.meta{font-size:12px;color:#5B6470}
-.venue{background:#FFFFFF;border:1px solid #E1E4E8;border-radius:8px;padding:16px;display:flex;gap:14px;align-items:center;cursor:pointer;font:inherit;text-align:left}
-.venue:hover{border-color:#1F5FD6}
+body{margin:0;background:#F2F2F5}
+a{color:#0B5CAD}a:hover{color:#08467F}
+.nav{display:flex;align-items:center;gap:14px;height:56px;padding:0 24px;font-size:16px;color:#0B5CAD;text-decoration:none}
+.nav:hover{background:#ECF2FA}
+.nav.on{background:#DCEAF8;box-shadow:inset 4px 0 0 #0B5CAD;font-weight:700}
+.ob{height:44px;padding:0 28px;border:1px solid #0B5CAD;background:#FFFFFF;color:#0B5CAD;border-radius:0;font:inherit;font-size:16px;cursor:pointer}
+.ob:hover{background:#ECF2FA}
+.ib{width:44px;height:44px;border:0;background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#222831;padding:0}
+.card{background:#FFFFFF;display:flex;flex-direction:column}
+.meta{font-size:14px;color:#6B7280}
 </style>
 </helmet>
-<div style="display: flex; flex-wrap: wrap; min-height: 900px; font-family: 'IBM Plex Sans KR', sans-serif; color: #1B1F24; background: #F3F4F7">
+<div style="display: flex; flex-wrap: wrap; min-height: 900px; background: #F2F2F5; font-family: {{fontFamily}}; color: #222831">
 
-<!-- Side nav -->
-<nav style="flex: 1 1 240px; max-width: 260px; background: #FFFFFF; border-right: 1px solid #E1E4E8; display: flex; flex-direction: column; padding: 20px 0">
-<div style="display: flex; align-items: center; gap: 10px; padding: 0 20px 28px">
-<svg width="30" height="30" viewBox="0 0 32 32" aria-hidden="true"><rect x="10" y="3" width="12" height="9" rx="2" fill="#1B1F24"></rect><path d="M12 12 5 29h22l-7-17z" fill="#F5B841"></path></svg>
-<span style="font-size: 19px; font-weight: 700; letter-spacing: -0.01em">Lighting Aid</span>
+<nav style="flex: 1 1 260px; max-width: 300px; background: #FFFFFF; display: flex; flex-direction: column; padding: 24px 0 20px">
+<div style="display: flex; align-items: center; gap: 10px; padding: 0 24px 64px">
+<svg width="34" height="34" viewBox="0 0 32 32" aria-hidden="true"><rect x="10" y="3" width="12" height="9" rx="1" fill="#0B5CAD"></rect><path d="M12 12 5 29h22l-7-17z" fill="#0B5CAD" opacity=".35"></path></svg>
+<span style="font-size: 24px; font-weight: 700; color: #1E2A38">Lighting Aid</span>
 </div>
-<a class="nav on" href="#"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 11 12 4l9 7v9h-6v-6H9v6H3z"></path></svg>홈</a>
-<a class="nav" href="#"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 7h7l2 2h9v10H3z"></path></svg>내 프로젝트</a>
-<a class="nav" href="#"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="9" cy="8" r="3"></circle><path d="M3 20c0-3 3-5 6-5s6 2 6 5M16 11a3 3 0 1 0 0-6M21 20c0-2-1.5-4-4-4.6"></path></svg>공유받은 프로젝트</a>
-<a class="nav" href="#"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 20h18M5 20V8l7-4 7 4v12"></path><path d="M9 20v-6h6v6"></path></svg>극장 라이브러리</a>
+<a class="nav on" href="#"><svg width="26" height="26" viewBox="0 0 24 24" fill="#0B5CAD" aria-hidden="true"><path d="M12 3 3 10.5V21h6v-6h6v6h6V10.5z"></path></svg>홈</a>
+<a class="nav" href="#"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#0B5CAD" stroke-width="1.5" aria-hidden="true"><path d="M3 7h7l2 2h9v10H3z"></path></svg>내 프로젝트</a>
+<a class="nav" href="#"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#0B5CAD" stroke-width="1.5" aria-hidden="true"><path d="M3 20h18M5 20V8l7-4 7 4v12"></path><path d="M9 20v-6h6v6"></path></svg>극장 라이브러리</a>
 <div style="flex: 1"></div>
-<a class="nav" href="#"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 5h11a3 3 0 0 1 3 3v12H7a3 3 0 0 1-3-3z"></path><path d="M8 9h6M8 13h6"></path></svg>튜토리얼</a>
-<a class="nav" href="#"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v6M12 7h0"></path></svg>정보</a>
+<a class="nav" href="#"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#0B5CAD" stroke-width="1.5" aria-hidden="true"><path d="M4 5h11a3 3 0 0 1 3 3v12H7a3 3 0 0 1-3-3z"></path><path d="M8 9h6M8 13h6"></path></svg>튜토리얼</a>
+<a class="nav" href="#"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#0B5CAD" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v6M12 7.5v.5"></path></svg>정보</a>
 </nav>
 
-<!-- Content -->
-<main style="flex: 999 1 560px; min-width: 0; padding: 28px 40px 48px; display: flex; flex-direction: column; gap: 28px">
-<div style="display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap">
-<h1 style="margin: 0; font-size: 24px; font-weight: 700; color: #1F5FD6">홈</h1>
-<div style="display: flex; align-items: center; gap: 12px">
-<span style="font-size: 12px; font-weight: 600; color: #7A4A00; background: #FFF4DC; padding: 4px 10px; border-radius: 999px">무료 · 로컬 저장</span>
-<button class="icon-btn" aria-label="계정 메뉴" style="width: 40px; height: 40px; border-radius: 50%; background: #2A3B5C; color: #FFFFFF; font-size: 13px; font-weight: 700">HC</button>
-</div>
+<main style="flex: 999 1 560px; min-width: 0; padding: 28px 32px 48px; display: flex; flex-direction: column; gap: 24px">
+<div style="display: flex; align-items: center; justify-content: space-between">
+<h1 style="margin: 0; font-size: 22px; font-weight: 700; color: #0B5CAD">홈</h1>
+<button class="ib" aria-label="계정"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#222831" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c0-4 3.5-6.5 8-6.5s8 2.5 8 6.5"></path></svg></button>
 </div>
 
-<div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap">
+<div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap">
 <div style="display: flex">
-<button class="btn-p" style="border-radius: 6px 0 0 6px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>새 프로젝트</button>
-<button class="btn-p" aria-label="극장 템플릿 선택" style="border-radius: 0 6px 6px 0; border-left: 1px solid #5A8AE6; padding: 0 10px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg></button>
+<button class="ob" style="padding: 0 40px">새로 만들기</button>
+<button class="ob" aria-label="극장 템플릿 선택" style="padding: 0 10px; margin-left: 4px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg></button>
 </div>
-<button class="btn-o"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 15V3M7 8l5-5 5 5M4 15v5h16v-5"></path></svg>기기에서 열기 (.json)</button>
+<button class="ob">기기에서 열기</button>
 <div style="flex: 1"></div>
-<button class="icon-btn" aria-label="정렬"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M7 4v16M3 16l4 4 4-4M14 6h7M14 12h5M14 18h3"></path></svg></button>
-<button class="icon-btn" aria-label="목록 보기"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M9 6h12M9 12h12M9 18h12M4 6h1M4 12h1M4 18h1"></path></svg></button>
+<button class="ib" aria-label="정렬"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#0B5CAD" stroke-width="1.5" aria-hidden="true"><path d="M6 4v16M3 17l3 3 3-3M12 6h9M12 10h7M12 14h5M12 18h3"></path></svg></button>
+<button class="ib" aria-label="목록 보기"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#0B5CAD" stroke-width="1.5" aria-hidden="true"><rect x="3" y="4" width="4" height="4"></rect><rect x="3" y="10" width="4" height="4"></rect><rect x="3" y="16" width="4" height="4"></rect><path d="M10 6h11M10 12h11M10 18h11"></path></svg></button>
 </div>
 
-<!-- Tutorial banner -->
-<section style="background: #1B1F24; color: #FFFFFF; border-radius: 10px; padding: 20px 24px; display: flex; align-items: center; gap: 20px; flex-wrap: wrap">
-<svg width="56" height="56" viewBox="0 0 56 56" aria-hidden="true"><ellipse cx="28" cy="40" rx="22" ry="10" fill="#F5B841" opacity=".35"></ellipse><ellipse cx="28" cy="40" rx="12" ry="5" fill="#F5B841" opacity=".7"></ellipse><rect x="22" y="4" width="12" height="10" rx="2" fill="#FFFFFF"></rect><path d="M24 14 16 38M32 14l8 24" stroke="#F5B841" stroke-opacity=".6"></path></svg>
-<div style="flex: 1 1 320px; display: flex; flex-direction: column; gap: 4px">
-<span style="font-size: 16px; font-weight: 700">처음이신가요? 3분 튜토리얼로 시작해 보세요</span>
-<span style="font-size: 13px; color: #C9D1DB">조명을 배치하고, 조준하고, 셔터로 자르고, Probe로 밝기를 확인하는 흐름을 예제 프로젝트에서 따라 해 봅니다.</span>
-</div>
-<div style="display: flex; gap: 8px">
-<button style="height: 40px; padding: 0 18px; border: 0; background: #F5B841; color: #1B1F24; border-radius: 6px; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer">튜토리얼 시작</button>
-<button style="height: 40px; padding: 0 14px; border: 1px solid #4A525E; background: transparent; color: #FFFFFF; border-radius: 6px; font: inherit; font-size: 14px; cursor: pointer">나중에</button>
-</div>
-</section>
-
-<!-- Start from venue -->
 <section style="display: flex; flex-direction: column; gap: 12px">
-<h2 style="margin: 0; font-size: 14px; font-weight: 700">극장에서 시작</h2>
-<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px">
-<button class="venue">
-<svg width="56" height="56" viewBox="0 0 56 56" aria-hidden="true"><rect width="56" height="56" rx="6" fill="#1E232A"></rect><rect x="10" y="8" width="36" height="28" fill="none" stroke="#7C8592"></rect><path d="M10 16h36M10 24h36" stroke="#4A525E" stroke-dasharray="3 2"></path><path d="M14 42h28M14 47h28" stroke="#4A525E"></path></svg>
-<div style="display: flex; flex-direction: column; gap: 3px"><span style="font-size: 14px; font-weight: 700">인문소극장</span><span class="meta">12 × 22.7 m · 캣워크 6열 · 91채널</span></div>
+<h2 style="margin: 0; font-size: 16px; font-weight: 700">극장에서 시작</h2>
+<div style="display: flex; gap: 20px; flex-wrap: wrap">
+<button class="card" style="width: 240px; border: 0; padding: 0; text-align: left; font: inherit; cursor: pointer">
+<svg viewBox="0 0 240 110" style="display: block; width: 100%; background: #E6E8EB" aria-hidden="true"><rect x="70" y="10" width="100" height="72" fill="#F2F3F5" stroke="#8A929C"></rect><path d="M70 28h100M70 46h100M70 64h100" stroke="#8A929C" stroke-dasharray="4 3" opacity=".7"></path><path d="M80 92h80M80 100h80" stroke="#B8BEC6"></path></svg>
+<span style="padding: 12px 16px 2px; font-size: 16px; font-weight: 700">인문소극장</span>
+<span class="meta" style="padding: 0 16px 14px">12 × 22.7 m · 91채널</span>
 </button>
-<button class="venue">
-<svg width="56" height="56" viewBox="0 0 56 56" aria-hidden="true"><rect width="56" height="56" rx="6" fill="#EEF1F4"></rect><rect x="10" y="10" width="36" height="36" fill="none" stroke="#7C8592" stroke-dasharray="4 3"></rect></svg>
-<div style="display: flex; flex-direction: column; gap: 3px"><span style="font-size: 14px; font-weight: 700">빈 무대 (Sandbox)</span><span class="meta">10 × 10 m · 도면 없음</span></div>
-</button>
-<button class="venue" style="border-style: dashed">
-<span style="width: 56px; height: 56px; border-radius: 6px; background: #F3F4F7; display: flex; align-items: center; justify-content: center; color: #5B6470"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></span>
-<div style="display: flex; flex-direction: column; gap: 3px"><span style="font-size: 14px; font-weight: 700">내 극장 추가</span><span class="meta">도면 이미지와 치수로 등록</span></div>
+<button class="card" style="width: 240px; border: 0; padding: 0; text-align: left; font: inherit; cursor: pointer">
+<svg viewBox="0 0 240 110" style="display: block; width: 100%; background: #E6E8EB" aria-hidden="true"><rect x="80" y="15" width="80" height="80" fill="#F2F3F5" stroke="#8A929C" stroke-dasharray="5 4"></rect></svg>
+<span style="padding: 12px 16px 2px; font-size: 16px; font-weight: 700">빈 무대</span>
+<span class="meta" style="padding: 0 16px 14px">10 × 10 m</span>
 </button>
 </div>
 </section>
 
-<!-- Recent projects -->
 <section style="display: flex; flex-direction: column; gap: 12px">
-<h2 style="margin: 0; font-size: 14px; font-weight: 700">최근 프로젝트</h2>
-<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px">
+<h2 style="margin: 0; font-size: 16px; font-weight: 700">최근 파일</h2>
+<div style="display: flex; gap: 24px; flex-wrap: wrap">
 
-<article class="proj">
-<svg viewBox="0 0 300 170" style="display: block; width: 100%; height: auto; background: #1E232A" aria-hidden="true"><rect x="60" y="14" width="180" height="120" fill="none" stroke="#4A525E"></rect><ellipse cx="120" cy="90" rx="40" ry="34" fill="#BFD7FF" opacity=".3"></ellipse><ellipse cx="180" cy="90" rx="40" ry="34" fill="#BFD7FF" opacity=".3"></ellipse><ellipse cx="150" cy="66" rx="46" ry="32" fill="#FFD27A" opacity=".45"></ellipse><path d="M60 150h180M60 160h180" stroke="#2C323B"></path></svg>
-<div style="padding: 14px 16px; display: flex; flex-direction: column; gap: 6px">
-<span style="font-size: 15px; font-weight: 700">햄릿 · 2026 봄 정기공연</span>
-<span class="meta">인문소극장 · 씬 12 · 조명 34</span>
-<div style="display: flex; align-items: center; justify-content: space-between"><span class="meta">마지막 수정: 2026. 10. 19.</span><span style="display: flex; align-items: center; gap: 4px">
-<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5B6470" stroke-width="1.8" role="img" aria-label="이 기기에 저장됨"><rect x="3" y="4" width="18" height="12" rx="1"></rect><path d="M8 20h8M12 16v4"></path></svg>
-<button class="icon-btn" aria-label="프로젝트 메뉴" style="width: 32px; height: 32px"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="5" r="1.6"></circle><circle cx="12" cy="12" r="1.6"></circle><circle cx="12" cy="19" r="1.6"></circle></svg></button></span></div>
+<article class="card" style="width: 300px">
+<svg viewBox="0 0 300 150" style="display: block; width: 100%; background: #E6E8EB" aria-hidden="true"><rect x="70" y="10" width="160" height="110" fill="#F2F3F5" stroke="#8A929C"></rect><ellipse cx="125" cy="80" rx="36" ry="30" fill="#8FB6EE" opacity=".35"></ellipse><ellipse cx="175" cy="80" rx="36" ry="30" fill="#8FB6EE" opacity=".35"></ellipse><ellipse cx="150" cy="58" rx="42" ry="28" fill="#F5B841" opacity=".45" stroke="#C98A12"></ellipse></svg>
+<div style="padding: 16px; display: flex; flex-direction: column; gap: 10px">
+<span style="font-size: 18px; font-weight: 700">햄릿 정기공연</span>
+<div style="display: flex; justify-content: space-between; align-items: center"><span class="meta">마지막 수정일: 2026. 10. 19.</span><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#0B5CAD" stroke-width="1.4" role="img" aria-label="클라우드에 저장됨"><path d="M7 18a5 5 0 1 1 1-9.9A6 6 0 0 1 19 10a4 4 0 0 1-1 8z"></path></svg></div>
+<div style="display: flex; justify-content: space-between; align-items: center"><span class="meta">인문소극장 · 씬 12</span><button class="ib" aria-label="파일 메뉴" style="width: 32px; height: 32px"><svg width="20" height="20" viewBox="0 0 24 24" fill="#222831" aria-hidden="true"><circle cx="12" cy="5" r="1.7"></circle><circle cx="12" cy="12" r="1.7"></circle><circle cx="12" cy="19" r="1.7"></circle></svg></button></div>
 </div>
 </article>
 
-<article class="proj">
-<svg viewBox="0 0 300 170" style="display: block; width: 100%; height: auto; background: #1E232A" aria-hidden="true"><rect x="60" y="14" width="180" height="120" fill="none" stroke="#4A525E"></rect><ellipse cx="150" cy="80" rx="80" ry="50" fill="#BFD7FF" opacity=".25"></ellipse><ellipse cx="100" cy="100" rx="22" ry="18" fill="#FFD27A" opacity=".6"></ellipse><path d="M60 150h180M60 160h180" stroke="#2C323B"></path></svg>
-<div style="padding: 14px 16px; display: flex; flex-direction: column; gap: 6px">
-<span style="font-size: 15px; font-weight: 700">신입 워크숍 실습</span>
-<span class="meta">인문소극장 · 씬 3 · 조명 8</span>
-<div style="display: flex; align-items: center; justify-content: space-between"><span class="meta">마지막 수정: 2026. 9. 30.</span><span style="display: flex; align-items: center; gap: 4px">
-<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1F5FD6" stroke-width="1.8" role="img" aria-label="클라우드에 저장됨"><path d="M7 18a5 5 0 1 1 1-9.9A6 6 0 0 1 19 10a4 4 0 0 1-1 8z"></path></svg>
-<button class="icon-btn" aria-label="프로젝트 메뉴" style="width: 32px; height: 32px"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="5" r="1.6"></circle><circle cx="12" cy="12" r="1.6"></circle><circle cx="12" cy="19" r="1.6"></circle></svg></button></span></div>
+<article class="card" style="width: 300px">
+<svg viewBox="0 0 300 150" style="display: block; width: 100%; background: #E6E8EB" aria-hidden="true"><rect x="70" y="10" width="160" height="110" fill="#F2F3F5" stroke="#8A929C"></rect><ellipse cx="150" cy="70" rx="70" ry="40" fill="#8FB6EE" opacity=".3"></ellipse><ellipse cx="110" cy="85" rx="20" ry="16" fill="#F5B841" opacity=".6"></ellipse></svg>
+<div style="padding: 16px; display: flex; flex-direction: column; gap: 10px">
+<span style="font-size: 18px; font-weight: 700">신입 워크숍 실습</span>
+<div style="display: flex; justify-content: space-between; align-items: center"><span class="meta">마지막 수정일: 2026. 9. 30.</span><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="1.4" role="img" aria-label="이 기기에 저장됨"><rect x="3" y="4" width="18" height="12" rx="1"></rect><path d="M8 20h8M12 16v4"></path></svg></div>
+<div style="display: flex; justify-content: space-between; align-items: center"><span class="meta">인문소극장 · 씬 3</span><button class="ib" aria-label="파일 메뉴" style="width: 32px; height: 32px"><svg width="20" height="20" viewBox="0 0 24 24" fill="#222831" aria-hidden="true"><circle cx="12" cy="5" r="1.7"></circle><circle cx="12" cy="12" r="1.7"></circle><circle cx="12" cy="19" r="1.7"></circle></svg></button></div>
 </div>
 </article>
 
-<article class="proj">
-<svg viewBox="0 0 300 170" style="display: block; width: 100%; height: auto; background: #1E232A" aria-hidden="true"><rect x="90" y="24" width="120" height="120" fill="none" stroke="#4A525E" stroke-dasharray="5 4"></rect><ellipse cx="150" cy="84" rx="36" ry="36" fill="#FFD27A" opacity=".4"></ellipse></svg>
-<div style="padding: 14px 16px; display: flex; flex-direction: column; gap: 6px">
-<span style="font-size: 15px; font-weight: 700">렌즈 비교 테스트</span>
-<span class="meta">빈 무대 · 씬 1 · 조명 4</span>
-<div style="display: flex; align-items: center; justify-content: space-between"><span class="meta">마지막 수정: 2026. 8. 14.</span><span style="display: flex; align-items: center; gap: 4px">
-<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5B6470" stroke-width="1.8" role="img" aria-label="이 기기에 저장됨"><rect x="3" y="4" width="18" height="12" rx="1"></rect><path d="M8 20h8M12 16v4"></path></svg>
-<button class="icon-btn" aria-label="프로젝트 메뉴" style="width: 32px; height: 32px"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="5" r="1.6"></circle><circle cx="12" cy="12" r="1.6"></circle><circle cx="12" cy="19" r="1.6"></circle></svg></button></span></div>
+<article class="card" style="width: 300px">
+<svg viewBox="0 0 300 150" style="display: block; width: 100%; background: #E6E8EB" aria-hidden="true"><rect x="100" y="20" width="100" height="100" fill="#F2F3F5" stroke="#8A929C" stroke-dasharray="5 4"></rect><ellipse cx="150" cy="70" rx="32" ry="32" fill="#F5B841" opacity=".45" stroke="#C98A12"></ellipse></svg>
+<div style="padding: 16px; display: flex; flex-direction: column; gap: 10px">
+<span style="font-size: 18px; font-weight: 700">렌즈 비교 테스트</span>
+<div style="display: flex; justify-content: space-between; align-items: center"><span class="meta">마지막 수정일: 2026. 8. 14.</span><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="1.4" role="img" aria-label="이 기기에 저장됨"><rect x="3" y="4" width="18" height="12" rx="1"></rect><path d="M8 20h8M12 16v4"></path></svg></div>
+<div style="display: flex; justify-content: space-between; align-items: center"><span class="meta">빈 무대 · 씬 1</span><button class="ib" aria-label="파일 메뉴" style="width: 32px; height: 32px"><svg width="20" height="20" viewBox="0 0 24 24" fill="#222831" aria-hidden="true"><circle cx="12" cy="5" r="1.7"></circle><circle cx="12" cy="12" r="1.7"></circle><circle cx="12" cy="19" r="1.7"></circle></svg></button></div>
 </div>
 </article>
 
@@ -138,10 +107,11 @@ a{color:#1F5FD6}a:hover{color:#16479F}
 </main>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+<script type="text/x-dc" data-dc-script data-props='{"font":{"editor":"enum","options":["Noto Sans KR","IBM Plex Sans KR","Nanum Gothic","Gothic A1"],"default":"Noto Sans KR","section":"글꼴"},"$preview":{"width":1440,"height":900}}'>
 class Component extends DCLogic {
 renderVals() {
-return {};
+const font = this.props.font ?? 'Noto Sans KR';
+return { fontFamily: "'" + font + "', sans-serif" };
 }
 }
 </script>

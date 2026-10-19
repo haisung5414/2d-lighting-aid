@@ -9,146 +9,137 @@
 <x-dc>
 <helmet>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&amp;family=IBM+Plex+Sans+KR:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&amp;family=IBM+Plex+Sans+KR:wght@400;500;700&amp;family=Nanum+Gothic:wght@400;700&amp;family=Gothic+A1:wght@400;500;700&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
 <style>
-body{margin:0;background:#15181D}
-a{color:#1F5FD6}a:hover{color:#16479F}
-.card{background:#FFFFFF;border:1px solid #DDE1E6;border-radius:8px;box-shadow:0 2px 10px rgba(0,0,0,.22)}
-.mi{display:flex;align-items:center;gap:14px;padding:11px 18px;font-size:14px;color:#1B1F24;border:0;background:transparent;width:100%;font-family:inherit;text-align:left;cursor:pointer}
-.mi:hover{background:#F0F2F5}
-.mi .k{margin-left:auto;font-family:"IBM Plex Mono",monospace;font-size:11px;color:#5B6470}
-.res{display:flex;align-items:center;gap:12px;padding:9px 14px;font-size:13px;border:0;background:transparent;width:100%;font-family:inherit;text-align:left;cursor:pointer;color:#1B1F24}
-.res.on{background:#E8EFFC}
-.res .k{margin-left:auto;font-family:"IBM Plex Mono",monospace;font-size:11px;color:#5B6470;border:1px solid #DDE1E6;border-radius:4px;padding:1px 6px}
-.cell{border:1px solid #DDE1E6;border-radius:4px;background:#FFFFFF;font-family:"IBM Plex Mono",monospace;font-size:11px;display:flex;flex-direction:column;align-items:center;justify-content:center;height:38px;cursor:pointer;padding:0;color:#1B1F24}
-.cell b{font-size:10px;font-weight:500;color:#5B6470}
-.cell.used{background:#E8EFFC;border-color:#9DB8EE}
-.cell.over{background:#FDECEC;border-color:#D64545;color:#8F1D1D}
-.cell.sel{box-shadow:0 0 0 2px #1B1F24}
-.tray-btn{width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:#FFFFFF;border:1px solid #DDE1E6;border-radius:8px;color:#2A3038}
-.tray-btn.on{background:#1F5FD6;border-color:#1F5FD6;color:#FFFFFF}
+body{margin:0}
+a{color:#0B5CAD}a:hover{color:#08467F}
+.bar{background:#FFFFFF;border-radius:2px;box-shadow:0 1px 3px rgba(0,0,0,.18)}
+.ib{width:44px;height:44px;display:flex;align-items:center;justify-content:center;border:0;background:transparent;color:#3A4049;cursor:pointer;padding:0}
+.mi{display:flex;align-items:center;gap:18px;height:56px;padding:0 20px;font-size:16px;color:#222831;border:0;background:transparent;width:100%;font-family:inherit;text-align:left;cursor:pointer}
+.mi:hover{background:#EEF1F5}
+.mi .k{margin-left:auto;color:#3A4049}
+.tb{width:52px;height:52px;display:flex;align-items:center;justify-content:center;background:#FFFFFF;border:0;border-radius:2px;box-shadow:0 1px 3px rgba(0,0,0,.18);padding:0}
+.tb.on{box-shadow:inset 0 0 0 2px #0B5CAD,0 1px 3px rgba(0,0,0,.18)}
+.cell{border:1px solid #D5D8DD;background:#FFFFFF;font-family:"IBM Plex Mono",monospace;font-size:11px;display:flex;flex-direction:column;align-items:center;justify-content:center;height:40px;cursor:pointer;padding:0;color:#222831}
+.cell b{font-size:10px;font-weight:400;color:#6B7280}
+.cell.used{background:#E3EEF9;border-color:#8DB3DE}
+.cell.over{background:#FCE8E6;border-color:#D93025;color:#A50E0E}
+.cell.sel{box-shadow:inset 0 0 0 2px #222831}
 </style>
 </helmet>
-<div style="position: relative; width: 100%; height: 900px; overflow: hidden; background: #15181D; font-family: 'IBM Plex Sans KR', sans-serif; color: #1B1F24">
+<div style="position: relative; width: 100%; height: 900px; overflow: hidden; background: #E6E8EB; font-family: {{fontFamily}}; color: #222831">
 
-<!-- dimmed canvas -->
-<svg viewBox="0 0 640 820" style="position: absolute; left: 50%; top: 40px; height: 800px; transform: translateX(-50%); opacity: .5" aria-hidden="true">
-<rect x="40" y="40" width="560" height="560" fill="none" stroke="#4A525E" stroke-width="2"></rect>
-<g stroke="#3A414B" stroke-width="1.5" stroke-dasharray="6 5"><line x1="40" y1="110" x2="600" y2="110"></line><line x1="40" y1="200" x2="600" y2="200"></line><line x1="40" y1="290" x2="600" y2="290"></line><line x1="40" y1="380" x2="600" y2="380"></line></g>
-<ellipse cx="320" cy="300" rx="150" ry="120" fill="#FFD27A" opacity=".25"></ellipse>
-<ellipse cx="220" cy="420" rx="110" ry="130" fill="#BFD7FF" opacity=".18"></ellipse>
-<ellipse cx="420" cy="420" rx="110" ry="130" fill="#BFD7FF" opacity=".18"></ellipse>
+<svg viewBox="0 0 640 820" style="position: absolute; left: 50%; top: 50px; height: 780px; transform: translateX(-50%)" aria-hidden="true">
+<rect x="40" y="40" width="560" height="560" fill="#F2F3F5" stroke="#8A929C" stroke-width="1.5"></rect>
+<g stroke="#8A929C" stroke-dasharray="5 5" opacity=".7"><line x1="40" y1="110" x2="600" y2="110"></line><line x1="40" y1="200" x2="600" y2="200"></line><line x1="40" y1="290" x2="600" y2="290"></line><line x1="40" y1="380" x2="600" y2="380"></line></g>
+<ellipse cx="320" cy="300" rx="150" ry="120" fill="#F5B841" fill-opacity=".3" stroke="#C98A12"></ellipse>
+<ellipse cx="220" cy="420" rx="110" ry="130" fill="#8FB6EE" fill-opacity=".28" stroke="#5C8FD6"></ellipse>
+<ellipse cx="420" cy="420" rx="110" ry="130" fill="#8FB6EE" fill-opacity=".28" stroke="#5C8FD6"></ellipse>
 </svg>
 
-<!-- File menu (slide-in) -->
-<div class="card" style="position: absolute; top: 16px; left: 16px; bottom: 52px; width: 300px; display: flex; flex-direction: column; overflow: auto">
-<div style="display: flex; align-items: center; gap: 8px; padding: 10px 10px 10px 6px; border-bottom: 1px solid #E6E9ED">
-<button aria-label="파일 메뉴 닫기" style="width: 44px; height: 44px; border: 0; background: transparent; border-radius: 6px; color: #2A3038; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"></path></svg></button>
-<span style="font-size: 15px; font-weight: 700">햄릿 · 2026 봄 정기공연</span>
-</div>
-<div style="padding: 6px 0">
-<button class="mi"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 11 12 4l9 7v9h-6v-6H9v6H3z"></path></svg>홈으로</button>
-<button class="mi"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 3h8l4 4v14H6z"></path><path d="M12 11v6M9 14h6"></path></svg>새 프로젝트</button>
-<button class="mi"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 7h7l2 2h9v10H3z"></path></svg>열기<span class="k">›</span></button>
-<button class="mi"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M5 3h11l3 3v15H5z"></path><path d="M8 3v6h8V3M8 21v-7h8v7"></path></svg>다른 이름으로 저장<span class="k">Ctrl+Shift+S</span></button>
-<button class="mi"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 15V3M8 7l4-4 4 4M4 14v6h16v-6"></path></svg>내보내기<span class="k">›</span></button>
-</div>
-<div style="padding: 4px 18px 10px; display: flex; flex-direction: column; gap: 6px">
-<span style="font-size: 11px; font-weight: 700; color: #5B6470">내보내기 형식</span>
-<div style="display: flex; flex-wrap: wrap; gap: 6px">
-<span style="font-size: 12px; border: 1px solid #DDE1E6; border-radius: 999px; padding: 3px 10px">프로젝트 .json</span>
-<span style="font-size: 12px; border: 1px solid #DDE1E6; border-radius: 999px; padding: 3px 10px">평면도 PNG</span>
-<span style="font-size: 12px; border: 1px solid #DDE1E6; border-radius: 999px; padding: 3px 10px">큐시트 PDF</span>
-<span style="font-size: 12px; border: 1px solid #DDE1E6; border-radius: 999px; padding: 3px 10px">패치 표 CSV</span>
-</div>
-</div>
-<div style="height: 1px; background: #E6E9ED; margin: 4px 18px"></div>
-<div style="padding: 6px 0">
-<button class="mi"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 20h18M5 20V8l7-4 7 4v12"></path></svg>극장 변경<span class="k">›</span></button>
-<button class="mi"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"></path></svg>앱 설정</button>
-<button class="mi"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 9V3h12v6M6 18H4v-7h16v7h-2M8 14h8v7H8z"></path></svg>인쇄</button>
-<button class="mi"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="6" width="18" height="12" rx="2"></rect><path d="M7 10h0M11 10h0M15 10h0M7 14h10"></path></svg>단축키 보기<span class="k">?</span></button>
-</div>
+<!-- Top-left bar with menu open (X) -->
+<div class="bar" style="position: absolute; top: 0; left: 0; display: flex; align-items: center; height: 60px; padding: 0 12px 0 4px; gap: 4px; border-radius: 0 0 2px 0">
+<button class="ib" aria-label="파일 메뉴 닫기"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"></path></svg></button>
+<span style="font-size: 16px; font-weight: 700; padding: 0 10px 0 4px">햄릿 정기공연</span>
+<span style="font-size: 14px; color: #8A9099; padding-left: 10px">저장됨</span>
 </div>
 
-<!-- Command search -->
-<div class="card" style="position: absolute; top: 16px; left: 336px; width: 460px; display: flex; flex-direction: column; overflow: hidden">
-<label style="display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-bottom: 1px solid #E6E9ED">
-<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5B6470" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
-<span style="position: absolute; left: -9999px">도구와 명령 검색</span>
-<input value="셔" style="flex: 1; border: 0; outline: 0; font: inherit; font-size: 15px; color: #1B1F24">
-<span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #5B6470; border: 1px solid #DDE1E6; border-radius: 4px; padding: 1px 6px">Ctrl K</span>
+<!-- File menu -->
+<div class="bar" style="position: absolute; top: 60px; left: 0; width: 300px; padding: 8px 0; border-radius: 0 0 2px 0">
+<button class="mi"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M3 11 12 4l9 7v9h-6v-6H9v6H3z"></path></svg>홈</button>
+<button class="mi"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M6 3h8l4 4v14H6z"></path><path d="M12 11v6M9 14h6"></path></svg>새로 만들기</button>
+<button class="mi"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M3 7h7l2 2h9v10H3z"></path></svg>열기<span class="k">›</span></button>
+<button class="mi"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M5 3h11l3 3v15H5z"></path><path d="M8 3v6h8V3"></path></svg>다른 이름으로 저장</button>
+<button class="mi"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><circle cx="9" cy="8" r="3.5"></circle><path d="M3 20c0-3 3-5 6-5s6 2 6 5M18 8v6M15 11h6"></path></svg>공유</button>
+<button class="mi"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M12 15V3M8 7l4-4 4 4M4 14v6h16v-6"></path></svg>내보내기<span class="k">›</span></button>
+<button class="mi"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M3 20h18M5 20V8l7-4 7 4v12"></path></svg>극장 변경<span class="k">›</span></button>
+<div style="height: 1px; background: #D5D8DD; margin: 8px 20px"></div>
+<button class="mi"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"></path></svg>앱 설정</button>
+<button class="mi"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M6 9V3h12v6M6 18H4v-7h16v7h-2M8 14h8v7H8z"></path></svg>인쇄</button>
+</div>
+
+<!-- Tool search -->
+<button class="bar ib" aria-label="도구 검색" style="position: absolute; top: 72px; left: 312px; width: 48px; height: 48px"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#3A4049" stroke-width="1.6" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="m20 20-4.5-4.5"></path></svg></button>
+<div class="bar" style="position: absolute; top: 72px; left: 372px; width: 460px; display: flex; flex-direction: column">
+<label style="display: flex; align-items: center; height: 48px; padding: 0 8px 0 16px; gap: 8px">
+<span style="position: absolute; left: -9999px">도구 검색</span>
+<input value="셔터" style="flex: 1; border: 0; outline: 0; font: inherit; font-size: 15px; color: #222831; background: transparent">
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3A4049" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.7M12 17v.5"></path></svg>
 </label>
-<div style="padding: 6px 0">
-<span style="display: block; padding: 4px 14px; font-size: 11px; font-weight: 700; color: #5B6470">도구</span>
-<button class="res on"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1F5FD6" stroke-width="1.8" aria-hidden="true"><path d="M4 8h16M4 16h16M8 4v16M16 4v16"></path></svg><span><b>셔</b>터 컷 도구</span><span class="k">S</span></button>
-<span style="display: block; padding: 8px 14px 4px; font-size: 11px; font-weight: 700; color: #5B6470">명령</span>
-<button class="res"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2A3038" stroke-width="1.8" aria-hidden="true"><path d="M5 12h14"></path></svg><span>선택한 조명의 <b>셔</b>터 초기화</span></button>
-<button class="res"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2A3038" stroke-width="1.8" aria-hidden="true"><path d="M5 12h14"></path></svg><span><b>셔</b>터 사용 조명만 보기</span></button>
-<span style="display: block; padding: 8px 14px 4px; font-size: 11px; font-weight: 700; color: #5B6470">조명</span>
-<button class="res"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2A3038" stroke-width="1.8" aria-hidden="true"><rect x="7" y="4" width="10" height="7" rx="1"></rect><path d="M9 11l-3 9h12l-3-9"></path></svg><span>L3 · <b>센</b>터 탑 (채널 12, 셔터 사용 중)</span></button>
+<div style="border-top: 1px solid #ECEEF1; padding: 4px 0">
+<button class="mi" style="height: 44px; font-size: 14px; background: #E3EEF9"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0B5CAD" stroke-width="1.6" aria-hidden="true"><rect x="5" y="5" width="14" height="14"></rect><circle cx="5" cy="5" r="2" fill="#D93025" stroke="none"></circle><circle cx="19" cy="19" r="2" fill="#D93025" stroke="none"></circle></svg>셔터 컷 도구<span class="k" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px">S</span></button>
+<button class="mi" style="height: 44px; font-size: 14px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3A4049" stroke-width="1.5" aria-hidden="true"><path d="M4 12h16"></path></svg>선택한 조명의 셔터 초기화</button>
+<button class="mi" style="height: 44px; font-size: 14px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3A4049" stroke-width="1.5" aria-hidden="true"><path d="M4 12h16"></path></svg>셔터를 쓰는 조명만 보기</button>
 </div>
 </div>
 
-<!-- Right tray (compact) -->
-<div style="position: absolute; top: 88px; right: 16px; display: flex; flex-direction: column; gap: 8px">
-<button class="tray-btn" aria-label="조명 속성"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"></path><circle cx="16" cy="6" r="2"></circle><circle cx="10" cy="12" r="2"></circle></svg></button>
-<button class="tray-btn" aria-label="조명 목록"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11"></path></svg></button>
-<button class="tray-btn" aria-label="조명기 라이브러리"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect></svg></button>
-<button class="tray-btn" aria-label="밝기 Probe"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 3v2M12 19v2M3 12h2M19 12h2"></path></svg></button>
-<button class="tray-btn on" aria-label="채널 패치"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"></rect><circle cx="8" cy="12" r="1.5"></circle><circle cx="12" cy="12" r="1.5"></circle><circle cx="16" cy="12" r="1.5"></circle></svg></button>
-<button class="tray-btn" aria-label="무대 설정"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 20h18M5 20V8l7-4 7 4v12"></path></svg></button>
-<button class="tray-btn" aria-label="도면 레이어"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m12 3 9 5-9 5-9-5z"></path><path d="m3 13 9 5 9-5"></path></svg></button>
+<!-- Top-right -->
+<div class="bar" style="position: absolute; top: 0; right: 0; display: flex; align-items: center; height: 60px; padding: 0 10px; gap: 12px; border-radius: 0 0 0 2px">
+<span style="width: 34px; height: 34px; border-radius: 50%; background: #3E5F8A; color: #FFFFFF; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center">HC</span>
+<button style="height: 40px; padding: 0 18px; background: #0B5CAD; color: #FFFFFF; border: 0; border-radius: 2px; font: inherit; font-size: 14px; font-weight: 700">공유</button>
 </div>
 
-<!-- Patch panel (wide) -->
-<div class="card" style="position: absolute; top: 88px; right: 72px; width: 460px; bottom: 52px; display: flex; flex-direction: column; overflow: hidden">
-<div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 16px">
-<div style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 15px; font-weight: 700">채널 패치</span><span style="font-size: 12px; color: #5B6470">전체 씬 기준 · 인문소극장 91채널</span></div>
-<div style="display: flex; gap: 12px; font-size: 11px; color: #5B6470">
-<span style="display: flex; align-items: center; gap: 4px"><span style="width: 10px; height: 10px; border: 1px solid #C9CFD6; border-radius: 2px"></span>비어 있음</span>
-<span style="display: flex; align-items: center; gap: 4px"><span style="width: 10px; height: 10px; background: #E8EFFC; border: 1px solid #9DB8EE; border-radius: 2px"></span>사용</span>
-<span style="display: flex; align-items: center; gap: 4px"><span style="width: 10px; height: 10px; background: #FDECEC; border: 1px solid #D64545; border-radius: 2px"></span>초과</span>
+<!-- Right tray (icons only while a panel is open) -->
+<div style="position: absolute; top: 72px; right: 12px; display: flex; flex-direction: column; gap: 12px">
+<button class="tb" aria-label="조명 정보"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3A4049" stroke-width="1.5" aria-hidden="true"><rect x="7" y="3" width="10" height="7" rx="1"></rect><path d="M9 10 6 20h12l-3-10"></path></svg></button>
+<button class="tb" aria-label="조명 목록"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3A4049" stroke-width="1.5" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11M4 6h1M4 12h1M4 18h1"></path></svg></button>
+<button class="tb" aria-label="조명기 라이브러리"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3A4049" stroke-width="1.5" aria-hidden="true"><path d="m12 3 8 4.5v9L12 21l-8-4.5v-9z"></path></svg></button>
+<button class="tb" aria-label="씬"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3A4049" stroke-width="1.5" aria-hidden="true"><rect x="3" y="8" width="18" height="12" rx="1"></rect><path d="m3 8 2-4h14l2 4"></path></svg></button>
+<button class="tb" aria-label="표시"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3A4049" stroke-width="1.5" aria-hidden="true"><circle cx="7" cy="14" r="3.5"></circle><circle cx="17" cy="14" r="3.5"></circle><path d="M10.5 14h3"></path></svg></button>
+<button class="tb" aria-label="밝기 Probe"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3A4049" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 3v2M12 19v2M3 12h2M19 12h2"></path></svg></button>
+<button class="tb on" aria-label="채널 패치"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0B5CAD" stroke-width="1.5" aria-hidden="true"><rect x="3" y="6" width="18" height="12" rx="1"></rect><circle cx="8" cy="12" r="1.5"></circle><circle cx="12" cy="12" r="1.5"></circle><circle cx="16" cy="12" r="1.5"></circle></svg></button>
+<button class="tb" aria-label="무대 정보"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3A4049" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v6M12 7.5v.5"></path></svg></button>
 </div>
+
+<!-- Patch panel -->
+<div class="bar" style="position: absolute; top: 72px; right: 76px; width: 440px; bottom: 56px; display: flex; flex-direction: column; overflow: hidden">
+<div style="display: flex; align-items: center; justify-content: space-between; height: 52px; padding: 0 12px 0 16px; background: #F4F5F7">
+<span style="font-size: 16px; font-weight: 700">채널 패치</span>
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3A4049" stroke-width="1.5" aria-hidden="true"><rect x="3" y="6" width="18" height="12" rx="1"></rect><circle cx="8" cy="12" r="1.5"></circle><circle cx="12" cy="12" r="1.5"></circle><circle cx="16" cy="12" r="1.5"></circle></svg>
 </div>
-<div style="margin: 0 16px; padding: 10px 12px; background: #FDECEC; border-radius: 6px; font-size: 12px; color: #8F1D1D; display: flex; flex-direction: column; gap: 2px">
-<b>14번 채널 · 2번 캣워크 무대 뒤쪽 면</b>
-<span>콘센트 2개에 조명 3대가 배정되었습니다: L3(씬 2), L3(씬 3), L9(씬 5)</span>
+<div style="display: flex; align-items: center; gap: 2px; padding: 6px 8px">
+<button class="ib" aria-label="초과 채널만 보기"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M12 3 2 20h20zM12 10v4M12 17v.5"></path></svg></button>
+<button class="ib" aria-label="CSV로 내보내기"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M12 15V3M8 7l4-4 4 4M4 14v6h16v-6"></path></svg></button>
 </div>
-<div style="flex: 1; overflow: auto; padding: 12px 16px; display: flex; flex-direction: column; gap: 12px">
-<section style="display: flex; flex-direction: column; gap: 6px"><span style="font-size: 12px; font-weight: 600; color: #2A3038">1번 캣워크 · 앞쪽 면 (ch 4–13)</span>
-<div style="display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 4px">
+<label style="margin: 0 16px; display: flex; align-items: center; gap: 10px; height: 44px; padding: 0 12px; background: #FFFFFF; border: 1px solid #D5D8DD">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3A4049" stroke-width="1.5" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="m20 20-4.5-4.5"></path></svg>
+<span style="position: absolute; left: -9999px">채널 검색</span>
+<input placeholder="채널 번호나 조명 이름 검색..." style="flex: 1; border: 0; outline: 0; font: inherit; font-size: 14px; background: transparent">
+</label>
+<div style="margin: 12px 16px 0; padding: 10px 12px; background: #FCE8E6; font-size: 13px; color: #A50E0E; display: flex; flex-direction: column; gap: 2px">
+<b>14번 채널 · 2번 캣워크 뒤쪽 면</b>
+<span>콘센트 2개에 조명 3대: L3(씬 2), L3(씬 3), L9(씬 5)</span>
+</div>
+<div style="flex: 1; overflow: auto; padding: 12px 16px; display: flex; flex-direction: column; gap: 14px">
+<section style="display: flex; flex-direction: column; gap: 6px"><span style="font-size: 13px; font-weight: 700">1번 캣워크 · 앞쪽 면</span>
+<div style="display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 3px">
 <button class="cell used">4<b>1</b></button><button class="cell used">5<b>2</b></button><button class="cell">6<b>0</b></button><button class="cell">7<b>0</b></button><button class="cell used">8<b>1</b></button><button class="cell">9<b>0</b></button><button class="cell used">10<b>2</b></button><button class="cell">11<b>0</b></button><button class="cell used">12<b>2</b></button><button class="cell">13<b>0</b></button>
 </div></section>
-<section style="display: flex; flex-direction: column; gap: 6px"><span style="font-size: 12px; font-weight: 600; color: #2A3038">2번 캣워크 · 뒤쪽 면 (ch 14–23)</span>
-<div style="display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 4px">
+<section style="display: flex; flex-direction: column; gap: 6px"><span style="font-size: 13px; font-weight: 700">2번 캣워크 · 뒤쪽 면</span>
+<div style="display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 3px">
 <button class="cell over sel">14<b>3</b></button><button class="cell used">15<b>1</b></button><button class="cell">16<b>0</b></button><button class="cell used">17<b>2</b></button><button class="cell">18<b>0</b></button><button class="cell">19<b>0</b></button><button class="cell used">20<b>1</b></button><button class="cell">21<b>0</b></button><button class="cell">22<b>0</b></button><button class="cell">23<b>0</b></button>
 </div></section>
-<section style="display: flex; flex-direction: column; gap: 6px"><span style="font-size: 12px; font-weight: 600; color: #2A3038">2번 캣워크 · 앞쪽 면 (ch 24–33)</span>
-<div style="display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 4px">
+<section style="display: flex; flex-direction: column; gap: 6px"><span style="font-size: 13px; font-weight: 700">2번 캣워크 · 앞쪽 면</span>
+<div style="display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 3px">
 <button class="cell">24<b>0</b></button><button class="cell used">25<b>1</b></button><button class="cell used">26<b>1</b></button><button class="cell">27<b>0</b></button><button class="cell">28<b>0</b></button><button class="cell">29<b>0</b></button><button class="cell">30<b>0</b></button><button class="cell used">31<b>2</b></button><button class="cell">32<b>0</b></button><button class="cell">33<b>0</b></button>
 </div></section>
-<section style="display: flex; flex-direction: column; gap: 6px"><span style="font-size: 12px; font-weight: 600; color: #2A3038">3번 캣워크 · 뒤쪽 면 (ch 34–43)</span>
-<div style="display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 4px">
-<button class="cell">34<b>0</b></button><button class="cell">35<b>0</b></button><button class="cell used">36<b>1</b></button><button class="cell">37<b>0</b></button><button class="cell">38<b>0</b></button><button class="cell">39<b>0</b></button><button class="cell">40<b>0</b></button><button class="cell">41<b>0</b></button><button class="cell">42<b>0</b></button><button class="cell">43<b>0</b></button>
-</div></section>
-<span style="font-size: 12px; color: #5B6470">… 4~6번 캣워크, 무대 1층 (ch 44–91)</span>
 </div>
 </div>
 
 <!-- Status bar -->
-<div style="position: absolute; left: 0; right: 0; bottom: 0; height: 36px; background: #FFFFFF; border-top: 1px solid #DDE1E6; display: flex; align-items: center; gap: 14px; padding: 0 12px; font-size: 12px; color: #2A3038">
-<span style="font-weight: 700; color: #1F5FD6">선택</span>
-<span style="flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">채널 칸을 누르면 해당 채널을 쓰는 조명이 캔버스에서 강조됩니다.</span>
-<span style="color: #8F1D1D; font-weight: 600">채널 경고 1건</span>
+<div style="position: absolute; left: 0; right: 0; bottom: 0; height: 40px; background: #FFFFFF; border-top: 1px solid #D5D8DD; display: flex; align-items: center; gap: 4px; padding: 0 8px; font-size: 14px">
+<button class="ib" aria-label="도움말" style="width: 36px; height: 36px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.7M12 17v.5"></path></svg></button>
+<span style="flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-left: 8px">채널 칸을 누르면 그 채널을 쓰는 조명이 캔버스에서 강조됩니다.</span>
+<span style="color: #A50E0E; font-weight: 700; padding-right: 8px">채널 경고 1건</span>
 </div>
 
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+<script type="text/x-dc" data-dc-script data-props='{"font":{"editor":"enum","options":["Noto Sans KR","IBM Plex Sans KR","Nanum Gothic","Gothic A1"],"default":"Noto Sans KR","section":"글꼴"},"$preview":{"width":1440,"height":900}}'>
 class Component extends DCLogic {
 renderVals() {
-return {};
+const font = this.props.font ?? 'Noto Sans KR';
+return { fontFamily: "'" + font + "', sans-serif" };
 }
 }
 </script>

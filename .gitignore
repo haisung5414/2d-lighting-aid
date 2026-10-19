@@ -38,3 +38,6 @@ tmp/
 # OS files
 Thumbs.db
 desktop.ini
+
+# Claude Code worktrees
+.claude/worktrees/
