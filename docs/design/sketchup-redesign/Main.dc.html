@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>Lighting Aid 에디터</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&amp;family=IBM+Plex+Sans+KR:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#15181D}
+a{color:#1F5FD6}a:hover{color:#16479F}
+.card{background:#FFFFFF;border:1px solid #DDE1E6;border-radius:8px;box-shadow:0 2px 10px rgba(0,0,0,.22)}
+.tool{width:44px;height:44px;display:flex;align-items:center;justify-content:center;border:0;background:transparent;border-radius:6px;color:#2A3038;cursor:pointer;position:relative}
+.tool:hover{background:#F0F2F5}
+.tool.on{background:#E8EFFC;color:#1F5FD6;box-shadow:inset 3px 0 0 #1F5FD6}
+.tray-row{display:flex;align-items:center;justify-content:flex-end;gap:8px}
+.pill{font-size:12px;font-weight:600;color:#2A3038;background:#FFFFFF;border:1px solid #DDE1E6;border-radius:999px;padding:4px 10px;white-space:nowrap}
+.tray-btn{width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:#FFFFFF;border:1px solid #DDE1E6;border-radius:8px;color:#2A3038;cursor:pointer}
+.tray-btn.on{background:#1F5FD6;border-color:#1F5FD6;color:#FFFFFF}
+.lbl{font-size:12px;color:#5B6470;font-weight:500}
+.num{font-family:"IBM Plex Mono",monospace;font-size:13px;color:#1B1F24;border:1px solid #C9CFD6;border-radius:6px;padding:6px 8px;background:#FFFFFF;width:100%;box-sizing:border-box}
+.seg{display:flex;background:#F0F2F5;border-radius:6px;padding:2px;gap:2px}
+.seg button{flex:1;border:0;background:transparent;font:inherit;font-size:12px;font-weight:600;color:#5B6470;padding:6px 0;border-radius:5px;cursor:pointer}
+.seg button.on{background:#FFFFFF;color:#1B1F24;box-shadow:0 1px 2px rgba(0,0,0,.12)}
+.chip{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:#2A3038;background:transparent;border:0;border-radius:6px;padding:6px 10px;cursor:pointer;font-family:inherit}
+.chip.on{background:#FFF4DC;color:#7A4A00}
+.cue{width:112px;flex:0 0 auto;border-radius:6px;border:1px solid #DDE1E6;background:#FFFFFF;overflow:hidden;cursor:pointer;padding:0;font-family:inherit;text-align:left}
+.cue.on{border-color:#1F5FD6;box-shadow:0 0 0 2px #1F5FD6}
+.sec{border-top:1px solid #E6E9ED;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+@media (max-width:900px){.pill{display:none}.hide-sm{display:none}}
+</style>
+</helmet>
+<div style="position: relative; width: 100%; height: 900px; overflow: hidden; background: #15181D; font-family: 'IBM Plex Sans KR', sans-serif; color: #1B1F24">
+
+<!-- Stage canvas (viewport) -->
+<div style="position: absolute; inset: 0 0 36px 0; display: flex; align-items: center; justify-content: center">
+<svg viewBox="0 0 640 820" style="height: 92%; max-width: 70%" role="img" aria-label="인문소극장 평면도 위에 조명 6대의 바닥 투사 영역이 표시된 무대 캔버스">
+<defs>
+<pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M20 0H0V20" fill="none" stroke="#232830" stroke-width="1"></path></pattern>
+<radialGradient id="beamA"><stop offset="0" stop-color="#FFD27A" stop-opacity=".55"></stop><stop offset="1" stop-color="#FFD27A" stop-opacity=".08"></stop></radialGradient>
+<radialGradient id="beamB"><stop offset="0" stop-color="#BFD7FF" stop-opacity=".45"></stop><stop offset="1" stop-color="#BFD7FF" stop-opacity=".06"></stop></radialGradient>
+</defs>
+<rect x="0" y="0" width="640" height="820" fill="url(#grid)"></rect>
+<rect x="40" y="40" width="560" height="560" fill="none" stroke="#4A525E" stroke-width="2"></rect>
+<g stroke="#3A414B" stroke-width="1.5" stroke-dasharray="6 5">
+<line x1="40" y1="110" x2="600" y2="110"></line><line x1="40" y1="200" x2="600" y2="200"></line><line x1="40" y1="290" x2="600" y2="290"></line><line x1="40" y1="380" x2="600" y2="380"></line><line x1="40" y1="470" x2="600" y2="470"></line>
+</g>
+<g font-family="IBM Plex Mono, monospace" font-size="10" fill="#7C8592">
+<text x="46" y="104">CW1</text><text x="46" y="194">CW2</text><text x="46" y="284">CW3</text><text x="46" y="374">CW4</text><text x="46" y="464">CW5</text>
+</g>
+<line x1="40" y1="600" x2="600" y2="600" stroke="#6B7480" stroke-width="3"></line>
+<text x="320" y="622" text-anchor="middle" font-size="11" fill="#7C8592" font-family="IBM Plex Sans KR, sans-serif">프로시니엄 / 객석 방향</text>
+<g fill="none" stroke="#2C323B" stroke-width="1">
+<rect x="100" y="650" width="440" height="22"></rect><rect x="100" y="680" width="440" height="22"></rect><rect x="100" y="710" width="440" height="22"></rect><rect x="100" y="740" width="440" height="22"></rect><rect x="100" y="770" width="440" height="22"></rect>
+</g>
+<!-- light pools -->
+<ellipse cx="220" cy="420" rx="110" ry="130" fill="url(#beamB)" stroke="#BFD7FF" stroke-opacity=".5"></ellipse>
+<ellipse cx="420" cy="420" rx="110" ry="130" fill="url(#beamB)" stroke="#BFD7FF" stroke-opacity=".5"></ellipse>
+<ellipse cx="320" cy="300" rx="150" ry="120" fill="url(#beamA)" stroke="#FFD27A" stroke-opacity=".7"></ellipse>
+<ellipse cx="320" cy="300" rx="92" ry="74" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-opacity=".85"></ellipse>
+<ellipse cx="320" cy="322" rx="104" ry="84" fill="none" stroke="#FF6B6B" stroke-width="2" stroke-dasharray="5 4"></ellipse>
+<!-- shutter cut on selected -->
+<polygon points="196,220 446,220 446,388 196,388" fill="none" stroke="#FF6B6B" stroke-width="1" stroke-opacity=".4"></polygon>
+<!-- fixtures -->
+<g fill="#5B6470" stroke="#15181D" stroke-width="2">
+<rect x="212" y="102" width="16" height="16"></rect><rect x="412" y="102" width="16" height="16"></rect><rect x="132" y="192" width="16" height="16"></rect><rect x="492" y="192" width="16" height="16"></rect><rect x="272" y="462" width="16" height="16"></rect>
+</g>
+<line x1="320" y1="560" x2="320" y2="300" stroke="#F5B841" stroke-width="1.5" stroke-dasharray="3 3"></line>
+<rect x="310" y="550" width="20" height="20" fill="#1F5FD6" stroke="#FFFFFF" stroke-width="2"></rect>
+<circle cx="320" cy="300" r="7" fill="#F5B841" stroke="#15181D" stroke-width="2"></circle>
+<g font-family="IBM Plex Mono, monospace" font-size="11" fill="#C9D1DB">
+<text x="232" y="98">L1</text><text x="432" y="98">L2</text><text x="152" y="188">L4</text><text x="512" y="188">L5</text><text x="292" y="458">L6</text>
+</g>
+<rect x="336" y="548" width="74" height="22" rx="4" fill="#1F5FD6"></rect>
+<text x="344" y="563" font-family="IBM Plex Mono, monospace" font-size="11" fill="#FFFFFF">L3 · ch12</text>
+<!-- probe -->
+<g stroke="#4ADE80" stroke-width="2" fill="none"><circle cx="420" cy="250" r="8"></circle><line x1="408" y1="250" x2="432" y2="250"></line><line x1="420" y1="238" x2="420" y2="262"></line></g>
+<rect x="434" y="232" width="78" height="22" rx="4" fill="#0F2A1B" stroke="#4ADE80" stroke-opacity=".5"></rect>
+<text x="442" y="247" font-family="IBM Plex Mono, monospace" font-size="11" fill="#86EFAC">Probe 38.4</text>
+</svg>
+</div>
+
+<!-- Top-left file bar -->
+<div class="card" style="position: absolute; top: 16px; left: 16px; display: flex; align-items: center; gap: 4px; padding: 6px 10px 6px 6px">
+<button class="tool" aria-label="파일 메뉴 열기"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"></path></svg></button>
+<div style="display: flex; flex-direction: column; padding: 0 8px; gap: 1px">
+<span style="font-size: 15px; font-weight: 700">햄릿 · 2026 봄 정기공연</span>
+<span style="font-size: 11px; color: #5B6470">인문소극장 · 12 × 22.7 m</span>
+</div>
+<span style="width: 1px; height: 28px; background: #E1E4E8; margin: 0 4px"></span>
+<button class="tool" aria-label="실행 취소"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M9 14 4 9l5-5"></path><path d="M4 9h10a6 6 0 0 1 0 12h-3"></path></svg></button>
+<button class="tool" aria-label="다시 실행" style="color: #A3AAB3"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m15 14 5-5-5-5"></path><path d="M20 9H10a6 6 0 0 0 0 12h3"></path></svg></button>
+<span class="hide-sm" style="font-size: 12px; color: #5B6470; padding-left: 6px; display: flex; align-items: center; gap: 6px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2E7D4F" stroke-width="2" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>저장됨</span>
+</div>
+
+<!-- Top-center view toggles -->
+<div class="card hide-sm" style="position: absolute; top: 16px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 2px; padding: 4px">
+<button class="chip on"><span style="width: 10px; height: 10px; border-radius: 50%; background: #F5B841"></span>바닥 z=0</button>
+<button class="chip on"><span style="width: 10px; height: 10px; border-radius: 50%; border: 2px dashed #D64545; box-sizing: border-box"></span>얼굴 1.67m</button>
+<span style="width: 1px; height: 20px; background: #E1E4E8"></span>
+<button class="chip on">빔</button>
+<button class="chip on">필드</button>
+<span style="width: 1px; height: 20px; background: #E1E4E8"></span>
+<button class="chip">도면</button>
+<button class="chip">캣워크</button>
+</div>
+
+<!-- Top-right collaboration -->
+<div class="card" style="position: absolute; top: 16px; right: 16px; display: flex; align-items: center; gap: 10px; padding: 6px 6px 6px 10px">
+<span style="width: 32px; height: 32px; border-radius: 50%; background: #2A3B5C; color: #FFFFFF; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center">HC</span>
+<button style="height: 36px; padding: 0 16px; background: #1F5FD6; color: #FFFFFF; border: 0; border-radius: 6px; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer">공유</button>
+</div>
+
+<!-- Left tool rail -->
+<div class="card" style="position: absolute; top: 88px; left: 16px; padding: 4px; display: flex; flex-direction: column; gap: 2px">
+<button class="tool" aria-label="도구 검색"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg></button>
+<span style="height: 1px; background: #E6E9ED; margin: 2px 6px"></span>
+<button class="tool" aria-label="선택 (V)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M5 3l14 8-6 2-2 6z"></path></svg></button>
+<button class="tool" aria-label="조명 배치 (L)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="7" y="3" width="10" height="8" rx="1"></rect><path d="M9 11l-3 9h12l-3-9"></path><path d="M12 14v4M10 16h4"></path></svg></button>
+<button class="tool on" aria-label="조준 (T)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="8"></circle><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3"></path></svg></button>
+<button class="tool" aria-label="셔터 컷 (S)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 8h16M4 16h16M8 4v16M16 4v16"></path></svg></button>
+<button class="tool" aria-label="밝기 Probe (P)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v5M12 17v5M2 12h5M17 12h5"></path></svg></button>
+<button class="tool" aria-label="거리 측정 (M)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 17 17 3l4 4L7 21z"></path><path d="M7 13l2 2M10 10l2 2M13 7l2 2"></path></svg></button>
+<button class="tool" aria-label="메모 (N)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M5 4h14v12l-4 4H5z"></path><path d="M15 20v-4h4"></path></svg></button>
+<span style="height: 1px; background: #E6E9ED; margin: 2px 6px"></span>
+<button class="tool" aria-label="화면 이동 (H)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 3v18M3 12h18M12 3l-3 3M12 3l3 3M12 21l-3-3M12 21l3-3M3 12l3-3M3 12l3 3M21 12l-3-3M21 12l-3 3"></path></svg></button>
+<button class="tool" aria-label="전체 보기 (F)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"></path></svg></button>
+<button class="tool" aria-label="도구 더 보기"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.6"></circle><circle cx="12" cy="12" r="1.6"></circle><circle cx="19" cy="12" r="1.6"></circle></svg></button>
+</div>
+
+<!-- Right tray -->
+<div style="position: absolute; top: 88px; right: 16px; display: flex; flex-direction: column; gap: 8px">
+<div class="tray-row"><button class="tray-btn on" aria-label="조명 속성"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"></path><circle cx="16" cy="6" r="2"></circle><circle cx="10" cy="12" r="2"></circle><circle cx="18" cy="18" r="2"></circle></svg></button></div>
+<div class="tray-row"><span class="pill">조명 목록</span><button class="tray-btn" aria-label="조명 목록"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11"></path><rect x="3" y="4" width="3" height="4"></rect><rect x="3" y="10" width="3" height="4"></rect><rect x="3" y="16" width="3" height="4"></rect></svg></button></div>
+<div class="tray-row"><span class="pill">조명기 라이브러리</span><button class="tray-btn" aria-label="조명기 라이브러리"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect></svg></button></div>
+<div class="tray-row"><span class="pill">밝기 Probe</span><button class="tray-btn" aria-label="밝기 Probe"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M5.6 18.4 7 17M17 7l1.4-1.4"></path><circle cx="12" cy="12" r="4"></circle></svg></button></div>
+<div class="tray-row"><span class="pill">채널 패치</span><button class="tray-btn" aria-label="채널 패치"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"></rect><circle cx="8" cy="12" r="1.5"></circle><circle cx="12" cy="12" r="1.5"></circle><circle cx="16" cy="12" r="1.5"></circle></svg></button></div>
+<div class="tray-row"><span class="pill">무대 설정</span><button class="tray-btn" aria-label="무대 설정"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 20h18M5 20V8l7-4 7 4v12"></path><path d="M9 20v-6h6v6"></path></svg></button></div>
+<div class="tray-row"><span class="pill">도면 레이어</span><button class="tray-btn" aria-label="도면 레이어"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m12 3 9 5-9 5-9-5z"></path><path d="m3 13 9 5 9-5"></path></svg></button></div>
+<div class="tray-row"><span class="pill">도움말</span><button class="tray-btn" aria-label="도움말"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.7M12 17h0"></path></svg></button></div>
+</div>
+
+<!-- Fixture properties panel (open) -->
+<div class="card" style="position: absolute; top: 88px; right: 72px; width: 320px; max-height: 620px; overflow: auto; display: flex; flex-direction: column">
+<div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 16px">
+<div style="display: flex; flex-direction: column; gap: 2px">
+<span style="font-size: 15px; font-weight: 700">L3 · 센터 탑</span>
+<span style="font-size: 12px; color: #5B6470">Fixed Ellipsoidal · 채널 12</span>
+</div>
+<div style="display: flex; gap: 2px">
+<button class="tool" style="width: 32px; height: 32px" aria-label="조명 숨기기"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"></path><circle cx="12" cy="12" r="3"></circle></svg></button>
+<button class="tool" style="width: 32px; height: 32px" aria-label="조명 복제"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"></rect><path d="M16 8V4H4v12h4"></path></svg></button>
+<button class="tool" style="width: 32px; height: 32px; color: #B42318" aria-label="조명 삭제"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"></path></svg></button>
+</div>
+</div>
+<div class="sec">
+<span class="lbl">조명기 종류</span>
+<div class="seg"><button class="on">Fixed</button><button>Zoom</button><button>Fresnel</button><button>PAR</button></div>
+</div>
+<div class="sec">
+<span class="lbl">위치 (m)</span>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+<label style="display: flex; flex-direction: column; gap: 4px"><span class="lbl">X</span><input class="num" value="6.00"></label>
+<label style="display: flex; flex-direction: column; gap: 4px"><span class="lbl">Y</span><input class="num" value="1.20"></label>
+<label style="display: flex; flex-direction: column; gap: 4px"><span class="lbl">Z 높이</span><input class="num" value="5.74"></label>
+</div>
+</div>
+<div class="sec">
+<span class="lbl">광학</span>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+<label style="display: flex; flex-direction: column; gap: 4px"><span class="lbl">렌즈</span><select class="num"><option>26°</option><option selected>36°</option><option>51°</option></select></label>
+<label style="display: flex; flex-direction: column; gap: 4px"><span class="lbl">채널</span><input class="num" value="12"></label>
+</div>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; font-size: 12px; color: #5B6470">
+<span>Beam <b style="font-family: 'IBM Plex Mono', monospace; color: #1B1F24">2.9 m</b></span>
+<span>Field <b style="font-family: 'IBM Plex Mono', monospace; color: #1B1F24">4.1 m</b></span>
+</div>
+</div>
+<div class="sec">
+<span class="lbl">조준 각도</span>
+<div style="display: flex; gap: 12px; align-items: center">
+<svg width="96" height="64" viewBox="0 0 96 64" aria-hidden="true"><line x1="8" y1="56" x2="90" y2="56" stroke="#C9CFD6"></line><rect x="10" y="6" width="10" height="8" fill="#1F5FD6"></rect><line x1="15" y1="14" x2="76" y2="56" stroke="#F5B841" stroke-width="2"></line><path d="M15 34 A20 20 0 0 0 29 24" fill="none" stroke="#5B6470"></path><circle cx="76" cy="56" r="4" fill="#F5B841"></circle></svg>
+<div style="display: flex; flex-direction: column; gap: 6px; font-size: 12px; color: #5B6470">
+<span>Tilt <b style="font-family: 'IBM Plex Mono', monospace; font-size: 15px; color: #1B1F24">42.5°</b></span>
+<span>Pan <b style="font-family: 'IBM Plex Mono', monospace; font-size: 15px; color: #1B1F24">90.0°</b></span>
+</div>
+</div>
+</div>
+<div class="sec">
+<label style="display: flex; align-items: center; justify-content: space-between; font-size: 13px; font-weight: 600">셔터 컷 사용<input type="checkbox" checked style="width: 18px; height: 18px; accent-color: #1F5FD6"></label>
+<span style="font-size: 12px; color: #5B6470">캔버스에서 빨간 꼭짓점 4개를 끌어 컷을 조정합니다.</span>
+</div>
+</div>
+
+<!-- Scene (cue) strip -->
+<div class="card" style="position: absolute; left: 80px; right: 420px; bottom: 52px; padding: 8px; display: flex; align-items: center; gap: 8px; overflow-x: auto">
+<span style="font-size: 12px; font-weight: 700; color: #5B6470; padding: 0 6px; white-space: nowrap">씬</span>
+<button class="cue"><div style="height: 46px; background: #1E232A; display: flex; align-items: center; justify-content: center"><span style="width: 30px; height: 20px; border-radius: 50%; background: #FFD27A; opacity: .5"></span></div><div style="font-size: 11px; padding: 4px 6px; font-weight: 600">1 · 프롤로그</div></button>
+<button class="cue on"><div style="height: 46px; background: #1E232A; display: flex; align-items: center; justify-content: center; gap: 4px"><span style="width: 20px; height: 22px; border-radius: 50%; background: #BFD7FF; opacity: .5"></span><span style="width: 26px; height: 20px; border-radius: 50%; background: #FFD27A; opacity: .6"></span><span style="width: 20px; height: 22px; border-radius: 50%; background: #BFD7FF; opacity: .5"></span></div><div style="font-size: 11px; padding: 4px 6px; font-weight: 600">2 · 성벽 위</div></button>
+<button class="cue"><div style="height: 46px; background: #1E232A; display: flex; align-items: center; justify-content: center"><span style="width: 50px; height: 24px; border-radius: 50%; background: #BFD7FF; opacity: .35"></span></div><div style="font-size: 11px; padding: 4px 6px; font-weight: 600">3 · 알현실</div></button>
+<button class="cue"><div style="height: 46px; background: #1E232A; display: flex; align-items: center; justify-content: center"><span style="width: 14px; height: 14px; border-radius: 50%; background: #FFD27A; opacity: .7"></span></div><div style="font-size: 11px; padding: 4px 6px; font-weight: 600">4 · 독백</div></button>
+<button aria-label="씬 추가" style="width: 46px; height: 66px; flex: 0 0 auto; border: 1px dashed #A3AAB3; border-radius: 6px; background: transparent; color: #5B6470; cursor: pointer"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></button>
+</div>
+
+<!-- Status bar -->
+<div style="position: absolute; left: 0; right: 0; bottom: 0; height: 36px; background: #FFFFFF; border-top: 1px solid #DDE1E6; display: flex; align-items: center; gap: 14px; padding: 0 12px; font-size: 12px; color: #2A3038">
+<span style="display: flex; align-items: center; gap: 6px; font-weight: 700; color: #1F5FD6"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="8"></circle><circle cx="12" cy="12" r="3"></circle></svg>조준</span>
+<span style="flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">노란 타겟을 끌어 조준점을 옮깁니다. Shift = 수평/수직 고정 · Alt = 바닥 대신 얼굴 높이에 스냅</span>
+<span class="hide-sm" style="color: #5B6470; font-family: 'IBM Plex Mono', monospace">X 6.00 · Y 9.85 m</span>
+<label class="hide-sm" style="display: flex; align-items: center; gap: 6px; color: #5B6470">Tilt / Pan<input value="42.5°, 90°" style="width: 110px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; border: 1px solid #C9CFD6; border-radius: 4px; padding: 3px 6px"></label>
+<span style="color: #5B6470; font-family: 'IBM Plex Mono', monospace">120%</span>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>
