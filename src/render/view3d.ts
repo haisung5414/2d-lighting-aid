@@ -518,34 +518,31 @@ const applyWorkLight = () => {
   renderFrame();
 };
 
+export type VenueLayer3D = 'venue' | 'catwalk' | 'seating' | 'worklight';
+
+/** 오른쪽 트레이의 "3D 극장 구조" 패널(ui/shell.ts)이 켜고 끈다 */
+export const setVenueLayer3D = (layer: VenueLayer3D, on: boolean) => {
+  if (layer === 'worklight') {
+    workLightOn = on;
+    applyWorkLight();
+    return;
+  }
+  if (layer === 'venue') showVenue = on;
+  if (layer === 'catwalk') showCatwalk = on;
+  if (layer === 'seating') showSeating = on;
+  rebuild();
+};
+
+export const getVenueLayers3D = (): Record<VenueLayer3D, boolean> => ({
+  venue: showVenue, catwalk: showCatwalk, seating: showSeating, worklight: workLightOn
+});
+
 const createOverlay = (host: HTMLElement) => {
   const overlay = document.createElement('div');
   overlay.className = 'view3d-overlay';
   overlay.innerHTML = `
-    <div class="view3d-toggles">
-      <label class="view3d-toggle"><input type="checkbox" id="view3d-venue" ${showVenue ? 'checked' : ''}> 극장 구조</label>
-      <label class="view3d-toggle"><input type="checkbox" id="view3d-catwalk" ${showCatwalk ? 'checked' : ''}> 캣워크</label>
-      <label class="view3d-toggle"><input type="checkbox" id="view3d-seating" ${showSeating ? 'checked' : ''}> 객석</label>
-      <label class="view3d-toggle"><input type="checkbox" id="view3d-worklight" ${workLightOn ? 'checked' : ''}> 작업등</label>
-    </div>
     <div class="view3d-hint">조명 편집은 2D 화면에서 해 주세요. 사람 모형은 여기서 끌어서 옮길 수 있습니다.<br>드래그: 회전 · 휠: 확대 · 우클릭 드래그: 이동</div>
   `;
-  overlay.querySelector<HTMLInputElement>('#view3d-venue')?.addEventListener('change', e => {
-    showVenue = (e.target as HTMLInputElement).checked;
-    rebuild();
-  });
-  overlay.querySelector<HTMLInputElement>('#view3d-worklight')?.addEventListener('change', e => {
-    workLightOn = (e.target as HTMLInputElement).checked;
-    applyWorkLight();
-  });
-  overlay.querySelector<HTMLInputElement>('#view3d-seating')?.addEventListener('change', e => {
-    showSeating = (e.target as HTMLInputElement).checked;
-    rebuild();
-  });
-  overlay.querySelector<HTMLInputElement>('#view3d-catwalk')?.addEventListener('change', e => {
-    showCatwalk = (e.target as HTMLInputElement).checked;
-    rebuild();
-  });
   host.appendChild(overlay);
 };
 

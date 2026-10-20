@@ -43,7 +43,8 @@ Acceptance
 Done notes
 - New files: `src/ui/shell.ts` (tray, file menu, 2D/3D switch, undo/redo buttons, scene drawer, zoom %), `src/ui/shell.css` (chrome tokens and layout).
 - `canvas.ts`: `fitFrame()` fits the plan inside the chrome insets; `getViewZoom()` / `onViewChange()` feed the zoom %.
-- Deferred on purpose: chrome dark theme (Phase 7); save-state dirty tracking and file rename (Phase 6). The 3D overlay checkboxes sit next to the tool rail until Phase 3 moves them into 보기.
+- Deferred on purpose: chrome dark theme (Phase 7); save-state dirty tracking and file rename (Phase 6).
+- Follow-ups before Phase 2 (user requests): 2D light drawn as a photometric gradient; 보기 renamed 빛 범위 표시 with an (i) beam/field tip; defaults floor + face + field on, beam off; new tray panel 3D 극장 구조 (3D only) replaces the checkboxes in the 3D overlay.
 
 ## Phase 2 — Tools `[ ]`
 
@@ -62,7 +63,7 @@ Spec §4, §5.
 - 선택한 객체 속성 rebuilt per selection type (fixture: 이름 editable, 채널, 위치, 조준점 numeric; set; actor with brightness + contributions).
 - Canvas actor label `얼굴 N lux`.
 - 무대 위 목록 tree (조명 / 세트 / 사람 모형) with select, hide, delete.
-- Lamp choice moves to 공연장 정보; 3D overlay toggles move to 보기.
+- Lamp choice moves to 공연장 정보. (The 3D overlay toggles already moved to the 3D 극장 구조 tray panel before Phase 2.)
 - Panel exclusivity rules (spec §5.4). Remove the TEMP probe panel.
 
 ## Phase 4 — Set handles `[ ]`

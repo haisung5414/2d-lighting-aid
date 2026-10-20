@@ -109,9 +109,22 @@ export const setViewMode = async (mode: '2d' | '3d') => {
   view3DOn = on;
   canvas.style.display = on ? 'none' : 'block';
   setView3DActive(wrapper, on);
+  // "3D 극장 구조" 패널은 3D 보기일 때만 누를 수 있다
+  const venue3dButton = document.querySelector<HTMLButtonElement>('[data-tray="venue3d"]');
+  if (venue3dButton) venue3dButton.disabled = !on;
+  if (!on && openPanelId === 'venue3d') openPanel(null);
   $('view-2d')?.setAttribute('aria-pressed', String(!on));
   $('view-3d')?.setAttribute('aria-pressed', String(on));
   if (!on) window.dispatchEvent(new Event('resize'));
+};
+
+const initVenue3DPanel = () => {
+  document.querySelectorAll<HTMLInputElement>('[data-venue3d]').forEach(input => {
+    input.addEventListener('change', async () => {
+      const { setVenueLayer3D } = await import('../render/view3d');
+      setVenueLayer3D(input.dataset.venue3d as 'venue' | 'catwalk' | 'seating' | 'worklight', input.checked);
+    });
+  });
 };
 
 const initViewSwitch = () => {
@@ -165,6 +178,7 @@ export const initShell = () => {
   initTray();
   initFilePill();
   initViewSwitch();
+  initVenue3DPanel();
   initSceneDrawer();
   initZoom();
 };

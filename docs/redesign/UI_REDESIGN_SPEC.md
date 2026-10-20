@@ -93,7 +93,8 @@ The actor always shows a small label on the 2D plan: `얼굴 642 lux` (live face
 
 | Group | Panel id | Label | Contents |
 |---|---|---|---|
-| 작업 전체 | `display` | 보기 | 2D: 바닥에 닿는 빛 (gradient, **default on**), 배우 얼굴 높이에 닿는 빛 (default off), 각도선 with an (i) hover tip explaining beam (50 %) and field (10 %), 빔 각도선 (solid) and 필드 각도선 (dashed) — both default off. 3D: 극장 구조, 캣워크, 객석, 작업등 (moved from the 3D overlay). |
+| 작업 전체 | `display` | 빛 범위 표시 | 2D light drawing only: 바닥에 닿는 빛 (gradient, default **on**), 배우 얼굴 높이에 닿는 빛 (default **on**), 각도선 with an (i) hover tip explaining beam (50 %) and field (10 %), 빔 각도선 (solid, default off), 필드 각도선 (dashed, default **on**). |
+| | `venue3d` | 3D 극장 구조 | 3D only: 극장 구조, 캣워크, 객석, 작업등. The tray button is **disabled in 2D** and the panel closes when switching back to 2D. Separate from 빛 범위 표시 on purpose (user decision 2026-10-20). |
 | | `layers` | 레이어 | 극장 평면도, 캣워크 오버레이 (visibility + opacity), 이 씬의 배경 이미지 (upload / position / size / opacity / delete). |
 | | `patch` | 채널 검사 | channel usage grid with over-capacity warning (current patch panel, always expanded). |
 | | `venue` | 공연장 정보 | 공연장 name, 무대 폭·깊이, 배우 얼굴 높이, 기본 조명 높이, 램프 규격 (HPL 575/750). |
@@ -132,7 +133,7 @@ Title is always `선택한 객체 속성`.
 
 ### 5.5 2D light drawing (decided 2026-10-20, before Phase 2)
 
-By default each fixture's floor light is a soft pool: a radial gradient over the field ellipse that follows the photometric falloff `10^(-r^p)` (100 % centre → 50 % at the beam angle → 10 % at the field angle, continuing slightly past it), tinted by the gel colour, scaled by the dimmer, clipped by shutters, composited with `screen`. Beam/field outlines are opt-in in 보기 so that newcomers see "where the light is" first and the technical boundaries only on demand.
+By default each fixture's floor light is a soft pool: a radial gradient over the field ellipse that follows the photometric falloff `10^(-r^p)` (100 % centre → 50 % at the beam angle → 10 % at the field angle, continuing slightly past it), tinted by the gel colour, scaled by the dimmer, clipped by shutters, composited with `screen`. Default visible: floor gradient, face-height area, field outline (dashed). The beam outline is opt-in in 빛 범위 표시. Panel names were chosen to be self-explanatory to newcomers (`보기` was too vague).
 
 ## 6. Scene drawer (bottom)
 
@@ -173,12 +174,12 @@ Left to right: help icon (opens 도우미), **hint sentence for the current tool
 | Left | 씬 list | scene drawer |
 | Left | 배경 이미지 | 레이어 |
 | Left | 세트 panel | tools (create) + 무대 위 목록 + 선택한 객체 속성 |
-| Left | 전체 보기 옵션 (2D toggles, reference layers) | 보기 (toggles) + 레이어 (reference layers) |
+| Left | 전체 보기 옵션 (2D toggles, reference layers) | 빛 범위 표시 (toggles) + 레이어 (reference layers) |
 | Right | 조명 기구 list + add controls | tools (add) + 무대 위 목록 |
 | Right | 위치 / 채널·타입·광학 / 젤 / 디머 / 셔터 / 그림자 | split: 선택한 객체 속성 (이름, 채널, 위치, 조준점) and 조명 설정 (the five) |
 | Right | 밝기 Probe | actor selection in 선택한 객체 속성 + canvas lux label; lamp choice → 공연장 정보 |
 | Right | 채널 사용 현황 | 채널 검사 |
-| 3D overlay | 극장 구조 / 캣워크 / 객석 / 작업등 | 보기 |
+| 3D overlay | 극장 구조 / 캣워크 / 객석 / 작업등 | 3D 극장 구조 (tray, 3D only) |
 | Shortcuts only | undo / redo | file-pill buttons too |
 
 ## 11. Out of scope for this redesign
