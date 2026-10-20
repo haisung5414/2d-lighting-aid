@@ -6,6 +6,7 @@ import { initSceneUI } from './ui/scene';
 import { initFixtureUI } from './ui/fixture';
 import { initPatchUI } from './ui/patch';
 import { initProbeUI } from './ui/probe';
+import { initSetUI } from './ui/sets';
 import { undo, redo } from './state/store';
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -24,6 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initFixtureUI();
     initProbeUI();
     initPatchUI();
+    initSetUI();
     
     console.log("애플리케이션 초기화 완료");
   } else {

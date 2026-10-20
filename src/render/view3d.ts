@@ -9,8 +9,8 @@ import { DEFAULT_COSTUME_COLOR, getState, getCurrentCue, subscribe, setState, co
 import { DEFAULT_LAMP, dimmerOutput, getBeamFrame, getPhotometry, shutterPolygon } from '../engine/photometrics';
 import { FixtureDataTexture, createStageLightMaterial } from './stageLightMaterial';
 import { lightColorOf } from '../engine/gels';
-import { buildVenueModel, venueModelFor } from './venueModel';
-import type { Fixture, LampKey, Position2D, StageConfig } from '../types';
+import { OCCLUDER_LAYER, buildVenueModel, venueModelFor } from './venueModel';
+import type { Fixture, LampKey, Position2D, SetPiece, StageConfig } from '../types';
 
 type Vec3 = { x: number; y: number; z: number };
 type CameraPreset = 'audience' | 'overview' | 'top' | 'left' | 'right';
@@ -329,6 +329,19 @@ const buildActor = (x: number, y: number, height: number, costume: string, data:
   return group;
 };
 
+/** 세트 상자. 조명 셰이더로 비추고, 그림자를 만드는 물체로 표시한다 */
+const buildSetPiece = (piece: SetPiece, data: FixtureDataTexture): THREE.Mesh => {
+  const mesh = new THREE.Mesh(
+    new THREE.BoxGeometry(piece.width, piece.height, piece.depth),
+    createStageLightMaterial(data, { color: piece.color })
+  );
+  mesh.position.set(piece.x, piece.height / 2, piece.y);
+  // 앱의 평면 회전(x→y 방향)은 three.js에서 y축 기준 반대 방향 회전이다
+  mesh.rotation.y = -piece.rotation * Math.PI / 180;
+  mesh.layers.enable(OCCLUDER_LAYER);
+  return mesh;
+};
+
 /* ---------- 씬 구성 ---------- */
 
 const disposeObject = (obj: THREE.Object3D) => {
@@ -382,6 +395,8 @@ const rebuild = () => {
     box.position.set(stage.width / 2, stage.default_z / 2, stage.depth / 2);
     dynamicGroup.add(box);
   }
+
+  (stage.set_pieces ?? []).forEach(piece => dynamicGroup!.add(buildSetPiece(piece, fixtureData!)));
 
   // 조명기와 빛줄기
   fixtures.forEach(fix => {

@@ -3,7 +3,7 @@
 import { getState, setState, getCurrentCue, subscribe, commitHistory } from '../state/store';
 import { GeometryEngine } from '../engine/geometry';
 import { gelDisplayHex } from '../engine/gels';
-import type { Position2D, Cue, UIToggles, StageConfig, ProbeState } from '../types';
+import type { Position2D, Cue, UIToggles, StageConfig, ProbeState, SetPiece } from '../types';
 
 let canvas: HTMLCanvasElement | null = null;
 let ctx: CanvasRenderingContext2D | null = null;
@@ -20,6 +20,57 @@ let lastPanY = 0;
 let lastViewPanEndAt = 0;
 
 const imageCache = new Map<string, HTMLImageElement>();
+/** 세트를 끌 때 클릭한 지점과 세트 중심 사이의 거리 */
+let setDragOffset: Position2D = { x: 0, y: 0 };
+
+const setPieceCorners = (piece: SetPiece): Position2D[] => {
+  const r = piece.rotation * Math.PI / 180;
+  const cos = Math.cos(r);
+  const sin = Math.sin(r);
+  return [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(([sx, sy]) => {
+    const lx = sx * piece.width / 2;
+    const ly = sy * piece.depth / 2;
+    return { x: piece.x + lx * cos - ly * sin, y: piece.y + lx * sin + ly * cos };
+  });
+};
+
+const pointInSetPiece = (point: Position2D, piece: SetPiece): boolean => {
+  const r = -piece.rotation * Math.PI / 180;
+  const dx = point.x - piece.x;
+  const dy = point.y - piece.y;
+  const lx = dx * Math.cos(r) - dy * Math.sin(r);
+  const ly = dx * Math.sin(r) + dy * Math.cos(r);
+  return Math.abs(lx) <= piece.width / 2 && Math.abs(ly) <= piece.depth / 2;
+};
+
+const drawSetPieces = (targetCtx: CanvasRenderingContext2D, pieces: SetPiece[], selectedId: string | null | undefined) => {
+  pieces.forEach(piece => {
+    const corners = setPieceCorners(piece);
+    const selected = piece.id === selectedId;
+    targetCtx.save();
+    targetCtx.beginPath();
+    corners.forEach((p, i) => {
+      const px = offsetX + toPx(p.x);
+      const py = offsetY + toPx(p.y);
+      if (i === 0) targetCtx.moveTo(px, py); else targetCtx.lineTo(px, py);
+    });
+    targetCtx.closePath();
+    targetCtx.globalAlpha = 0.55;
+    targetCtx.fillStyle = piece.color;
+    targetCtx.fill();
+    targetCtx.globalAlpha = 1;
+    targetCtx.lineWidth = selected ? 2.5 : 1.5;
+    targetCtx.strokeStyle = selected ? '#ffd166' : 'rgba(255, 255, 255, 0.7)';
+    targetCtx.setLineDash(selected ? [] : [5, 3]);
+    targetCtx.stroke();
+    targetCtx.setLineDash([]);
+    targetCtx.fillStyle = '#fff';
+    targetCtx.font = '11px "Segoe UI", sans-serif';
+    targetCtx.textAlign = 'center';
+    targetCtx.fillText(`${piece.label} (${piece.height}m)`, offsetX + toPx(piece.x), offsetY + toPx(piece.y) + 4);
+    targetCtx.restore();
+  });
+};
 
 const toPx = (m: number, s = scale): number => m * s;
 const toWorld = (px: number, py: number): Position2D => ({
@@ -315,6 +366,8 @@ export const renderCanvas = () => {
     ctx.stroke();
   }
 
+  drawSetPieces(ctx, state.stage_config.set_pieces ?? [], state.selected_set_id);
+
   const currentCue = getCurrentCue();
   if (!currentCue) return;
 
@@ -411,6 +464,21 @@ export const initCanvas = (canvasEl: HTMLCanvasElement, wrapperEl: HTMLElement) 
       }
     }
 
+    // 조명이 아닌 곳을 누르면 세트를 고르고 끌 수 있다 (위에 그려진 세트부터 확인)
+    const pieces = state.stage_config.set_pieces ?? [];
+    for (let k = pieces.length - 1; k >= 0; k--) {
+      const piece = pieces[k];
+      if (!pointInSetPiece(worldPos, piece)) continue;
+      commitHistory();
+      setDragOffset = { x: worldPos.x - piece.x, y: worldPos.y - piece.y };
+      setState(s => {
+        s.selected_set_id = piece.id;
+        s.interaction.dragMode = 'set';
+      });
+      canvas!.classList.add('grabbing');
+      return;
+    }
+
     isViewPanning = true;
     lastPanX = e.clientX;
     lastPanY = e.clientY;
@@ -445,6 +513,15 @@ export const initCanvas = (canvasEl: HTMLCanvasElement, wrapperEl: HTMLElement) 
       if (dragMode === 'probe') {
         s.probe.x = Math.min(s.stage_config.width, Math.max(0, worldPos.x));
         s.probe.y = Math.min(s.stage_config.depth, Math.max(0, worldPos.y));
+        return;
+      }
+
+      if (dragMode === 'set') {
+        const piece = (s.stage_config.set_pieces ?? []).find(item => item.id === s.selected_set_id);
+        if (piece) {
+          piece.x = Number((worldPos.x - setDragOffset.x).toFixed(2));
+          piece.y = Number((worldPos.y - setDragOffset.y).toFixed(2));
+        }
         return;
       }
 

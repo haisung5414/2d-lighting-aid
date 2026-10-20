@@ -337,6 +337,22 @@
   min-width: 0;
 }
 
+.set-panel-body .collapsible-body {
+  max-height: 45vh;
+  overflow-y: auto;
+}
+
+.set-hint {
+  margin: 0 0 8px;
+  color: var(--text-muted);
+  font-size: 0.74rem;
+  line-height: 1.4;
+}
+
+.set-properties {
+  margin-top: 8px;
+}
+
 .probe-estimated {
   margin-left: 4px;
   padding: 0 4px;

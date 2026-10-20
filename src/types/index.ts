@@ -5,7 +5,7 @@ export type FixtureType = 'ellipsoidal' | 'zoom' | 'fresnel' | 'par';
 export type ZoomRangeType = 'narrow' | 'medium';
 export type FresnelFocus = 'narrow' | 'medium' | 'flood';
 export type ParLampType = 'VNSP' | 'NSP' | 'MFL' | 'WFL';
-export type DragMode = 'position' | 'target' | 'shutter' | 'probe' | null;
+export type DragMode = 'position' | 'target' | 'shutter' | 'probe' | 'set' | null;
 
 export interface Position3D {
   x: number;
@@ -114,6 +114,23 @@ export interface Cue {
 
 export type LampKey = 'HPL575_230' | 'HPL750_230';
 
+/** 무대 위 세트 덩어리 (단, 벽, 계단 등). 모든 씬에서 공통으로 쓴다 */
+export interface SetPiece {
+  id: string;
+  label: string;
+  /** 중심 위치 m */
+  x: number;
+  y: number;
+  /** x 방향 폭, y 방향 깊이, 높이 m */
+  width: number;
+  depth: number;
+  height: number;
+  /** 평면 회전 deg */
+  rotation: number;
+  /** 표면 색 #rrggbb */
+  color: string;
+}
+
 export interface StageConfig {
   width: number;
   depth: number;
@@ -123,6 +140,7 @@ export interface StageConfig {
   lamp?: LampKey;
   /** 공연장 프리셋 키 (3D 극장 모형을 찾는 데 쓴다) */
   venue_key?: string;
+  set_pieces?: SetPiece[];
   reference_layers: ReferenceLayer[];
 }
 
@@ -153,6 +171,7 @@ export interface AppState {
   active_cue_index: number;
   selected_fixture_id: string | null;
   selected_fixture_ids: string[];
+  selected_set_id?: string | null;
   interaction: InteractionState;
   probe: ProbeState;
 }
