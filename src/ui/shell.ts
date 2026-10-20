@@ -117,23 +117,37 @@ let fileName: string | null = null;
 /** 마지막으로 저장하거나 불러온 뒤 작업 내용이 바뀌었는가 */
 let dirty = false;
 
-/** 지금 작업의 파일 이름과 저장 안 된 변경 여부 (src/cloud가 로그인으로 페이지를 떠나기 전에 쓴다) */
-export const getFileState = () => ({ name: fileName, dirty });
+/** 저장 위치: 내 컴퓨터(JSON 내려받기) 또는 온라인(src/cloud). docs/cloud/CLOUD_SPEC.md §5.1 */
+export type SaveLocation = 'local' | 'cloud';
+let saveLocation: SaveLocation = 'local';
+/** 저장 위치가 온라인일 때 저장을 맡는 함수 (src/cloud가 등록한다). asNew = 다른 이름으로 저장 */
+let cloudSaveHandler: ((name: string, asNew: boolean) => void) | null = null;
+export const setCloudSaveHandler = (handler: typeof cloudSaveHandler) => { cloudSaveHandler = handler; };
+
+/** 지금 작업의 파일 이름, 저장 안 된 변경 여부, 저장 위치 (src/cloud가 쓴다) */
+export const getFileState = () => ({ name: fileName, dirty, location: saveLocation });
 
 const renderFileState = () => {
   const label = $('file-name');
   if (label) label.textContent = fileName ?? '이름 없는 작업';
   const saveState = $('save-state');
   if (saveState) {
-    saveState.textContent = dirty ? '저장 안 됨 · 내 컴퓨터' : fileName ? '저장됨 · 내 컴퓨터' : '내 컴퓨터';
+    const where = saveLocation === 'cloud' ? '온라인' : '내 컴퓨터';
+    saveState.textContent = dirty ? `저장 안 됨 · ${where}` : fileName ? `저장됨 · ${where}` : where;
     saveState.classList.toggle('dirty', dirty);
   }
 };
 
-/** 파일 이름을 그 자리에서 입력칸으로 바꾼다. thenSave면 Enter와 함께 저장한다 (다른 이름으로 저장) */
-const startFileRename = (thenSave: boolean) => {
+const saveTo = (name: string, asNew: boolean) => {
+  if (saveLocation === 'cloud' && cloudSaveHandler) cloudSaveHandler(name, asNew);
+  else saveProject(name);
+};
+
+/** 파일 이름을 그 자리에서 입력칸으로 바꾼다. onSubmit이 있으면 Enter와 함께 그 이름으로 저장한다 */
+const startFileRename = (onSubmit?: (name: string) => void) => {
   const label = $('file-name');
   if (!label || label.hidden) return;
+  let thenSave = !!onSubmit;
   const input = document.createElement('input');
   input.type = 'text';
   input.className = 'filename-input';
@@ -155,7 +169,7 @@ const startFileRename = (thenSave: boolean) => {
     label.hidden = false;
     if (save && name) {
       fileName = name;
-      if (download) saveProject(name);
+      if (download) onSubmit?.(name);
     }
     renderFileState();
   };
@@ -168,9 +182,12 @@ const startFileRename = (thenSave: boolean) => {
   input.addEventListener('blur', () => { thenSave = false; finish(true); });
 };
 
+/** 파일 알약에서 이름을 받아 onSubmit을 부른다 (src/cloud의 "온라인에 저장"이 쓴다) */
+export const askFileName = (onSubmit: (name: string) => void) => startFileRename(onSubmit);
+
 const saveCurrent = () => {
-  if (fileName) saveProject(fileName);
-  else startFileRename(true);
+  if (fileName) saveTo(fileName, false);
+  else startFileRename(name => saveTo(name, false));
 };
 
 const closeFileMenu = () => {
@@ -206,9 +223,9 @@ const initFilePill = () => {
       const action = item.dataset.menu;
       if (action === 'load') $('file-upload')?.click();
       if (action === 'save') saveCurrent();
-      if (action === 'saveas') startFileRename(true);
+      if (action === 'saveas') startFileRename(name => saveTo(name, true));
       // 저장하지 않은 변경이 있을 때만 확인을 묻는다
-      if (action === 'workspace' && (!dirty || window.confirm('저장하지 않은 작업은 사라집니다. 작업 공간 선택 화면으로 돌아갈까요?'))) {
+      if (action === 'workspace' && (!dirty || window.confirm('저장하지 않은 작업은 사라집니다. 홈으로 돌아갈까요?'))) {
         if (view3DOn) void setViewMode('2d');
         showLanding();
       }
@@ -218,15 +235,17 @@ const initFilePill = () => {
   $('undo-btn')?.addEventListener('click', () => undo());
   $('redo-btn')?.addEventListener('click', () => redo());
 
-  $('file-name')?.addEventListener('click', () => startFileRename(false));
+  $('file-name')?.addEventListener('click', () => startFileRename());
 
   // manager.ts가 저장·불러오기 때, store가 새 작업을 시작할 때 알려 준다 (name이 null이면 새 작업)
   window.addEventListener('lighting:file', (e) => {
     // dirty: 로그인하러 떠났다 돌아와 작업을 되살릴 때 "저장 안 됨"을 그대로 둔다 (src/cloud/auth.ts)
-    const detail = (e as CustomEvent<{ name: string | null; dirty?: boolean }>).detail;
+    // location: 저장 위치. 없으면 내 컴퓨터 (온라인 작업은 src/cloud/projects.ts가 'cloud'로 알린다)
+    const detail = (e as CustomEvent<{ name: string | null; dirty?: boolean; location?: SaveLocation }>).detail;
     const name = detail?.name ?? null;
     fileName = name ? name.replace(/\.json$/i, '') : null;
     dirty = detail?.dirty ?? false;
+    saveLocation = detail?.location ?? 'local';
     renderFileState();
   });
   onEdit(() => {

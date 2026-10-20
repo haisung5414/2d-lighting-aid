@@ -55,30 +55,44 @@ Done notes
 - Dev server for this worktree: `cloud-dev` on port 5180 (5173/5174 are used by other sessions); `#account` gets `z-index: 21` so the account menu opens above the tray.
 - `shell.ts`: `getFileState()` export; the `lighting:file` event accepts `dirty`. `manager.ts`: `loadProjectData(parsed, name)`.
 
-## Phase 2 — Save online `[ ]`
+## Phase 2 — Save online `[x]`
 
 Spec §5.1, §5.2, §6.
-- `projects.ts`: `saveProjectOnline(name, data, {id?, expectedUpdatedAt?})`, `findByName`, size check.
-- `shell.ts` hooks: ask-name-in-place helper, cloud save handler for 저장/Ctrl+S, `location` in the `lighting:file` event and save-state text.
-- File menu: `온라인에 저장` (signed in only).
+- `projects.ts`: `saveOnline(name, asNew)` (insert / update / overwrite by name), size check, `openRow` tracking, `downloadCurrent`.
+- `shell.ts` hooks: `askFileName`, `setCloudSaveHandler` (저장 / Ctrl+S / 다른 이름으로 저장 go online when the location is `cloud`), `location` in the `lighting:file` event and the save-state text; ☰ `작업 공간 바꾸기` → `홈으로`.
+- `fileMenu.ts`: `온라인에 저장` (signed in, local work) and `내 컴퓨터에 내려받기` (signed in, online work).
 - Overwrite confirmations (same name, newer remote copy). Sign-out switches the location to local.
 
 Acceptance
-- Signed in: 온라인에 저장 creates a row (visible in Supabase Table Editor) with the same JSON as a local save; the pill shows `저장됨 · 온라인`; an edit shows `저장 안 됨 · 온라인`; Ctrl+S updates the same row.
-- A second user (or SQL with another uid) cannot read the row (RLS check in the SQL editor with `set role authenticated` + a fake `request.jwt.claims`).
-- Signed out: 저장 downloads as today.
+- Signed in: saving creates a row with the same JSON as a local save; the pill shows `저장됨 · 온라인`; an edit shows `저장 안 됨 · 온라인`; Ctrl+S updates the same row.
+- Signed out: 저장 downloads as before.
 
-## Phase 3 — Open online (project list) `[ ]`
+Done notes (2026-10-21, tested with the real account on `localhost:5180`)
+- New work from Home → Ctrl+S asked the name in the pill → row inserted; F tool edit → `저장 안 됨 · 온라인` → Ctrl+S updated the same row (`updated_at` > `created_at`).
+- 다른 이름으로 저장 → second row; saving as an existing name asked to overwrite and replaced that row; a remote change (row touched by a second request) triggered the "더 최근에 저장" question, and declining kept `저장 안 됨`.
+- 기기에서 열기 while signed in → `저장됨 · 내 컴퓨터` with `온라인에 저장` in the menu → saved online → `저장됨 · 온라인`, menu shows `내 컴퓨터에 내려받기`.
+- Not verified: reading another user's rows with a second real account (RLS was only checked as an anonymous visitor: select returns `[]`, insert is rejected).
 
-Spec §5.3, §6.
-- `projectDialog.ts`: `내 온라인 작업` dialog, newest first, relative time, 열기 / 삭제, empty state, unsaved-changes question.
-- File menu `온라인에서 열기` and the landing-screen button.
+## Phase 3 — Login screen and Home `[x]`
+
+Spec §4.1, §4.2, §9 (replaces the planned project-list dialog; decided 2026-10-21 when the user asked for "login → dashboard → editor" in the SketchUp Web style).
+- Migration `20261021010000_project_summary.sql`: generated `venue_key`, `scene_count`, `thumbnail` columns, so the list never downloads `data`.
+- `home.ts` + `home.css`: login screen (Login.dc.html) and Home (Home.dc.html) drawn inside `#landing-screen`; the old landing card is hidden. Home: 새로 만들기 ▾, 기기에서 열기, sort and view toggles, 극장에서 시작 cards, 내 작업 cards with thumbnail, relative time, venue · 씬 N and a ⋯ menu (열기, 이름 바꾸기 inline, 내 컴퓨터에 내려받기, 삭제).
+- `auth.ts`: `isAuthResolved()` (Home waits up to 4 s for the session check), `skipLogin` flag cleared on sign-out.
+- `account.ts`: the landing line from Phase 1 is removed (Home replaces it).
 
 Acceptance
-- The list shows only my projects; 열기 restores the exact work (fixtures, sets, scenes, venue) and sets the location to cloud; 삭제 removes the row after confirmation.
-- Works from the landing screen (no editor open yet).
+- Signed out (configured) → login screen; "로그인 없이 시작하기" → local Home, remembered after reload; Google sign-in → Home with my projects.
+- Clicking a project opens the exact work in the editor with location `cloud`; 홈으로 returns to Home and the list is reloaded.
+- Not configured → local Home, no Supabase request.
+
+Done notes (2026-10-21)
+- All of the above checked in the browser with the real account, plus rename (inline, Enter) and delete (confirm) from the ⋯ menu, sort/view toggles, light and dark themes, desktop (1100–1280 px: 260 px nav, two cards per row) and narrow (722 px: nav becomes a top bar) layouts.
+- The real sign-in from the **login screen** button was not repeated (sign-in itself was verified in Phase 1, from the editor dialog); the session was signed out at the end of testing, so the next start shows the login screen.
+- Two test rows remain in the account: `자동시험 첫 저장`, `로컬에서 온 작업`.
 
 ## Phase 4 — Deploy check `[ ]`
 
 - After the user approves merging to `main` and pushing: confirm the GitHub Variables are set, the Pages build succeeds, and on `https://haisung5414.github.io/2d-lighting-aid/` sign-in, save online, list, open and sign-out all work; local save still works signed out.
-- Update `PROJECT_BRIEF.md` (top bar / account) and spec §8 of `UI_REDESIGN_SPEC.md` (account area no longer a placeholder for 로그인).
+- Update `PROJECT_BRIEF.md` (top bar / account, Home replaces the venue picker) and `UI_REDESIGN_SPEC.md` §2 / §8 (account area no longer a placeholder for 로그인; landing screen replaced by login + Home; ☰ `홈으로`).
+- Merge note: `feature/sketchup-ui` also edits `index.html` and `src/ui/shell.ts`; the cloud hooks there are small (spec §8) and should be re-applied by hand if they conflict.

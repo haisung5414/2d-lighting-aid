@@ -1,0 +1,188 @@
+/* src/cloud/home.css
+ * 로그인 화면과 홈. 시안: docs/design/sketchup-redesign/Login.dc.html, Home.dc.html (SketchUp Web 홈 허브).
+ * 다크 테마는 ui/shell.css와 같은 규칙(운영체제 설정, data-theme)을 따른다. */
+
+:root {
+  --lh-bg: #f2f2f5;
+  --lh-surface: #ffffff;
+  --lh-ink: #222831;
+  --lh-meta: #6b7280;
+  --lh-line: #e1e4e8;
+  --lh-blue: #0b5cad;
+  --lh-blue-hover: #ecf2fa;
+  --lh-blue-on: #dceaf8;
+  --lh-tile: #e6e8eb;
+  --lh-tile-fill: #f2f3f5;
+  --lh-tile-line: #8a929c;
+  --lh-thumb: #1f2329; /* 씬 썸네일은 편집 화면과 같은 어두운 바탕으로 그려진다 */
+  --lh-hero-1: #e3eef9;
+  --lh-hero-2: #ffffff;
+  --lh-faint: #c8cdd3;
+  --lh-faint-fill: #f2f2f5;
+  --lh-danger: #c5221f;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --lh-bg: #161b21;
+    --lh-surface: #222b35;
+    --lh-ink: #e4eaf0;
+    --lh-meta: #a5b1be;
+    --lh-line: #36414e;
+    --lh-blue: #6aa8ff;
+    --lh-blue-hover: #1c2d42;
+    --lh-blue-on: #1f3550;
+    --lh-tile: #2a3440;
+    --lh-tile-fill: #222b35;
+    --lh-tile-line: #75818f;
+    --lh-hero-1: #1c2d42;
+    --lh-hero-2: #161b21;
+    --lh-faint: #4a5563;
+    --lh-faint-fill: #2a3440;
+    --lh-danger: #ff8a80;
+  }
+}
+:root[data-theme="dark"] {
+  --lh-bg: #161b21;
+  --lh-surface: #222b35;
+  --lh-ink: #e4eaf0;
+  --lh-meta: #a5b1be;
+  --lh-line: #36414e;
+  --lh-blue: #6aa8ff;
+  --lh-blue-hover: #1c2d42;
+  --lh-blue-on: #1f3550;
+  --lh-tile: #2a3440;
+  --lh-tile-fill: #222b35;
+  --lh-tile-line: #75818f;
+  --lh-hero-1: #1c2d42;
+  --lh-hero-2: #161b21;
+  --lh-faint: #4a5563;
+  --lh-faint-fill: #2a3440;
+  --lh-danger: #ff8a80;
+}
+
+/* 예전 작업 공간 카드 대신 이 화면을 쓴다 */
+#landing-screen.lh-on { padding: 0; align-items: stretch; justify-content: stretch; background: var(--lh-bg); }
+#landing-screen.lh-on > .landing-card { display: none; }
+
+.lh { width: 100%; height: 100vh; overflow: auto; color: var(--lh-ink); background: var(--lh-bg); }
+.lh[data-screen="pending"] { background: var(--lh-bg); }
+.lh button { font: inherit; }
+.lh a { color: var(--lh-blue); }
+.lh-icon { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; }
+.lh-icon > svg { display: block; }
+.lh-grow { flex: 1; }
+
+/* ---------- 공통 버튼 ---------- */
+.lh-outline { height: 44px; padding: 0 28px; display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--lh-blue); border-radius: 0; background: var(--lh-surface); color: var(--lh-blue); font-size: 15px; cursor: pointer; white-space: nowrap; }
+.lh-outline:hover { background: var(--lh-blue-hover); }
+.lh-outline.lh-small { height: 36px; padding: 0 14px; font-size: 14px; }
+.lh-iconbtn { width: 40px; height: 40px; border: 0; background: transparent; color: var(--lh-blue); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; border-radius: 4px; }
+.lh-iconbtn:hover { background: var(--lh-blue-hover); }
+.lh button:focus-visible, .lh a:focus-visible, .lh-card:focus-visible { outline: 2px solid var(--lh-blue); outline-offset: 2px; }
+
+.lh-google { height: 48px; display: flex; align-items: center; justify-content: center; gap: 12px; border: 1px solid var(--lh-ink); border-radius: 0; background: var(--lh-surface); color: var(--lh-ink); font-size: 16px; font-weight: 700; cursor: pointer; }
+.lh-google:hover { background: var(--lh-blue-hover); }
+.lh-google:disabled { opacity: .6; cursor: progress; }
+.lh-google.lh-google-small { height: 40px; padding: 0 18px; font-size: 14px; display: inline-flex; }
+
+.lh-brand { display: flex; align-items: center; gap: 10px; color: var(--lh-blue); font-size: 24px; font-weight: 700; }
+.lh-brand > span:last-child { color: var(--lh-ink); }
+
+/* ---------- 팝업 메뉴 ---------- */
+.lh-popup-wrap { position: relative; display: inline-flex; }
+.lh-popup { position: absolute; z-index: 30; top: calc(100% + 4px); left: 0; min-width: 200px; padding: 4px; display: grid; background: var(--lh-surface); border: 1px solid var(--lh-line); box-shadow: 0 6px 20px rgba(0, 0, 0, .14); }
+.lh-popup-right, .lh-more + .lh-popup { left: auto; right: 0; }
+.lh-popup button { border: 0; background: none; text-align: left; padding: 9px 12px; font-size: 14px; color: var(--lh-ink); cursor: pointer; white-space: nowrap; }
+.lh-popup button:hover { background: var(--lh-blue-hover); }
+.lh-popup button.lh-danger { color: var(--lh-danger); }
+.lh-popup-email { padding: 9px 12px 8px; margin-bottom: 4px; border-bottom: 1px solid var(--lh-line); font-size: 13px; color: var(--lh-meta); overflow-wrap: anywhere; }
+
+/* ---------- 로그인 화면 ---------- */
+.lh-login { display: flex; flex-wrap: wrap; min-height: 100vh; background: var(--lh-surface); }
+.lh-hero { flex: 999 1 560px; min-width: 0; position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; padding: 0 64px 72px; min-height: 360px; }
+.lh-hero > .lh-icon { position: absolute; inset: 0; }
+.lh-hero > .lh-icon > svg { width: 100%; height: 100%; }
+.lh-hero-text { position: relative; display: flex; flex-direction: column; gap: 4px; }
+.lh-hero-line { font-size: clamp(40px, 6vw, 72px); line-height: 1.1; font-weight: 400; }
+.lh-hero-line.lh-strong { font-weight: 700; }
+.lh-hero-rule { display: block; height: 3px; background: var(--lh-blue); margin-top: 36px; max-width: 760px; }
+.lh-signin { flex: 1 1 380px; max-width: 520px; border-left: 1px solid var(--lh-line); display: flex; flex-direction: column; padding: 96px 48px 32px; }
+.lh-signin .lh-brand { font-size: 28px; }
+.lh-sub { margin: 6px 0 0 46px; font-size: 14px; color: var(--lh-meta); }
+.lh-signin h1 { margin: 36px 0 0; font-size: 30px; font-weight: 500; }
+.lh-lead { margin: 12px 0 0; font-size: 15px; line-height: 1.6; color: var(--lh-meta); }
+.lh-signin .lh-google { margin-top: 36px; }
+.lh-link { margin-top: 20px; border: 0; background: none; color: var(--lh-blue); font-size: 15px; cursor: pointer; padding: 6px; }
+.lh-link:hover { text-decoration: underline; }
+.lh-foot { display: flex; justify-content: center; gap: 16px; font-size: 14px; }
+@media (max-width: 960px) {
+  .lh-hero { padding: 0 24px 40px; min-height: 280px; }
+  .lh-signin { max-width: none; border-left: 0; border-top: 1px solid var(--lh-line); padding: 40px 24px 24px; }
+}
+
+/* ---------- 홈 ---------- */
+.lh-home { display: flex; min-height: 100vh; }
+.lh-nav { flex: 0 0 260px; background: var(--lh-surface); display: flex; flex-direction: column; padding: 24px 0 20px; border-right: 1px solid var(--lh-line); position: sticky; top: 0; height: 100vh; box-sizing: border-box; }
+.lh-nav .lh-brand { padding: 0 24px 56px; }
+.lh-nav-item { display: flex; align-items: center; gap: 14px; height: 52px; padding: 0 24px; font-size: 15px; color: var(--lh-blue); text-decoration: none; }
+.lh-nav-item:hover { background: var(--lh-blue-hover); }
+.lh-nav-item.lh-on { background: var(--lh-blue-on); box-shadow: inset 4px 0 0 var(--lh-blue); font-weight: 700; }
+.lh-main { flex: 1; min-width: 0; padding: 28px 32px 48px; display: flex; flex-direction: column; gap: 24px; }
+.lh-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.lh-header h1 { margin: 0; font-size: 22px; font-weight: 700; color: var(--lh-blue); }
+.lh-account { display: flex; align-items: center; }
+.lh-chip { display: flex; align-items: center; gap: 8px; height: 40px; padding: 0 12px 0 6px; border: 1px solid var(--lh-line); border-radius: 999px; background: var(--lh-surface); color: var(--lh-ink); cursor: pointer; max-width: 240px; }
+.lh-chip:hover { background: var(--lh-blue-hover); }
+.lh-chip .cloud-avatar { width: 28px; height: 28px; }
+.lh-chip-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; }
+.lh-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.lh-new { padding: 0 20px 0 32px; }
+.lh-section { display: flex; flex-direction: column; gap: 12px; }
+.lh-section h2 { margin: 0; font-size: 16px; font-weight: 700; }
+
+.lh-card { background: var(--lh-surface); display: flex; flex-direction: column; border: 0; padding: 0; text-align: left; color: var(--lh-ink); cursor: pointer; position: relative; }
+.lh-card:hover { box-shadow: 0 0 0 2px var(--lh-blue); }
+.lh-card-title { padding: 12px 16px 2px; font-size: 16px; font-weight: 700; }
+.lh-meta { font-size: 13px; color: var(--lh-meta); }
+.lh-venues { display: flex; gap: 20px; flex-wrap: wrap; }
+.lh-venue { width: 240px; }
+.lh-venue .lh-meta { padding: 0 16px 14px; }
+.lh-venue-thumb { height: 110px; background: var(--lh-tile); display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.lh-venue-thumb img { width: 100%; height: 100%; object-fit: cover; opacity: .85; }
+.lh-venue-thumb .lh-icon, .lh-venue-thumb svg { width: 100%; height: 100%; }
+
+.lh-files.lh-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 24px; }
+.lh-file .lh-thumb { aspect-ratio: 2 / 1; background: var(--lh-thumb); display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.lh-file .lh-thumb img { height: 100%; width: auto; image-rendering: auto; }
+.lh-file .lh-thumb .lh-icon, .lh-file .lh-thumb svg { width: 100%; height: 100%; }
+.lh-file-body { padding: 14px 16px 10px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.lh-file-name { font-size: 17px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lh-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; min-height: 32px; }
+.lh-cloud { color: var(--lh-blue); }
+.lh-more { width: 32px; height: 32px; color: var(--lh-ink); }
+.lh-rename { font: inherit; font-size: 16px; font-weight: 700; padding: 4px 6px; border: 1px solid var(--lh-blue); background: var(--lh-surface); color: var(--lh-ink); width: 100%; box-sizing: border-box; }
+.lh-busy-label { display: none; position: absolute; inset: 0; align-items: center; justify-content: center; background: color-mix(in srgb, var(--lh-surface) 75%, transparent); font-weight: 600; }
+.lh-file.lh-busy .lh-busy-label { display: flex; }
+
+/* 목록 보기: 썸네일을 작게, 한 줄에 하나 */
+.lh-files.lh-list { display: flex; flex-direction: column; gap: 2px; }
+.lh-files.lh-list .lh-file { flex-direction: row; align-items: center; }
+.lh-files.lh-list .lh-thumb { width: 96px; flex: 0 0 96px; aspect-ratio: 2 / 1; }
+.lh-files.lh-list .lh-file-body { flex: 1; flex-direction: row; align-items: center; gap: 24px; padding: 6px 12px 6px 16px; }
+.lh-files.lh-list .lh-file-name { flex: 1; font-size: 15px; }
+.lh-files.lh-list .lh-row { flex: 0 0 auto; min-width: 180px; }
+
+.lh-status { margin: 0; color: var(--lh-meta); font-size: 14px; }
+.lh-note { background: var(--lh-surface); padding: 20px 24px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; max-width: 760px; }
+.lh-note p { margin: 0; font-size: 14px; line-height: 1.6; color: var(--lh-meta); }
+
+@media (max-width: 760px) {
+  .lh-home { flex-direction: column; }
+  .lh-nav { position: static; height: auto; flex: 0 0 auto; flex-direction: row; align-items: center; padding: 10px 16px; border-right: 0; border-bottom: 1px solid var(--lh-line); }
+  .lh-nav .lh-brand { padding: 0 16px 0 0; font-size: 20px; }
+  .lh-nav-item { height: 40px; padding: 0 12px; }
+  .lh-nav .lh-grow, .lh-nav-item:last-child { display: none; }
+  .lh-main { padding: 20px 16px 40px; }
+  .lh-venue { width: calc(50% - 10px); min-width: 150px; }
+  .lh-files.lh-list .lh-row:first-of-type { display: none; }
+}

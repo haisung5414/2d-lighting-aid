@@ -1,6 +1,6 @@
 // src/cloud/account.ts
-// 오른쪽 위 계정 자리(로그인 버튼 ↔ 계정 칩과 메뉴), 로그인 창, 시작 화면의 로그인 줄.
-// 사양: docs/cloud/CLOUD_SPEC.md §4.1, §4.2
+// 편집 화면 오른쪽 위 계정 자리(로그인 버튼 ↔ 계정 칩과 메뉴)와 로그인 창. 시작 화면(로그인·홈)은 home.ts가 그린다.
+// 사양: docs/cloud/CLOUD_SPEC.md §4.1, §4.4
 
 import { onAuthChange, signInWithGoogle, signOut, type CloudUser } from './auth';
 import { cloudConfig } from './config';
@@ -19,7 +19,7 @@ const button = (className: string, text: string, onClick: () => void) => {
   return node;
 };
 
-const avatar = (user: CloudUser) => {
+export const avatar = (user: CloudUser) => {
   if (user.avatarUrl) {
     const img = el('img', 'cloud-avatar');
     img.src = user.avatarUrl;
@@ -123,37 +123,7 @@ const initAccountArea = () => {
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeAccountMenu(); });
 };
 
-/* ---------- 시작 화면의 로그인 줄 ---------- */
-
-let landingLine: HTMLDivElement | null = null;
-
-const renderLanding = (user: CloudUser | null) => {
-  if (!landingLine) return;
-  if (!user) {
-    landingLine.replaceChildren(
-      el('span', 'cloud-landing-text', '로그인하면 작업을 온라인에 저장하고 어디서나 열 수 있습니다.'),
-      button('btn btn-secondary', 'Google로 로그인', () => void signInWithGoogle()),
-    );
-    return;
-  }
-  const who = el('span', 'cloud-landing-text');
-  who.append(avatar(user), el('span', undefined, `${user.name} 님으로 로그인됨`));
-  landingLine.replaceChildren(who, button('btn btn-secondary', '로그아웃', () => void signOut()));
-};
-
-const initLandingLine = () => {
-  if (!cloudConfig) return;
-  const card = document.querySelector('#landing-screen .landing-card');
-  if (!card) return;
-  landingLine = el('div', 'cloud-landing');
-  card.append(landingLine);
-};
-
 export const initAccountUI = () => {
   initAccountArea();
-  initLandingLine();
-  onAuthChange(user => {
-    renderAccount(user);
-    renderLanding(user);
-  });
+  onAuthChange(renderAccount);
 };

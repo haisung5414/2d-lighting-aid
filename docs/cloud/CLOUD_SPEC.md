@@ -56,58 +56,80 @@ alter table public.projects enable row level security;
 -- trigger: updated_at = now() on update
 ```
 
-- `data` is the whole `AppState` JSON, the same object `saveProject` downloads.
+Second migration (`20261021010000_project_summary.sql`, added 2026-10-21 for the home screen): three **generated columns** computed from `data`, so the home list never downloads whole projects:
+
+```sql
+venue_key   text generated always as (data->'stage_config'->>'venue_key') stored
+scene_count int  generated always as (jsonb_array_length(data->'cues')) stored
+thumbnail   text generated always as (coalesce(data->'cues'->((data->>'active_cue_index')::int)->>'thumbnail',
+                                               data->'cues'->0->>'thumbnail')) stored
+```
+
+- `data` is the whole `AppState` JSON, the same object `saveProject` downloads. Scene thumbnails (`cue.thumbnail`, a 160 px JPEG data URL made by `generateThumbnail`) are already inside it.
 - Names are unique per user, so "save with a name that already exists" is an overwrite question (§5.2).
 - The 5 MB cap protects the 500 MB quota; the client checks the size first and shows a Korean error instead of a raw database error.
 
 ## 4. Sign-in
 
-### 4.1 Where
-- **Account area (top-right, `#account`)**
-  - Signed out: `로그인` button (enabled when configured).
-  - Signed in: the `로그인` button becomes an **account chip** (Google avatar or first letter + display name). Clicking it opens a small menu: the email (muted), `로그아웃`.
-- **Landing screen**: below the venue cards, one line: signed out → `로그인하면 작업을 온라인에 저장하고 어디서나 열 수 있습니다.` + `Google로 로그인`; signed in → `<name> 님으로 로그인됨` + `온라인에서 열기` (Phase 3) + `로그아웃`.
+### 4.1 Screens (decided 2026-10-21, replaces the landing-line idea)
+The old landing card (venue picker) is replaced by two screens drawn inside `#landing-screen` (so every existing "show landing / show editor" path keeps working). Visual reference: `docs/design/sketchup-redesign/Login.dc.html` and `Home.dc.html` (SketchUp Web's sign-in page and Home hub).
 
-### 4.2 Sign-in dialog
-Clicking `로그인` in the top bar opens a small centred dialog (SketchUp Web shows a sign-in page; we keep it in-app):
-- Title `로그인`; text `Google 계정으로 로그인하면 작업을 온라인에 저장하고 다른 컴퓨터에서도 열 수 있습니다. 로그인하지 않아도 내 컴퓨터에 저장하는 기능은 그대로 쓸 수 있습니다.`
-- Button `Google로 로그인`; `닫기`.
+| Situation | Screen |
+|---|---|
+| Configured, signed out, never chose "without signing in" | **Login screen** (§4.2) |
+| Signed in | **Home** (§9) with my online projects |
+| Signed out after choosing "without signing in", or not configured | **Home** in local mode: no project list; a card invites to sign in (configured only) |
+
+- While the session is being checked (Supabase loads lazily), `#landing-screen` shows only its background (max 4 s, then local Home).
+- **Account area in the editor (top-right, `#account`)**: signed out → `로그인` (opens the sign-in dialog §4.4); signed in → **account chip** (avatar + name) with a menu: email, `로그아웃`.
+
+### 4.2 Login screen
+Two columns like the mockup (the right column stacks under the left on narrow screens):
+- Left: a light illustration (stage spot + aim line) and the headline `무대 조명을` / **`미리 그려 보세요.`** with a blue rule.
+- Right: logo + `Lighting Aid`, small `조명 시뮬레이터`, heading `환영합니다`, an outlined square **`Google로 계속 진행`** button with the Google "G", the link **`로그인 없이 시작하기 (이 기기에 저장)`**, and at the bottom `개인정보처리방침` (→ `privacy.html`).
+- "로그인 없이 시작하기" stores `lightingAid.cloud.skipLogin = 1` in `localStorage` and shows Home in local mode. Signing out clears it.
 
 ### 4.3 Flow
 - `supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: <app URL> } })` with PKCE (`flowType: 'pkce'`). `<app URL>` = `location.origin + import.meta.env.BASE_URL`.
-- The page **leaves and comes back**. Before leaving, if the editor is open, the current state, file name and save location are put in `sessionStorage` (`lightingAid.cloud.pendingWork`); after returning and signing in, that work is restored through the normal load path, and the dirty flag is kept. If the editor is not open, nothing is stored and the landing screen shows again.
+- The page **leaves and comes back**. Before leaving, if the editor is open, the current state, file name and dirty flag are put in `sessionStorage` (`lightingAid.cloud.pendingWork`); after returning, that work is restored through the normal load path, and the dirty flag is kept. If the editor is not open, nothing is stored and Home shows.
 - The session persists in `localStorage` (Supabase default), so a reload stays signed in.
-- `로그아웃` calls `signOut()`. The open work stays on screen; its save location becomes `내 컴퓨터` (online saving needs an account).
+- `로그아웃` calls `signOut({ scope: 'local' })`. An open work stays on screen; its save location becomes `내 컴퓨터` (online saving needs an account).
+
+### 4.4 Sign-in dialog (editor only)
+`로그인` in the editor's top bar opens a small centred dialog: title `로그인`, text `Google 계정으로 로그인하면 작업을 온라인에 저장하고 다른 컴퓨터에서도 열 수 있습니다. 로그인하지 않아도 내 컴퓨터에 저장하는 기능은 그대로 쓸 수 있습니다.`, buttons `닫기` / `Google로 로그인`.
 
 ## 5. Online save
 
 ### 5.1 Save location
-The open work has a **location**: `local` (default) or `cloud` (with the row `id` and the `updated_at` it was loaded/saved with).
+The open work has a **location**: `local` or `cloud` (with the row `id` and the `updated_at` it was loaded/saved with; a new cloud work has no id yet).
 
-| Action | Effect |
+| Action | Location |
 |---|---|
-| 불러오기 (local file), 작업 공간 바꾸기 → new work | location `local` |
-| 온라인에 저장 / 온라인에서 열기 | location `cloud` |
-| **저장 / Ctrl+S** | saves to the current location: `local` → download as today; `cloud` → update that row |
-| 다른 이름으로 저장 | unchanged: asks a name in place and downloads (location becomes `local`) |
-| 로그아웃 | location becomes `local` |
+| Home → 새로 만들기 / venue card while **signed in** | `cloud` (untitled, no row yet) |
+| Home → 새로 만들기 / venue card while signed out | `local` |
+| 기기에서 열기 / 불러오기 (local file) | `local` |
+| Home → open a project card | `cloud` |
+| 온라인에 저장 | `cloud` |
+| 로그아웃 | `local` |
 
-Save-state text in the file pill: `저장 안 됨 · 온라인` / `저장됨 · 온라인` / `온라인` for cloud, today's `… · 내 컴퓨터` for local.
+| Command | `local` | `cloud` |
+|---|---|---|
+| **저장 / Ctrl+S** | download JSON (as before) | untitled → ask the name in place, then insert; else update the row |
+| **다른 이름으로 저장** | ask name, download | ask name, save as a **new** row (the open work switches to it) |
+| **온라인에 저장** (signed in, local only) | ask name if untitled, save online → `cloud` | hidden |
+| **내 컴퓨터에 내려받기** (signed in, cloud only) | hidden | download JSON; location stays `cloud` |
 
-### 5.2 온라인에 저장
-- File menu item, shown only when signed in (inserted after `다른 이름으로 저장`).
-- If the work is untitled, the file name is asked in place in the file pill (same input as 다른 이름으로 저장), then saved.
-- If a row with that name exists and it is **not** the open cloud project: `confirm('온라인에 같은 이름의 작업이 있습니다. 덮어쓸까요?')`.
-- On success: location `cloud`, `저장됨 · 온라인`.
-- Overwrite guard on 저장 to `cloud`: if the row's `updated_at` is newer than the one we hold (saved from another computer), `confirm('다른 곳에서 이 작업을 더 최근에 저장했습니다. 덮어쓸까요?')`.
+Save-state text in the file pill: `저장 안 됨 · 온라인` / `저장됨 · 온라인` / `온라인` for cloud, the existing `… · 내 컴퓨터` for local.
 
-### 5.3 온라인에서 열기 (project list)
-- File menu item (signed in only) and a landing-screen button.
-- Opens a dialog `내 온라인 작업`: one row per project, newest first: name, `수정 <relative time>` (e.g. `3분 전`, `어제`, `2026-10-01`), buttons `열기` and `삭제` (`삭제` asks `confirm('"<name>" 작업을 온라인에서 지울까요? 되돌릴 수 없습니다.')`).
-- The list query selects `id, name, updated_at` only (not `data`); `열기` fetches `data` for that row.
-- Empty list: `아직 온라인에 저장한 작업이 없습니다.`
-- Opening asks first if the open work has unsaved changes (same wording as 작업 공간 바꾸기).
-- Opening goes through the shared load function (§8), then location `cloud`.
+The ☰ item `작업 공간 바꾸기` is renamed **`홈으로`** (Home now holds both the venue templates and the files); it still asks only when there are unsaved changes.
+
+### 5.2 Overwrite questions
+- Saving under a name that another of my rows already has: `confirm('온라인에 같은 이름의 작업이 있습니다. 덮어쓸까요?')`. Yes → that row is replaced (the open work takes it over).
+- 저장 to `cloud` when the row's `updated_at` differs from the one we hold (saved from another computer): `confirm('다른 곳에서 이 작업을 더 최근에 저장했습니다. 덮어쓸까요?')`.
+- The row was deleted elsewhere: it is inserted again.
+
+### 5.3 Opening
+Online projects are opened from Home (§9); there is no separate dialog. Opening goes through `loadProjectData` (§8), then location `cloud`.
 
 ## 6. States and errors
 
@@ -120,7 +142,7 @@ Save-state text in the file pill: `저장 안 됨 · 온라인` / `저장됨 · 
 
 ## 7. Out of scope
 
-Sharing links, co-editing, folders, version history, thumbnails, offline queueing, autosave, other sign-in providers. The `공유` button stays disabled.
+Sharing links, co-editing, folders, version history, offline queueing, autosave, other sign-in providers, search on Home, and the mockup's 내 프로젝트 / 극장 라이브러리 / 튜토리얼 nav items. The `공유` button stays disabled.
 
 ## 8. Touch points in existing files
 
@@ -128,11 +150,24 @@ Kept minimal so `feature/sketchup-ui` merges cleanly.
 
 | File | Change |
 |---|---|
-| `index.html` | `id="account"` on the account div; the `로그인` button gets `id="login-btn"`. |
+| `index.html` | `id="account"` on the account div; the `로그인` button gets `id="login-btn"`; ☰ `작업 공간 바꾸기` → `홈으로`. The old landing card stays in the DOM but is hidden by `src/cloud/home.css`. |
 | `src/main.ts` | one `initCloud()` call. |
 | `src/ui/manager.ts` | extract the body of `loadFile` into exported `loadProjectData(parsed, name)`; `loadFile` calls it. |
 | `src/ui/shell.ts` | (a) export a way to ask the file name in place and get it back; (b) `saveCurrent` delegates to a registered save handler when the location is `cloud`; (c) the `lighting:file` event gains an optional `location` and the save-state text uses it; (d) `dirty` exposed through a getter. |
 | `.github/workflows/deploy.yml` | `env:` with the two `VITE_SUPABASE_*` variables on the build step. |
 | `package.json` | dependency `@supabase/supabase-js` (loaded with dynamic `import()` only when configured). |
 
-New: `src/cloud/config.ts`, `client.ts` (lazy client), `auth.ts` (session state, sign-in/out, pending-work handoff), `account.ts` (top-right chip, dialog, landing line), `projects.ts` (list/get/save/delete), `projectDialog.ts`, `cloud.css`, `index.ts` (`initCloud`).
+New: `src/cloud/config.ts`, `client.ts` (lazy client), `auth.ts` (session state, sign-in/out, pending-work handoff), `account.ts` (editor top-right chip, sign-in dialog), `projects.ts` (list/get/save/rename/delete, open, download), `fileMenu.ts` (extra ☰ items), `home.ts` + `home.css` (login screen and Home), `cloud.css`, `index.ts` (`initCloud`).
+
+## 9. Home (decided 2026-10-21)
+
+Layout from `Home.dc.html` (SketchUp Web Home): white left nav + light grey main area; the dark theme uses the shell tokens.
+
+- **Left nav**: logo `Lighting Aid`; one item `홈` (active); at the bottom `개인정보처리방침`.
+- **Header row**: title `홈`; right: account chip + menu (signed in) or `로그인` (signed out, configured).
+- **Action row**: `새로 만들기 ▾` (menu of venues) · `기기에서 열기` (local JSON) · right side: sort toggle (`최근 수정순` / `이름순`) and view toggle (grid / list), both remembered in `localStorage`.
+- **극장에서 시작**: one card per venue preset: 인문소극장 (floor-plan image), 빈 무대 (dashed square); meta `12 × 22.7 m`. Click = new work on that venue (§5.1).
+- **내 작업** (signed in): one card per online project: thumbnail (scene thumbnail or a placeholder), name, `마지막 수정: 3분 전` (relative for today/yesterday, else `2026. 10. 19.`), cloud icon, `<venue> · 씬 N`, `⋯` menu: `열기`, `이름 바꾸기` (inline input on the card), `내 컴퓨터에 내려받기`, `삭제` (`confirm('"<name>" 작업을 온라인에서 지울까요? 되돌릴 수 없습니다.')`). Clicking the card opens it.
+  - Loading: `불러오는 중…`; empty: `아직 온라인에 저장한 작업이 없습니다. 위의 새로 만들기로 시작해 보세요.`; error: the §6 message with `다시 시도`.
+- **Signed out**: instead of 내 작업, a card `로그인하면 작업을 온라인에 저장하고 어느 컴퓨터에서나 이어서 할 수 있습니다.` + `Google로 로그인` (configured), or a note that work is saved as a JSON file on this computer (not configured).
+- The list reloads whenever Home becomes visible and after every online save.

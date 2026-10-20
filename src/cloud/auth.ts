@@ -19,9 +19,19 @@ export interface CloudUser {
 const PENDING_WORK_KEY = 'lightingAid.cloud.pendingWork';
 
 let currentUser: CloudUser | null = null;
+/** 처음 로그인 상태 확인이 끝났는가 (설정이 없으면 처음부터 끝난 것으로 본다) */
+let resolved = !cloudConfig;
 const listeners: ((user: CloudUser | null) => void)[] = [];
 
 export const getUser = () => currentUser;
+export const isAuthResolved = () => resolved;
+
+/** "로그인 없이 시작하기"를 고른 적이 있으면 로그인 화면 대신 홈을 보인다 (docs/cloud/CLOUD_SPEC.md §4.2) */
+const SKIP_LOGIN_KEY = 'lightingAid.cloud.skipLogin';
+export const hasSkippedLogin = () => { try { return localStorage.getItem(SKIP_LOGIN_KEY) === '1'; } catch { return false; } };
+export const setSkippedLogin = (skip: boolean) => {
+  try { if (skip) localStorage.setItem(SKIP_LOGIN_KEY, '1'); else localStorage.removeItem(SKIP_LOGIN_KEY); } catch { /* 저장소를 못 쓰면 이번만 */ }
+};
 
 /** 로그인 상태가 바뀔 때마다 부른다 (등록하자마자 지금 상태로 한 번 부른다) */
 export const onAuthChange = (listener: (user: CloudUser | null) => void) => {
@@ -42,8 +52,8 @@ const toUser = (session: Session | null): CloudUser | null => {
   };
 };
 
-const setUser = (user: CloudUser | null) => {
-  if (user?.id === currentUser?.id) return;
+const setUser = (user: CloudUser | null, force = false) => {
+  if (!force && user?.id === currentUser?.id) return;
   currentUser = user;
   listeners.forEach(listener => listener(user));
 };
@@ -111,6 +121,8 @@ export const initAuth = async () => {
   if (new URLSearchParams(location.search).has('code')) history.replaceState(null, '', location.pathname);
   reportRedirectError();
   restoreStashedWork();
+  resolved = true;
+  setUser(currentUser, true); // 확인이 끝났음을 알린다 (홈이 로그인 화면/홈 중 무엇을 보일지 정한다)
 };
 
 export const signInWithGoogle = async () => {
@@ -135,5 +147,6 @@ export const signOut = async () => {
   } catch (err) {
     console.error('로그아웃 중 오류', err);
   }
+  setSkippedLogin(false);
   setUser(null);
 };
