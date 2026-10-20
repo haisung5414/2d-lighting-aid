@@ -16,7 +16,7 @@ Status: `[ ]` todo · `[~]` in progress · `[x]` done
 ## Phase 0 — Supabase and Google setup (user) `[ ]`
 
 Step-by-step Korean guide: [SETUP_GUIDE.md](SETUP_GUIDE.md). The user creates the project and the Google client and pastes the client secret into Supabase; Claude links the repo with the Supabase CLI, applies the schema and writes only the public key to `.env.local`.
-Project: new `lighting-aid` project in the `dodo4114@snu.ac.kr's Org` organization (FindMeATime paused to stay within the 2 free active projects).
+Project: new `lighting-aid` project in the `caltalk-mvp` organization (an unused project there was deleted to stay within the free-plan project limit).
 
 1. https://supabase.com → New project (free plan, any region near Korea, e.g. Northeast Asia (Seoul)). Keep the database password to yourself.
 2. SQL Editor → paste `docs/cloud/schema.sql` → Run.

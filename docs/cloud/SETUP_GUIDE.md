@@ -18,7 +18,7 @@
 
 | 단계 | 하는 사람 | 이유 |
 |---|---|---|
-| A. FindMeATime 일시 정지, 새 프로젝트 만들기 | 사용자 (대시보드) | 데이터베이스 비밀번호를 정해야 하고, 다른 앱에 영향을 주는 작업이기 때문 |
+| A. 새 프로젝트 만들기 | 사용자 (대시보드) | 데이터베이스 비밀번호를 정해야 하기 때문 |
 | B. 표(테이블)와 보안 규칙 만들기, 공개 키를 `.env.local`에 넣기 | Claude (Supabase CLI) | 공개 키만 다루고, 비밀 키는 쓰지 않음 |
 | C. Google OAuth 클라이언트 만들기 | 사용자 (Google Cloud 콘솔) | Google 계정 작업이고 client secret이 나오기 때문 |
 | D. Supabase에 Google 정보와 돌아갈 주소 넣기 | 사용자 (대시보드) | client secret을 붙여 넣기 때문 |
@@ -28,19 +28,13 @@
 
 ## A. Supabase 프로젝트 만들기
 
-### A-1. FindMeATime 일시 정지
-무료 요금제는 동시에 켜 둘 수 있는 프로젝트가 2개뿐이라서, 하나를 꺼야 새 프로젝트를 만들 수 있습니다.
-
-1. 바로 가기: https://supabase.com/dashboard/project/anelszynxtvxoxqvzgqt/settings/general (FindMeATime의 설정 화면)
-   - 직접 찾아갈 때: 대시보드 첫 화면에서 **FindMeATime**(FindMeATime2가 아닌 것)을 누르고, 왼쪽 맨 아래 톱니바퀴 **Project Settings**를 누르면 **General** 화면이 열립니다.
-2. General 화면을 아래로 내리면 **Project availability** 칸에 **Restart project**와 **Pause project**가 있습니다.
-3. **Pause project**를 누르고, 확인 창에서 다시 **Pause**를 누릅니다. 몇 분 뒤 프로젝트 목록에 "Paused"로 보입니다.
-4. 데이터는 지워지지 않습니다. 나중에 같은 화면이나 프로젝트 첫 화면의 **Restore project**로 다시 켤 수 있습니다.
+### A-1. 만들 자리 비우기 (끝남)
+무료 요금제는 켜 둘 수 있는 프로젝트 수가 정해져 있습니다. FindMeATime은 일시 정지할 권한이 없어서, 대신 `caltalk-mvp` 조직에 있던 안 쓰는 프로젝트(haisung5414's Project)를 지웠습니다(2026-10-21). 이제 `caltalk-mvp` 조직은 비어 있습니다.
 
 ### A-2. 새 프로젝트 만들기
 1. 대시보드 첫 화면에서 **New project**를 누릅니다.
 2. 다음처럼 채웁니다.
-   - Organization: `dodo4114@snu.ac.kr's Org` (FindMeATime이 있던 조직)
+   - Organization: `caltalk-mvp`
    - Project name: `lighting-aid`
    - Database password: **Generate a password**를 누르고, 나온 비밀번호를 비밀번호 관리자에 보관합니다. 이 비밀번호는 Claude에게 알려 주지 않아도 됩니다.
    - Region: **Northeast Asia (Seoul)**
