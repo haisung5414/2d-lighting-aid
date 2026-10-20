@@ -168,10 +168,6 @@ export const buildVenueModel = (model: VenueModel3D, data: FixtureDataTexture): 
     const block = box(p, 0, p.z, galleryMaterial);
     block.layers.enable(OCCLUDER_LAYER);
     group.add(block);
-    // 무대 쪽 가장자리에 높이 1m 난간
-    const rail = box({ x0: p.x0, x1: p.x1, y0: p.y0 - 0.03, y1: p.y0 + 0.03 }, p.z, p.z + 1.0, galleryMaterial);
-    rail.layers.enable(OCCLUDER_LAYER);
-    group.add(rail);
   });
 
   return group;
