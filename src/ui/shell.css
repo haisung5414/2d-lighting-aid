@@ -92,9 +92,12 @@
 /* 놓기·그리기 도구가 켜져 있으면 십자 커서 */
 #canvas-wrapper.placing #stageCanvas { cursor: crosshair; }
 
-/* 오른쪽: 패널 트레이 */
-.tray { position: absolute; z-index: 20; top: 58px; right: 10px; display: flex; flex-direction: column; gap: 5px; padding: 2px; }
-.tray .grp { font-size: 10px; font-weight: 600; letter-spacing: .06em; color: #c3cad3; text-align: right; padding: 6px 4px 0; }
+/* 오른쪽: 패널 트레이 (SketchUp식 아코디언). 누른 항목 바로 아래에서 패널이 펼쳐지고 아래 항목은 밀려난다.
+   트레이 자체는 마우스를 통과시키고, 버튼과 패널만 누를 수 있다 (빈 곳 아래의 무대를 가리지 않게) */
+.tray { position: absolute; z-index: 20; top: 58px; right: 10px; bottom: 10px; display: flex; flex-direction: column; align-items: flex-end; gap: 5px; padding: 2px; overflow-y: auto; pointer-events: none; scrollbar-width: thin; }
+.tray > * { pointer-events: auto; flex: none; }
+.tray .grp { font-size: 10px; font-weight: 600; letter-spacing: .06em; color: #c3cad3; text-align: right; padding: 6px 4px 0; pointer-events: none; }
+.tray-entry { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
 .trayitem { display: flex; align-items: center; justify-content: flex-end; gap: 6px; border: 0; background: none; padding: 0; cursor: pointer; }
 .trayitem .lbl { background: var(--surface); border: 1px solid var(--line); border-radius: 5px; padding: 2px 8px; font-size: 12px; font-weight: 600; color: var(--ink); box-shadow: var(--shadow); white-space: nowrap; }
 .trayitem .ico { width: 38px; height: 38px; display: grid; place-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: 7px; box-shadow: var(--shadow); color: var(--ink-2); }
@@ -103,12 +106,15 @@
 .trayitem[aria-expanded="true"] .lbl { color: var(--chrome-accent); }
 .trayitem:disabled { cursor: not-allowed; opacity: .45; }
 
-/* 열린 패널: 트레이 왼쪽 세로 칸 */
-.panelcol { position: absolute; z-index: 20; top: 58px; right: 196px; bottom: 64px; width: 320px; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
-.panel { position: relative; pointer-events: auto; display: flex; flex-direction: column; max-height: 100%; min-height: 0; }
+/* 펼쳐진 패널 (트레이 안) */
+.tray .panel { position: relative; width: 300px; display: flex; flex-direction: column; }
 .panel > header { display: flex; justify-content: space-between; align-items: center; padding: 8px 8px 8px 12px; border-bottom: 1px solid var(--line); flex: none; }
 .panel > header h2 { margin: 0; font-size: 14px; }
-.panel-body { padding: 10px 12px 12px; overflow-y: auto; min-height: 0; }
+.panel-body { padding: 10px 12px 12px; }
+.light-settings { border-color: var(--chrome-accent); }
+.light-settings.drop { animation: drop-in .22s ease-out; }
+@keyframes drop-in { from { transform: translateY(-12px); opacity: 0; } to { transform: none; opacity: 1; } }
+.toggle-quiet { margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--line); color: var(--ink-3); font-size: 12px; }
 .venue-fields { display: grid; gap: 10px; }
 .venue-fields label { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 13px; color: var(--ink-2); }
 .venue-fields input { width: 96px; }
@@ -122,8 +128,76 @@
 .info:hover .info-icon, .info:focus .info-icon { border-color: var(--chrome-accent); color: var(--chrome-accent); }
 .info-tip { position: absolute; z-index: 30; top: 22px; left: -8px; width: 270px; padding: 10px 12px; border-radius: 8px; background: var(--ink); color: #fff; font-size: 12px; line-height: 1.55; box-shadow: var(--shadow); opacity: 0; visibility: hidden; transition: opacity .12s; }
 .info:hover .info-tip, .info:focus .info-tip, .info:focus-within .info-tip { opacity: 1; visibility: visible; }
-/* 보기 패널은 짧아서 스크롤이 필요 없다. 말풍선이 패널 밖으로 나와도 잘리지 않게 한다 */
-.panel[data-panel="display"] .panel-body { overflow: visible; }
+
+
+/* 공통: 켜고 끄는 줄, 젤 색 점 */
+.toggle-row { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink); padding: 3px 0; cursor: pointer; }
+.toggle-row.is-disabled { color: var(--ink-3); cursor: default; }
+.gel-dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; border: 1px solid rgba(0, 0, 0, .25); flex: none; vertical-align: middle; }
+.gel-dot.square { border-radius: 3px; }
+.gel-dot.big { width: 22px; height: 22px; }
+.gel-dot.actor { background: #2d7a52; border-color: #1f5c3d; }
+
+/* 조명 설정 패널 */
+.ls-section { padding: 10px 0; border-bottom: 1px solid var(--line); }
+.ls-section:first-child { padding-top: 2px; }
+.ls-section:last-child { border-bottom: 0; padding-bottom: 0; }
+.ls-section h3 { margin: 0 0 8px; font-size: 12px; font-weight: 600; color: var(--ink-2); display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: baseline; }
+.ls-section h3 small { font-weight: 400; color: var(--ink-3); font-family: var(--font-mono); font-size: 11px; }
+.ls-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 13px; color: var(--ink-2); margin: 4px 0; }
+.ls-row > select { flex: 1; max-width: 190px; }
+.ls-slider { display: flex; align-items: center; gap: 8px; flex: 1; }
+.ls-slider input[type="range"] { flex: 1; min-width: 0; accent-color: var(--chrome-accent); }
+.ls-slider output { width: 40px; text-align: right; font-family: var(--font-mono); font-size: 12px; color: var(--ink); }
+.ls-slider small { color: var(--ink-3); font-size: 11px; }
+.ls-note { margin: 6px 0 0; font-size: 12px; color: var(--ink-3); line-height: 1.5; }
+.ls-gel-current { display: flex; align-items: center; gap: 8px; font-size: 13px; margin-bottom: 8px; }
+.ls-gels { display: grid; grid-template-columns: repeat(8, 1fr); gap: 5px; }
+.ls-gels button { aspect-ratio: 1; border-radius: 5px; border: 1px solid rgba(0, 0, 0, .2); cursor: pointer; padding: 0; }
+.ls-gels button.none { background: var(--surface-2); color: var(--ink-3); font-size: 11px; }
+.ls-gels button.on { outline: 2px solid var(--chrome-accent); outline-offset: 1px; }
+
+/* 선택한 객체 속성 패널 */
+.pp-row { display: grid; grid-template-columns: 84px 1fr; align-items: center; gap: 8px; margin: 6px 0; font-size: 13px; color: var(--ink-2); }
+.pp-ctl { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; min-width: 0; }
+.pp-ctl > input[type="text"] { flex: 1; min-width: 0; width: 100%; box-sizing: border-box; }
+.pp-num { display: inline-flex; align-items: center; gap: 3px; }
+.pp-num input { width: 58px; box-sizing: border-box; }
+.pp-num small { color: var(--ink-3); font-size: 11px; }
+.pp-kind { font-size: 12px; color: var(--ink-3); margin-bottom: 6px; }
+.pp-sub { margin: 14px 0 6px; padding-top: 10px; border-top: 1px solid var(--line); font-size: 11px; font-weight: 600; letter-spacing: .04em; color: var(--ink-3); }
+.pp-lux { display: flex; align-items: center; gap: 8px; }
+.pp-lux strong { font-size: 24px; font-family: var(--font-mono); color: var(--ink); }
+.pp-lux span:last-child { font-size: 12px; color: var(--ink-2); }
+.pp-lux-sub { font-size: 12px; color: var(--ink-3); margin: 2px 0 8px; }
+.pp-contrib { border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.pp-contrib-head, .pp-contrib button { display: flex; justify-content: space-between; gap: 8px; padding: 5px 8px; font-size: 12px; }
+.pp-contrib-head { background: var(--surface-2); color: var(--ink-3); }
+.pp-contrib button { width: 100%; border: 0; border-top: 1px solid var(--line); background: none; cursor: pointer; color: var(--ink); text-align: left; }
+.pp-contrib button:hover { background: var(--chrome-accent-soft); }
+.pp-contrib button > span:first-child { display: inline-flex; align-items: center; gap: 6px; }
+.pp-contrib button > span:last-child { font-family: var(--font-mono); }
+.pp-contrib .est { color: #b26a00; }
+.pp-note { margin: 8px 0 0; font-size: 12px; color: var(--ink-3); line-height: 1.5; }
+.pp-empty { margin: 4px 0; font-size: 13px; color: var(--ink-3); line-height: 1.5; }
+.pp-ro { font-size: 13px; color: var(--ink); }
+.pp-ro small { color: var(--ink-3); }
+
+/* 무대 위 목록 패널 */
+.sl-group { display: flex; justify-content: space-between; margin: 10px 0 4px; font-size: 11px; font-weight: 600; letter-spacing: .04em; color: var(--ink-3); }
+.sl-group:first-child { margin-top: 0; }
+.sl-row { display: flex; align-items: center; border-radius: 6px; }
+.sl-row:hover { background: var(--surface-2); }
+.sl-row.sel { background: var(--chrome-accent-soft); }
+.sl-row.hidden-item .sl-main { opacity: .45; }
+.sl-main { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; border: 0; background: none; padding: 5px 6px; cursor: pointer; text-align: left; font-size: 13px; color: var(--ink); }
+.sl-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sl-main small { margin-left: auto; color: var(--ink-3); font-size: 11px; white-space: nowrap; }
+.sl-act { flex: none; width: 26px; height: 26px; display: grid; place-items: center; border: 0; background: none; border-radius: 5px; color: var(--ink-3); cursor: pointer; }
+.sl-act svg { width: 15px; height: 15px; }
+.sl-act:hover { background: var(--surface); color: var(--ink); }
+.sl-act.danger:hover { color: #c0392b; }
+.sl-empty { margin: 2px 6px 6px; font-size: 12px; color: var(--ink-3); }
 
 /* 채널 검사 패널 안에서는 늘 펼쳐 두므로 원래 접기 머리줄을 숨긴다 */
 .panel .patch-toggle { display: none; }

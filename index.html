@@ -128,85 +128,96 @@
     <!-- 왼쪽: 도구 -->
     <nav class="float toolrail" aria-label="도구"></nav>
 
-    <!-- 오른쪽: 패널 트레이 -->
+    <!-- 오른쪽: 패널 트레이. 누른 항목 바로 아래에서 패널이 펼쳐지고 아래 항목은 밀려난다 (SketchUp 방식) -->
     <div class="tray" id="tray">
-      <div class="grp">작업 전체</div>
-      <button type="button" class="trayitem" data-tray="display" aria-expanded="false"><span class="lbl">빛 범위 표시</span><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></span></button>
-      <button type="button" class="trayitem" data-tray="venue3d" aria-expanded="false" disabled title="3D 보기에서 쓸 수 있습니다"><span class="lbl">3D 극장 구조</span><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 7.5v9L12 21l8-4.5v-9z"/><path d="M4 7.5 12 12l8-4.5M12 12v9"/></svg></span></button>
-      <button type="button" class="trayitem" data-tray="layers" aria-expanded="false"><span class="lbl">레이어</span><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 9 5-9 5-9-5z"/><path d="m3 13 9 5 9-5"/></svg></span></button>
-      <button type="button" class="trayitem" data-tray="patch" aria-expanded="false"><span class="lbl">채널 검사</span><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 10h16M4 15h16M10 4v16M15 4v16"/></svg></span></button>
-      <button type="button" class="trayitem" data-tray="venue" aria-expanded="false"><span class="lbl">공연장 정보</span><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20V9l9-5 9 5v11"/><path d="M8 20v-6h8v6"/></svg></span></button>
-      <div class="grp">선택한 것</div>
-      <button type="button" class="trayitem" data-tray="props" aria-expanded="false"><span class="lbl">선택한 객체 속성</span><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5h.01"/></svg></span></button>
-      <button type="button" class="trayitem" data-tray="list" aria-expanded="false"><span class="lbl">무대 위 목록</span><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h12M8 12h12M8 18h12"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/></svg></span></button>
-    </div>
+      <!-- 조명 설정: 조명을 고를 때마다 맨 위에서 펼쳐진다 -->
+      <section class="float panel light-settings" id="light-settings" aria-label="조명 설정" hidden>
+        <header><h2 id="light-settings-title">조명 설정</h2><button type="button" class="ibtn" id="light-settings-close" aria-label="닫기">✕</button></header>
+        <div class="panel-body" id="light-settings-body"></div>
+      </section>
 
-    <!-- 열린 패널: 한 번에 하나 -->
-    <div class="panelcol" id="panelcol">
-      <section class="float panel" data-panel="display" hidden>
-        <header><h2>빛 범위 표시</h2><button type="button" class="ibtn" data-close-panel aria-label="닫기">✕</button></header>
-        <div class="panel-body">
-          <label class="toggle-row"><input type="checkbox" id="tg-floor"> 바닥에 닿는 빛 (가운데일수록 진하게)</label>
-          <label class="toggle-row"><input type="checkbox" id="tg-face"> 배우 얼굴 높이에 닿는 빛</label>
-          <div class="sub-row">
-            <span class="sub">각도선</span>
-            <span class="info" tabindex="0" aria-describedby="beam-field-tip">
-              <span class="info-icon" aria-hidden="true">i</span>
-              <span class="info-tip" role="tooltip" id="beam-field-tip">
-                <b>빔 각도</b>: 조명 한가운데 밝기의 절반(50%)이 되는 경계입니다. 이 안쪽은 고르게 밝습니다.<br>
-                <b>필드 각도</b>: 밝기가 한가운데의 10%로 줄어드는 경계입니다. 빛이 닿는 바깥 끝이라고 보면 됩니다.<br>
-                무대에서는 빔 안쪽에 배우를 세우면 밝기가 고르고, 필드 근처에서는 어두워집니다.
+      <div class="grp">작업 전체</div>
+      <div class="tray-entry">
+        <button type="button" class="trayitem" data-tray="display" aria-expanded="false"><span class="lbl">빛 범위 표시</span><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></span></button>
+        <section class="float panel" data-panel="display" hidden>
+          <div class="panel-body">
+            <label class="toggle-row"><input type="checkbox" id="tg-floor"> 바닥에 닿는 빛 (가운데일수록 진하게)</label>
+            <label class="toggle-row"><input type="checkbox" id="tg-face"> 배우 얼굴 높이에 닿는 빛</label>
+            <div class="sub-row">
+              <span class="sub">각도선</span>
+              <span class="info" tabindex="0" aria-describedby="beam-field-tip">
+                <span class="info-icon" aria-hidden="true">i</span>
+                <span class="info-tip" role="tooltip" id="beam-field-tip">
+                  <b>빔 각도</b>: 조명 한가운데 밝기의 절반(50%)이 되는 경계입니다. 이 안쪽은 고르게 밝습니다.<br>
+                  <b>필드 각도</b>: 밝기가 한가운데의 10%로 줄어드는 경계입니다. 빛이 닿는 바깥 끝이라고 보면 됩니다.<br>
+                  무대에서는 빔 안쪽에 배우를 세우면 밝기가 고르고, 필드 근처에서는 어두워집니다.
+                </span>
               </span>
-            </span>
+            </div>
+            <label class="toggle-row"><input type="checkbox" id="tg-beam"> 빔 각도선 (밝기 50% 경계, 실선)</label>
+            <label class="toggle-row"><input type="checkbox" id="tg-field"> 필드 각도선 (밝기 10% 경계, 점선)</label>
           </div>
-          <label class="toggle-row"><input type="checkbox" id="tg-beam"> 빔 각도선 (밝기 50% 경계, 실선)</label>
-          <label class="toggle-row"><input type="checkbox" id="tg-field"> 필드 각도선 (밝기 10% 경계, 점선)</label>
-        </div>
-      </section>
-      <section class="float panel" data-panel="venue3d" hidden>
-        <header><h2>3D 극장 구조</h2><button type="button" class="ibtn" data-close-panel aria-label="닫기">✕</button></header>
-        <div class="panel-body">
-          <label class="toggle-row"><input type="checkbox" data-venue3d="venue" checked> 극장 구조 (벽·천장·갤러리·조정실 앞 단)</label>
-          <label class="toggle-row"><input type="checkbox" data-venue3d="catwalk"> 캣워크</label>
-          <label class="toggle-row"><input type="checkbox" data-venue3d="seating" checked> 객석</label>
-          <label class="toggle-row"><input type="checkbox" data-venue3d="worklight" checked> 작업등 (공간 전체를 약하게 밝힘)</label>
-        </div>
-      </section>
-      <section class="float panel" data-panel="layers" hidden>
-        <header><h2>레이어</h2><button type="button" class="ibtn" data-close-panel aria-label="닫기">✕</button></header>
-        <div class="panel-body">
-          <label class="toggle-row"><input type="checkbox" id="tg-ref-humanities-floor-plan"> 극장 평면도 보기</label>
-          <label class="toggle-row"><input type="checkbox" id="tg-ref-humanities-catwalk"> 캣워크 오버레이 보기</label>
-          <div id="bg-settings-container"></div>
-        </div>
-      </section>
-      <section class="float panel" data-panel="patch" hidden>
-        <header><h2>채널 검사</h2><button type="button" class="ibtn" data-close-panel aria-label="닫기">✕</button></header>
-        <div class="panel-body"><div id="patch-bay-panel"></div></div>
-      </section>
-      <section class="float panel" data-panel="venue" hidden>
-        <header><h2>공연장 정보</h2><button type="button" class="ibtn" data-close-panel aria-label="닫기">✕</button></header>
-        <div class="panel-body venue-fields">
-          <label>무대 폭 (m) <input type="number" id="stage-w" class="top-input" value="12" step="0.1"></label>
-          <label>무대 깊이 (m) <input type="number" id="stage-d" class="top-input" value="22.7" step="0.1"></label>
-          <label>배우 얼굴 높이 (m) <input type="number" id="actor-h" class="top-input" value="1.67" step="0.1"></label>
-          <label>기본 조명 높이 (m) <input type="number" id="default-z" class="top-input" value="5.74" step="0.1"></label>
-        </div>
-      </section>
-      <section class="float panel" data-panel="props" hidden>
-        <header><h2>선택한 객체 속성</h2><button type="button" class="ibtn" data-close-panel aria-label="닫기">✕</button></header>
-        <div class="panel-body">
-          <div id="fixture-properties"></div>
-          <div id="probe-panel"></div>
-        </div>
-      </section>
-      <section class="float panel" data-panel="list" hidden>
-        <header><h2>무대 위 목록</h2><button type="button" class="ibtn" data-close-panel aria-label="닫기">✕</button></header>
-        <div class="panel-body">
-          <div id="fixture-list"></div>
-          <div id="set-panel"></div>
-        </div>
-      </section>
+        </section>
+      </div>
+      <div class="tray-entry">
+        <button type="button" class="trayitem" data-tray="venue3d" aria-expanded="false" disabled title="3D 보기에서 쓸 수 있습니다"><span class="lbl">3D 극장 구조</span><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 7.5v9L12 21l8-4.5v-9z"/><path d="M4 7.5 12 12l8-4.5M12 12v9"/></svg></span></button>
+        <section class="float panel" data-panel="venue3d" hidden>
+          <div class="panel-body">
+            <label class="toggle-row"><input type="checkbox" data-venue3d="venue" checked> 극장 구조 (벽·천장·갤러리·조정실 앞 단)</label>
+            <label class="toggle-row"><input type="checkbox" data-venue3d="catwalk"> 캣워크</label>
+            <label class="toggle-row"><input type="checkbox" data-venue3d="seating" checked> 객석</label>
+            <label class="toggle-row"><input type="checkbox" data-venue3d="worklight" checked> 작업등 (공간 전체를 약하게 밝힘)</label>
+            <label class="toggle-row toggle-quiet"><input type="checkbox" id="venue3d-no-auto"> 3D로 들어갈 때 자동으로 열지 않기</label>
+          </div>
+        </section>
+      </div>
+      <div class="tray-entry">
+        <button type="button" class="trayitem" data-tray="layers" aria-expanded="false"><span class="lbl">레이어</span><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 9 5-9 5-9-5z"/><path d="m3 13 9 5 9-5"/></svg></span></button>
+        <section class="float panel" data-panel="layers" hidden>
+          <div class="panel-body">
+            <label class="toggle-row"><input type="checkbox" id="tg-ref-humanities-floor-plan"> 극장 평면도 보기</label>
+            <label class="toggle-row"><input type="checkbox" id="tg-ref-humanities-catwalk"> 캣워크 오버레이 보기</label>
+            <div id="bg-settings-container"></div>
+          </div>
+        </section>
+      </div>
+      <div class="tray-entry">
+        <button type="button" class="trayitem" data-tray="patch" aria-expanded="false"><span class="lbl">채널 검사</span><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 10h16M4 15h16M10 4v16M15 4v16"/></svg></span></button>
+        <section class="float panel" data-panel="patch" hidden>
+          <div class="panel-body"><div id="patch-bay-panel"></div></div>
+        </section>
+      </div>
+      <div class="tray-entry">
+        <button type="button" class="trayitem" data-tray="venue" aria-expanded="false"><span class="lbl">공연장 정보</span><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20V9l9-5 9 5v11"/><path d="M8 20v-6h8v6"/></svg></span></button>
+        <section class="float panel" data-panel="venue" hidden>
+          <div class="panel-body venue-fields">
+            <label>무대 폭 (m) <input type="number" id="stage-w" class="top-input" value="12" step="0.1"></label>
+            <label>무대 깊이 (m) <input type="number" id="stage-d" class="top-input" value="22.7" step="0.1"></label>
+            <label>배우 얼굴 높이 (m) <input type="number" id="actor-h" class="top-input" value="1.67" step="0.1"></label>
+            <label>기본 조명 높이 (m) <input type="number" id="default-z" class="top-input" value="5.74" step="0.1"></label>
+            <label>램프 규격
+              <select id="venue-lamp">
+                <option value="HPL750_230">HPL 750W / 230V</option>
+                <option value="HPL575_230">HPL 575W / 230V</option>
+              </select>
+            </label>
+          </div>
+        </section>
+      </div>
+
+      <div class="grp">선택한 것</div>
+      <div class="tray-entry">
+        <button type="button" class="trayitem" data-tray="props" aria-expanded="false"><span class="lbl">선택한 객체 속성</span><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5h.01"/></svg></span></button>
+        <section class="float panel" data-panel="props" hidden>
+          <div class="panel-body" id="props-body"></div>
+        </section>
+      </div>
+      <div class="tray-entry">
+        <button type="button" class="trayitem" data-tray="list" aria-expanded="false"><span class="lbl">무대 위 목록</span><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h12M8 12h12M8 18h12"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/></svg></span></button>
+        <section class="float panel" data-panel="list" hidden>
+          <div class="panel-body" id="list-body"></div>
+        </section>
+      </div>
     </div>
 
     <!-- 아래: 씬 서랍 -->

@@ -1,5 +1,6 @@
 // src/ui/manager.ts
-import { getState, initVenue, setState } from '../state/store';
+import { getState, initVenue, setState, subscribe, commitHistory } from '../state/store';
+import { DEFAULT_LAMP } from '../engine/photometrics';
 import type { AppState } from '../types';
 import type { VenueKey } from '../config/venues';
 
@@ -45,6 +46,18 @@ export const initManagerUI = () => {
       });
     });
   });
+
+  // 램프 규격 (공연장 정보 패널)
+  const lampSelect = document.getElementById('venue-lamp') as HTMLSelectElement | null;
+  if (lampSelect) {
+    lampSelect.addEventListener('change', () => {
+      commitHistory();
+      setState(state => { state.stage_config.lamp = lampSelect.value as typeof state.stage_config.lamp; });
+    });
+    const syncLamp = () => { lampSelect.value = getState().stage_config.lamp ?? DEFAULT_LAMP; };
+    subscribe(syncLamp);
+    syncLamp();
+  }
 
   // 무대 크기 입력 이벤트 바인딩
   ['stage-w', 'stage-d', 'actor-h', 'default-z'].forEach(id => {

@@ -61,7 +61,7 @@ Done notes
 - After placing: fixture → 선택한 객체 속성 opens; set → 무대 위 목록 opens (TEMP until Phase 3/4 moves set properties).
 - `window.addFixture` / `window.addSetPiece` remain as unused globals (remove in Phase 7).
 
-## Phase 3 — Selection and panels `[ ]`
+## Phase 3 — Selection and panels `[x]`
 
 Spec §4, §5.
 - Single selection (fixture | set | actor | none); remove Ctrl multi-select.
@@ -73,6 +73,14 @@ Spec §4, §5.
 - Panel exclusivity rules (spec §5.4). Remove the TEMP probe panel.
 - Tray becomes an accordion: panels open inline under their tray item and push the others down; 조명 설정 opens at the top of the tray (spec §5.6). Remove the floating panel column.
 - 3D 극장 구조 auto-opens on entering 3D, with a `3D로 들어갈 때 자동으로 열지 않기` checkbox stored in localStorage.
+
+Done notes:
+- New modules: `ui/selection.ts` (single selection + `onSelect` event, avoids shell↔canvas import cycles), `ui/lightSettings.ts`, `ui/properties.ts`, `ui/stageList.ts`. `ui/probe.ts` deleted; `ui/fixture.ts` and `ui/sets.ts` keep only data operations.
+- Canvas hit order: selected fixture's aim point / shutter corners → fixture body → actor → set → empty (clear + pan). History is committed on the first drag move only.
+- 3D: clicking a fixture body (< 4 px pointer travel) selects it via raycast on `userData.fixtureId`; pressing the actor selects it.
+- Deleting the selected fixture now clears the selection (store no longer falls back to the first fixture).
+- `selected_fixture_ids` still exists in state as a one-element mirror for the renderers; remove in Phase 7.
+- Leftover CSS (`#probe-panel`, `.fixture-add-controls`, `.shutter-control`) is left for Phase 7 cleanup.
 
 ## Phase 4 — Set handles `[ ]`
 

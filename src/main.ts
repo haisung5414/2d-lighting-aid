@@ -3,10 +3,10 @@ import './style.css';
 import { initCanvas, resetCanvasZoom, zoomCanvas } from './render/canvas';
 import { initManagerUI } from './ui/manager';
 import { initSceneUI } from './ui/scene';
-import { initFixtureUI } from './ui/fixture';
 import { initPatchUI } from './ui/patch';
-import { initProbeUI } from './ui/probe';
-import { initSetUI } from './ui/sets';
+import { initLightSettings } from './ui/lightSettings';
+import { initProperties } from './ui/properties';
+import { initStageList } from './ui/stageList';
 import { initShell } from './ui/shell';
 import { undo, redo } from './state/store';
 
@@ -23,10 +23,10 @@ document.addEventListener('DOMContentLoaded', () => {
     initCanvas(canvasEl, wrapperEl);
     initManagerUI();
     initSceneUI();
-    initFixtureUI();
-    initProbeUI();
     initPatchUI();
-    initSetUI();
+    initLightSettings();
+    initProperties();
+    initStageList();
     initShell();
     
     console.log("애플리케이션 초기화 완료");

@@ -11,6 +11,7 @@ import { FixtureDataTexture, WORK_LIGHT_LUX, createStageLightMaterial } from './
 import { lightColorOf } from '../engine/gels';
 import { OCCLUDER_LAYER, buildCatwalk, buildSeating, buildVenueModel, venueModelFor } from './venueModel';
 import { pickShadowFixtures, renderFixtureShadows } from './fixtureShadows';
+import { selectActor, selectFixture } from '../ui/selection';
 import type { Fixture, LampKey, Position2D, SetPiece, StageConfig } from '../types';
 
 type Vec3 = { x: number; y: number; z: number };
@@ -304,6 +305,7 @@ const makeLabelSprite = (text: string, selected: boolean): THREE.Sprite => {
 
 const buildFixtureBody = (fix: Fixture, selected: boolean): THREE.Object3D => {
   const group = new THREE.Group();
+  group.userData.fixtureId = fix.id; // 3D에서 눌러 고를 때 쓴다
   const bodyLength = fix.type === 'ellipsoidal' || fix.type === 'zoom' ? 0.55 : 0.35;
   const geometry = new THREE.CylinderGeometry(0.13, 0.17, bodyLength, 16);
   geometry.rotateX(Math.PI / 2); // 원통 축을 +Z(lookAt 방향)로 맞춘다
@@ -542,7 +544,7 @@ const createOverlay = (host: HTMLElement) => {
   const overlay = document.createElement('div');
   overlay.className = 'view3d-overlay';
   overlay.innerHTML = `
-    <div class="view3d-hint">조명 편집은 2D 화면에서 해 주세요. 사람 모형은 여기서 끌어서 옮길 수 있습니다.<br>드래그: 회전 · 휠: 확대 · 우클릭 드래그: 이동</div>
+    <div class="view3d-hint">조명을 누르면 조명 설정이 열립니다. 사람 모형은 끌어서 옮길 수 있습니다.<br>드래그: 회전 · 휠: 확대 · 우클릭 드래그: 이동</div>
   `;
   host.appendChild(overlay);
 };
@@ -568,8 +570,11 @@ const hitsActor = (event: PointerEvent, element: HTMLElement) =>
 const setupActorDrag = (element: HTMLElement) => {
   // OrbitControls보다 먼저 받아야 회전이 시작되지 않는다
   element.addEventListener('pointerdown', event => {
-    if (event.button !== 0 || !hitsActor(event, element)) return;
+    if (event.button !== 0) return;
+    downAt = { x: event.clientX, y: event.clientY };
+    if (!hitsActor(event, element)) return;
     event.stopImmediatePropagation();
+    selectActor();
     isDraggingActor = true;
     controls!.enabled = false;
     element.setPointerCapture(event.pointerId);
@@ -609,7 +614,22 @@ const setupActorDrag = (element: HTMLElement) => {
   };
   element.addEventListener('pointerup', endDrag);
   element.addEventListener('pointercancel', endDrag);
+
+  // 거의 움직이지 않은 클릭이면 조명 몸체를 골라 준다 (회전 드래그와 구분)
+  element.addEventListener('pointerup', event => {
+    const start = downAt;
+    downAt = null;
+    if (event.button !== 0 || !start || !dynamicGroup || !camera) return;
+    if (Math.hypot(event.clientX - start.x, event.clientY - start.y) >= 4) return;
+    for (const hit of pointerRay(event, element).intersectObjects(dynamicGroup.children, true)) {
+      let node: THREE.Object3D | null = hit.object;
+      while (node && node.userData.fixtureId === undefined) node = node.parent;
+      if (node) { selectFixture(node.userData.fixtureId as string); return; }
+    }
+  });
 };
+
+let downAt: { x: number; y: number } | null = null;
 
 const init = (host: HTMLElement) => {
   container = document.createElement('div');

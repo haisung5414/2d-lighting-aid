@@ -7,6 +7,7 @@
 import { commitHistory, getState, setState } from '../state/store';
 import { VENUES } from '../config/venues';
 import { createFixture, nextFixtureNumber } from './fixture';
+import { selectFixture, selectSet } from './selection';
 import type { Fixture, LensType, Position2D, SetPiece, SetPieceKind } from '../types';
 
 export type ToolId = 'select' | 'ellip' | 'fresnel' | 'par' | SetPieceKind;
@@ -69,14 +70,10 @@ let view3D = false;
 /** 세트 그리기 중인 사각형 (평면 좌표) */
 let draft: { start: Position2D; end: Position2D } | null = null;
 
-type PlacedListener = (kind: 'fixture' | 'set') => void;
-const placedListeners = new Set<PlacedListener>();
 const redrawListeners = new Set<() => void>();
 
 export const getTool = () => tool;
 export const getSetDraft = () => draft;
-/** 무언가를 놓은 직후 (shell이 알맞은 패널을 연다) */
-export const onObjectPlaced = (listener: PlacedListener) => { placedListeners.add(listener); };
 /** 세트 그리기 미리보기를 다시 그려야 할 때 (canvas가 등록한다) */
 export const onToolRedraw = (listener: () => void) => { redrawListeners.add(listener); };
 
@@ -103,7 +100,7 @@ const renderRail = () => {
   const hint = document.getElementById('tool-hint');
   if (hint) {
     hint.textContent = view3D
-      ? '3D 보기: 사람 모형을 끌어서 옮기고, 빈 곳을 끌면 시점이 돌아갑니다. 조명 놓기와 세트 그리기는 2D 평면에서 합니다.'
+      ? '3D 보기: 조명을 누르면 조명 설정이 열리고, 사람 모형은 끌어서 옮깁니다. 빈 곳을 끌면 시점이 돌아갑니다. 조명 놓기와 세트 그리기는 2D 평면에서 합니다.'
       : def.id === 'ellip' ? `${def.hint} (지금 렌즈: ${LENSES[lensIndex].label})` : def.hint;
   }
   document.getElementById('canvas-wrapper')?.classList.toggle('placing', tool !== 'select');
@@ -146,7 +143,7 @@ const snapToPipe = (point: Position2D): Position2D => {
 
 const round2 = (v: number) => Math.round(v * 100) / 100;
 
-const placeFixture = (point: Position2D) => {
+const placeFixture = (point: Position2D): string | null => {
   const stage = getState().stage_config;
   const pos = snapToPipe(point);
   const center = stageAimCenter();
@@ -155,6 +152,7 @@ const placeFixture = (point: Position2D) => {
   const reach = dist > 0.01 ? Math.min(4, dist) / dist : 0;
   const target = { x: round2(pos.x + dx * reach), y: round2(pos.y + dy * reach) };
 
+  let placedId: string | null = null;
   commitHistory();
   setState(s => {
     const cue = s.cues[s.active_cue_index];
@@ -171,9 +169,9 @@ const placeFixture = (point: Position2D) => {
     fixture.position = { x: round2(pos.x), y: round2(pos.y), z: stage.default_z };
     fixture.target = target;
     cue.fixtures.push(fixture);
-    s.selected_fixture_id = fixture.id;
-    s.selected_fixture_ids = [fixture.id];
+    placedId = fixture.id;
   });
+  return placedId;
 };
 
 const nextSetName = (prefix: string, pieces: SetPiece[]) => {
@@ -182,13 +180,14 @@ const nextSetName = (prefix: string, pieces: SetPiece[]) => {
   return `${prefix}${max + 1}`;
 };
 
-const placeSet = (kind: SetPieceKind, center: Position2D, size?: { width: number; depth: number }) => {
+const placeSet = (kind: SetPieceKind, center: Position2D, size?: { width: number; depth: number }): string => {
   const preset = SET_PRESETS[kind];
+  const id = `set_${Math.random().toString(36).substring(2, 11)}`;
   commitHistory();
   setState(s => {
     const pieces = s.stage_config.set_pieces ?? (s.stage_config.set_pieces = []);
     const piece: SetPiece = {
-      id: `set_${Math.random().toString(36).substring(2, 11)}`,
+      id,
       label: nextSetName(preset.prefix, pieces),
       kind,
       x: round2(center.x),
@@ -200,13 +199,15 @@ const placeSet = (kind: SetPieceKind, center: Position2D, size?: { width: number
       color: kind === 'wall' ? '#5f6a76' : '#6b5a4a'
     };
     pieces.push(piece);
-    s.selected_set_id = piece.id;
   });
+  return id;
 };
 
-const finishPlacement = (kind: 'fixture' | 'set') => {
+/** 놓은 뒤에는 선택 도구로 돌아오고, 새 대상을 골라 그 패널을 연다 */
+const finishPlacement = (kind: 'fixture' | 'set', id: string | null) => {
   setTool('select');
-  placedListeners.forEach(listener => listener(kind));
+  if (!id) return;
+  if (kind === 'fixture') selectFixture(id); else selectSet(id);
 };
 
 /* ---------- 캔버스에서 부르는 함수 (선택 도구가 아니면 캔버스 마우스 입력을 여기서 처리) ---------- */
@@ -218,12 +219,10 @@ export const toolPointerDown = (world: Position2D): boolean => {
     return true;
   }
   if (tool === 'wall' || tool === 'deck' || tool === 'apple') {
-    placeSet(tool, world);
-    finishPlacement('set');
+    finishPlacement('set', placeSet(tool, world));
     return true;
   }
-  placeFixture(world);
-  finishPlacement('fixture');
+  finishPlacement('fixture', placeFixture(world));
   return true;
 };
 
@@ -240,13 +239,11 @@ export const toolPointerUp = (world: Position2D): boolean => {
   draft = null;
   const width = Math.abs(world.x - start.x);
   const depth = Math.abs(world.y - start.y);
-  if (width < 0.1 || depth < 0.1) {
-    // 끌지 않고 누르기만 하면 기본 크기 세트를 그 자리에 놓는다
-    placeSet('set', start);
-  } else {
-    placeSet('set', { x: (start.x + world.x) / 2, y: (start.y + world.y) / 2 }, { width, depth });
-  }
-  finishPlacement('set');
+  // 끌지 않고 누르기만 하면 기본 크기 세트를 그 자리에 놓는다
+  const id = width < 0.1 || depth < 0.1
+    ? placeSet('set', start)
+    : placeSet('set', { x: (start.x + world.x) / 2, y: (start.y + world.y) / 2 }, { width, depth });
+  finishPlacement('set', id);
   return true;
 };
 

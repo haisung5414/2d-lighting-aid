@@ -184,7 +184,7 @@ const normalizeFixtureSelection = () => {
   state.selected_fixture_ids = state.selected_fixture_ids.filter(id => validIds.has(id));
 
   if (state.selected_fixture_id && !validIds.has(state.selected_fixture_id)) {
-    state.selected_fixture_id = state.selected_fixture_ids[0] ?? cue?.fixtures[0]?.id ?? null;
+    state.selected_fixture_id = null; // 단일 선택: 지워진 조명을 골라 둔 상태면 선택을 비운다
   }
 
   if (state.selected_fixture_id && !state.selected_fixture_ids.includes(state.selected_fixture_id)) {

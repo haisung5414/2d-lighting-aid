@@ -1,14 +1,19 @@
 // src/ui/shell.ts
-// SketchUp Web식 화면 골격의 동작: 파일 메뉴, 2D/3D 전환, 실행 취소 버튼, 패널 트레이(한 번에 하나), 씬 서랍, 확대 비율.
-// 각 패널 안의 내용은 기존 UI 모듈(fixture, probe, patch, scene, sets, manager)이 그대로 그린다.
-// 사양: docs/redesign/UI_REDESIGN_SPEC.md §2, §5.4, §6, §7, §8
+// SketchUp Web식 화면 골격의 동작: 파일 메뉴, 2D/3D 전환, 실행 취소 버튼, 패널 트레이(아코디언, 한 번에 하나),
+// 조명 설정 패널 여닫기, 씬 서랍, 확대 비율.
+// 패널 안의 내용은 lightSettings / properties / stageList / patch / scene / manager 모듈이 그린다.
+// 사양: docs/redesign/UI_REDESIGN_SPEC.md §2, §5.2, §5.4, §5.6, §6, §7, §8
 
 import './shell.css';
 import { getState, subscribe, undo, redo } from '../state/store';
 import { getViewZoom, onViewChange, resetCanvasZoom, zoomCanvas } from '../render/canvas';
-import { initTools, onObjectPlaced, setToolsViewMode } from './tools';
+import { initTools, setToolsViewMode } from './tools';
+import { onSelect } from './selection';
 
 let openPanelId: string | null = null;
+/** 조명 설정 패널: 조명을 고를 때마다 트레이 맨 위에서 펼쳐진다 */
+let lightSettingsOpen = false;
+const AUTO_OPEN_3D_KEY = 'lightingAid.venue3dNoAutoOpen';
 let sceneDrawerOpen = false;
 let view3DOn = false;
 
@@ -20,14 +25,34 @@ const renderPanels = () => {
   document.querySelectorAll<HTMLElement>('[data-panel]').forEach(panel => {
     panel.hidden = panel.dataset.panel !== openPanelId;
   });
+  const settings = $('light-settings');
+  if (settings) settings.hidden = !lightSettingsOpen || !getState().selected_fixture_id;
   document.querySelectorAll<HTMLElement>('[data-tray]').forEach(button => {
     button.setAttribute('aria-expanded', String(button.dataset.tray === openPanelId));
   });
 };
 
+/** 트레이 패널을 연다. 패널이 겹치지 않도록 조명 설정은 접는다 */
 export const openPanel = (id: string | null) => {
   openPanelId = id;
+  if (id) lightSettingsOpen = false;
   renderPanels();
+};
+
+/** 조명 설정을 펼친다. 트레이에서 열어 둔 패널은 닫는다 (사양 §5.4) */
+const openLightSettings = () => {
+  const settings = $('light-settings');
+  const wasHidden = settings?.hidden ?? true;
+  lightSettingsOpen = true;
+  openPanelId = null;
+  renderPanels();
+  // 내려오는 움직임은 새로 나타날 때만 보여 준다
+  if (settings && wasHidden) {
+    settings.classList.remove('drop');
+    void settings.offsetWidth;
+    settings.classList.add('drop');
+  }
+  $('tray')?.scrollTo({ top: 0 });
 };
 
 const initTray = () => {
@@ -37,10 +62,23 @@ const initTray = () => {
       openPanel(openPanelId === id ? null : id);
     });
   });
-  document.querySelectorAll<HTMLElement>('[data-close-panel]').forEach(button => {
-    button.addEventListener('click', () => openPanel(null));
+  $('light-settings-close')?.addEventListener('click', () => {
+    lightSettingsOpen = false;
+    renderPanels();
   });
+  // 고르는 동작에 따라 알맞은 패널을 연다: 조명 → 조명 설정, 세트·사람 모형 → 선택한 객체 속성
+  onSelect(kind => {
+    if (kind === 'fixture') openLightSettings();
+    else if (kind === 'set' || kind === 'actor') openPanel('props');
+    else { lightSettingsOpen = false; renderPanels(); }
+  });
+  // 선택한 조명이 지워지거나 씬이 바뀌면 조명 설정을 숨긴다
+  subscribe(renderPanels);
   renderPanels();
+};
+
+const readNoAutoOpen3D = () => {
+  try { return localStorage.getItem(AUTO_OPEN_3D_KEY) === '1'; } catch { return false; }
 };
 
 /* ---------- 파일 알약 ---------- */
@@ -114,6 +152,8 @@ export const setViewMode = async (mode: '2d' | '3d') => {
   const venue3dButton = document.querySelector<HTMLButtonElement>('[data-tray="venue3d"]');
   if (venue3dButton) venue3dButton.disabled = !on;
   if (!on && openPanelId === 'venue3d') openPanel(null);
+  // 3D로 들어가면 3D 극장 구조 패널을 자동으로 연다 (끄는 체크가 있으면 열지 않음)
+  if (on && !readNoAutoOpen3D()) openPanel('venue3d');
   setToolsViewMode(on);
   $('view-2d')?.setAttribute('aria-pressed', String(!on));
   $('view-3d')?.setAttribute('aria-pressed', String(on));
@@ -121,6 +161,13 @@ export const setViewMode = async (mode: '2d' | '3d') => {
 };
 
 const initVenue3DPanel = () => {
+  const noAuto = $<HTMLInputElement>('venue3d-no-auto');
+  if (noAuto) {
+    noAuto.checked = readNoAutoOpen3D();
+    noAuto.addEventListener('change', () => {
+      try { localStorage.setItem(AUTO_OPEN_3D_KEY, noAuto.checked ? '1' : '0'); } catch { /* 저장소를 못 쓰면 이번 세션만 */ }
+    });
+  }
   document.querySelectorAll<HTMLInputElement>('[data-venue3d]').forEach(input => {
     input.addEventListener('change', async () => {
       const { setVenueLayer3D } = await import('../render/view3d');
@@ -179,8 +226,6 @@ const initZoom = () => {
 export const initShell = () => {
   initTray();
   initTools();
-  // 놓은 직후 그 대상의 패널을 연다 (임시: 세트 속성은 아직 "무대 위 목록" 안에 있다 — Phase 3에서 정리)
-  onObjectPlaced(kind => openPanel(kind === 'fixture' ? 'props' : 'list'));
   initFilePill();
   initViewSwitch();
   initVenue3DPanel();

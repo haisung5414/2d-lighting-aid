@@ -5,6 +5,7 @@ import { GeometryEngine } from '../engine/geometry';
 import { gelDisplayHex } from '../engine/gels';
 import { dimmerOutput, getPhotometry } from '../engine/photometrics';
 import { getSetDraft, onToolRedraw, toolPointerDown, toolPointerMove, toolPointerUp } from '../ui/tools';
+import { clearSelection, isActorSelected, selectActor, selectFixture, selectSet } from '../ui/selection';
 import type { Position2D, Cue, Fixture, UIToggles, StageConfig, ProbeState, SetPiece } from '../types';
 
 let canvas: HTMLCanvasElement | null = null;
@@ -30,6 +31,8 @@ let lastViewPanEndAt = 0;
 const imageCache = new Map<string, HTMLImageElement>();
 /** 세트를 끌 때 클릭한 지점과 세트 중심 사이의 거리 */
 let setDragOffset: Position2D = { x: 0, y: 0 };
+/** 끌기를 시작했지만 아직 움직이지 않음 (움직이는 순간 실행 취소 기록을 남긴다) */
+let dragHistoryPending = false;
 
 const setPieceCorners = (piece: SetPiece): Position2D[] => {
   const r = piece.rotation * Math.PI / 180;
@@ -337,9 +340,29 @@ export const drawCueToContext = (
     targetCtx.lineTo(px, py + 13);
     targetCtx.stroke();
 
-    targetCtx.fillStyle = "#ffffff";
-    targetCtx.font = "12px Segoe UI, sans-serif";
-    targetCtx.fillText("Probe", px + 12, py - 10);
+    // 고른 상태면 바깥 고리를 더 그린다
+    if (isActorSelected()) {
+      targetCtx.strokeStyle = "#ffd166";
+      targetCtx.lineWidth = 2;
+      targetCtx.beginPath();
+      targetCtx.arc(px, py, 15, 0, Math.PI * 2);
+      targetCtx.stroke();
+    }
+
+    // 배우 얼굴에 닿는 밝기를 늘 옆에 보여 준다 (사양 §4)
+    const brightness = GeometryEngine.calculateProbeBrightness(cue, stageConfig, probe);
+    const text = `얼굴 ${Math.round(brightness.faceLux).toLocaleString('ko-KR')} lux`;
+    targetCtx.font = '600 12px "IBM Plex Sans KR", "Segoe UI", sans-serif';
+    const w = targetCtx.measureText(text).width + 14;
+    targetCtx.fillStyle = "rgba(255, 255, 255, 0.95)";
+    targetCtx.strokeStyle = "#2d7a52";
+    targetCtx.lineWidth = 1;
+    targetCtx.beginPath();
+    targetCtx.roundRect(px + 16, py - 11, w, 22, 6);
+    targetCtx.fill();
+    targetCtx.stroke();
+    targetCtx.fillStyle = "#1f5c3d";
+    targetCtx.fillText(text, px + 23, py + 4);
     targetCtx.restore();
   }
 };
@@ -507,83 +530,62 @@ export const initCanvas = (canvasEl: HTMLCanvasElement, wrapperEl: HTMLElement) 
     if (toolPointerDown(worldPos)) return;
 
     const selectedFix = cue.fixtures.find(f => f.id === state.selected_fixture_id);
-
-    if (state.probe?.is_visible && Math.hypot(worldPos.x - state.probe.x, worldPos.y - state.probe.y) < 0.6) {
-      commitHistory();
-      setState(s => { s.interaction.dragMode = 'probe'; });
+    // 끌기는 실제로 움직였을 때만 실행 취소 기록을 남긴다 (그냥 누르기만 하면 기록하지 않음)
+    const startDrag = (mode: 'position' | 'target' | 'shutter' | 'probe' | 'set', index = -1) => {
+      dragHistoryPending = true;
+      setState(s => { s.interaction.dragMode = mode; s.interaction.draggedIndex = index; });
       canvas!.classList.add('grabbing');
-      return;
-    }
-    
-    if (selectedFix && selectedFix.is_visible !== false && !e.ctrlKey && !e.metaKey) {
-      if (Math.hypot(worldPos.x - selectedFix.position.x, worldPos.y - selectedFix.position.y) < 0.6) {
-        commitHistory();
-        setState(s => { s.interaction.dragMode = 'position'; });
-        canvas!.classList.add('grabbing');
-        return;
-      }
-      if (Math.hypot(worldPos.x - selectedFix.target.x, worldPos.y - selectedFix.target.y) < 0.6) {
-        commitHistory();
-        setState(s => { s.interaction.dragMode = 'target'; });
-        canvas!.classList.add('grabbing');
+    };
+
+    // 1) 선택한 조명의 손잡이: 조준점, 셔터 꼭짓점
+    if (selectedFix && selectedFix.is_visible !== false) {
+      if (Math.hypot(worldPos.x - selectedFix.target.x, worldPos.y - selectedFix.target.y) < 0.5) {
+        startDrag('target');
         return;
       }
       if (GeometryEngine.fixtureHasShutters(selectedFix) && selectedFix.shutter_active) {
         for (let i = 0; i < 4; i++) {
           const absX = selectedFix.target.x + selectedFix.shutter_polygon[i].dx;
           const absY = selectedFix.target.y + selectedFix.shutter_polygon[i].dy;
-          if (Math.hypot(worldPos.x - absX, worldPos.y - absY) < 0.6) {
-            commitHistory();
-            setState(s => { 
-              s.interaction.dragMode = 'shutter'; 
-              s.interaction.draggedIndex = i; 
-            });
-            canvas!.classList.add('grabbing');
+          if (Math.hypot(worldPos.x - absX, worldPos.y - absY) < 0.5) {
+            startDrag('shutter', i);
             return;
           }
         }
       }
     }
 
-    for (let j = 0; j < cue.fixtures.length; j++) {
+    // 2) 조명: 누르면 고르고, 그대로 끌면 옮긴다 (여러 개 동시 선택은 없다)
+    for (let j = cue.fixtures.length - 1; j >= 0; j--) {
       const fix = cue.fixtures[j];
       if (fix.is_visible === false) continue;
-      if (Math.hypot(worldPos.x - fix.position.x, worldPos.y - fix.position.y) < 0.8) {
-        setState(s => {
-          if (e.ctrlKey || e.metaKey) {
-            if (s.selected_fixture_ids.includes(fix.id)) {
-              s.selected_fixture_ids = s.selected_fixture_ids.filter(id => id !== fix.id);
-              if (s.selected_fixture_id === fix.id) {
-                s.selected_fixture_id = s.selected_fixture_ids[0] ?? null;
-              }
-            } else {
-              s.selected_fixture_ids.push(fix.id);
-              s.selected_fixture_id = fix.id;
-            }
-          } else {
-            s.selected_fixture_id = fix.id;
-            s.selected_fixture_ids = [fix.id];
-          }
-        });
+      if (Math.hypot(worldPos.x - fix.position.x, worldPos.y - fix.position.y) < 0.6) {
+        selectFixture(fix.id);
+        startDrag('position');
         return;
       }
     }
 
-    // 조명이 아닌 곳을 누르면 세트를 고르고 끌 수 있다 (위에 그려진 세트부터 확인)
+    // 3) 사람 모형
+    if (state.probe?.is_visible && Math.hypot(worldPos.x - state.probe.x, worldPos.y - state.probe.y) < 0.6) {
+      selectActor();
+      startDrag('probe');
+      return;
+    }
+
+    // 4) 세트 (위에 그려진 것부터)
     const pieces = state.stage_config.set_pieces ?? [];
     for (let k = pieces.length - 1; k >= 0; k--) {
       const piece = pieces[k];
       if (!pointInSetPiece(worldPos, piece)) continue;
-      commitHistory();
       setDragOffset = { x: worldPos.x - piece.x, y: worldPos.y - piece.y };
-      setState(s => {
-        s.selected_set_id = piece.id;
-        s.interaction.dragMode = 'set';
-      });
-      canvas!.classList.add('grabbing');
+      selectSet(piece.id);
+      startDrag('set');
       return;
     }
 
+    // 5) 빈 바닥: 선택을 풀고, 끌면 화면이 움직인다
+    clearSelection();
     isViewPanning = true;
     lastPanX = e.clientX;
     lastPanY = e.clientY;
@@ -614,6 +616,10 @@ export const initCanvas = (canvasEl: HTMLCanvasElement, wrapperEl: HTMLElement) 
     const state = getState();
     const { dragMode, draggedIndex } = state.interaction;
     if (!dragMode) return;
+    if (dragHistoryPending) {
+      commitHistory();
+      dragHistoryPending = false;
+    }
 
     const rect = canvas!.getBoundingClientRect();
     const worldPos = toWorld(e.clientX - rect.left, e.clientY - rect.top);
@@ -668,6 +674,7 @@ export const initCanvas = (canvasEl: HTMLCanvasElement, wrapperEl: HTMLElement) 
       if (toolPointerUp(toWorld(e.clientX - rect.left, e.clientY - rect.top))) return;
     }
     const state = getState();
+    dragHistoryPending = false;
     if (state.interaction.dragMode !== null) {
       setState(s => { s.interaction.dragMode = null; });
       canvas!.classList.remove('grabbing');
