@@ -597,7 +597,8 @@ const fitFrame = (scaleForOffset?: number) => {
   const w = canvas!.width;
   const h = canvas!.height;
   const wide = w >= 700;
-  const inset = wide ? { l: 70, r: 200, t: 56, b: 64 } : { l: 8, r: 8, t: 56, b: 48 };
+  // 왼쪽은 도구 레일(66px)과 그 옆 이름표까지 비운다
+  const inset = wide ? { l: 180, r: 200, t: 56, b: 64 } : { l: 8, r: 8, t: 56, b: 48 };
   const availW = Math.max(50, w - inset.l - inset.r);
   const availH = Math.max(50, h - inset.t - inset.b);
   const { width: sw, depth: sd } = getState().stage_config;

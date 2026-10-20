@@ -155,4 +155,4 @@ Done notes:
 - 조명 설정 is now a tray item (first in 선택한 것) and expands right under its icon like the other panels; the icon is disabled with nothing selected, tinted when a fixture is selected but the panel is closed, and toggles the panel.
 - Follow-up (same day): `WHITE_LIGHT_TINT` 0.8 → 0.6 (open tungsten ≈ #ffdbb7). The 3D view looked yellower than 2D because ACES tone mapping shifts bright warm colours toward orange; it now uses `NeutralToneMapping` with `toneMappingExposure = 1/0.6` (ACES in three.js applies that factor internally) so brightness stays the same.
 - 빛 범위 표시: new choice under 바닥에 닿는 빛 — 그라데이션 (default) or 꽉 채우기 (uniform fill inside the field edge). Stored as `ui_toggles.floor_style`; old files default to gradient.
-
+- Tool rail enlarged 1.5× (54 px buttons, 30 px icons, rail 66 px) with a name label beside each tool in the same pill style as the tray; the label of the ellipsoidal tool hides while its lens flyout is open. Plan fit inset (left 180 px), scene drawer (left 90 px) and the 3D hint (left 200 px) moved to clear the labels.

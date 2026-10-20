@@ -225,9 +225,9 @@ input:focus, select:focus, button:focus-visible { outline: 2px solid rgba(47, 11
 
 .view3d-overlay {
   position: absolute;
-  /* 왼쪽 도구 레일 옆 */
+  /* 왼쪽 도구 레일과 이름표 옆 */
   top: 58px;
-  left: 70px;
+  left: 200px;
   display: flex;
   flex-direction: column;
   gap: 8px;
