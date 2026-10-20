@@ -333,7 +333,8 @@ const drawLightPool = (
   fix: Fixture,
   field: { cx: number; cy: number; radiusX: number; radiusY: number; rotation: number },
   currentScale: number,
-  isSelected: boolean
+  isSelected: boolean,
+  style: 'gradient' | 'solid' = 'gradient'
 ) => {
   const rx = toPx(field.radiusX, currentScale);
   const ry = toPx(field.radiusY, currentScale);
@@ -347,6 +348,16 @@ const drawLightPool = (
   targetCtx.translate(toPx(field.cx, currentScale), toPx(field.cy, currentScale));
   targetCtx.rotate(field.rotation);
   targetCtx.scale(rx, ry);
+  targetCtx.globalCompositeOperation = 'screen';
+  if (style === 'solid') {
+    // 꽉 채우기: 필드(밝기 10%) 경계 안을 한 가지 진하기로 칠한다
+    targetCtx.fillStyle = `rgba(${r}, ${g}, ${b}, ${(strength * 0.6).toFixed(3)})`;
+    targetCtx.beginPath();
+    targetCtx.arc(0, 0, 1, 0, Math.PI * 2);
+    targetCtx.fill();
+    targetCtx.restore();
+    return;
+  }
   const gradient = targetCtx.createRadialGradient(0, 0, 0, 0, 0, reach);
   for (let i = 0; i <= 12; i++) {
     const t = (i / 12) * reach;
@@ -425,7 +436,7 @@ export const drawCueToContext = (
     if (toggles.show_floor && floorField) {
       targetCtx.save();
       clipShutter(floorPolygons);
-      drawLightPool(targetCtx, fix, floorField, currentScale, isSelected);
+      drawLightPool(targetCtx, fix, floorField, currentScale, isSelected, toggles.floor_style ?? 'gradient');
       targetCtx.restore();
     }
 

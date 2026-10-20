@@ -111,7 +111,11 @@
         <button type="button" class="trayitem" data-tray="display" aria-expanded="false"><span class="lbl">빛 범위 표시</span><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></span></button>
         <section class="float panel" data-panel="display" hidden>
           <div class="panel-body">
-            <label class="toggle-row"><input type="checkbox" id="tg-floor"> 바닥에 닿는 빛 (가운데일수록 진하게)</label>
+            <label class="toggle-row"><input type="checkbox" id="tg-floor"> 바닥에 닿는 빛</label>
+            <div class="seg" role="radiogroup" aria-label="바닥 빛 칠하는 방식">
+              <label><input type="radio" name="floor-style" value="gradient" checked> 그라데이션 <small>(가운데일수록 진하게)</small></label>
+              <label><input type="radio" name="floor-style" value="solid"> 꽉 채우기 <small>(필드 안을 고르게)</small></label>
+            </div>
             <label class="toggle-row"><input type="checkbox" id="tg-face"> 배우 얼굴 높이에 닿는 빛</label>
             <label class="inline-num">표시할 얼굴 높이 <input type="number" id="actor-h" value="1.67" step="0.05" min="0.3" max="3"> m</label>
             <div class="sub-row">

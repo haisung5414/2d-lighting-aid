@@ -158,6 +158,11 @@
 .del-btn { border: 1px solid #c0392b; background: #c0392b; color: #fff; border-radius: 5px; padding: 6px 12px; font-size: 12px; font-weight: 600; cursor: pointer; width: 100%; margin-top: 12px; }
 .del-btn:hover { background: #a93226; border-color: #a93226; }
 .del-btn.small { width: auto; margin: 0; padding: 4px 10px; }
+/* 둘 중 하나 고르기 (빛 범위 표시의 바닥 빛 칠하는 방식) */
+.seg { display: grid; gap: 2px; margin: 0 0 6px 24px; }
+.seg label { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink); cursor: pointer; }
+.seg small { color: var(--ink-3); }
+.seg input { margin: 0; }
 .inline-num { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink-2); margin: 2px 0 4px 24px; }
 .inline-num input { width: 64px; }
 .venue-fields label { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 13px; color: var(--ink-2); }

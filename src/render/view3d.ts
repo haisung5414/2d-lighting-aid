@@ -655,7 +655,10 @@ const init = (host: HTMLElement) => {
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.setClearColor(DARK_BACKGROUND);
   // 빛이 겹친 곳이 하얗게 잘리지 않고 부드럽게 포화되도록 한다
-  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  // ACES는 밝은 곳의 색을 노랗고 주황 쪽으로 틀어서 텅스텐이 2D보다 누렇게 보였다. 색상을 지키는 Neutral을 쓴다
+  renderer.toneMapping = THREE.NeutralToneMapping;
+  // three.js의 ACES는 안에서 노출을 1/0.6배 올린다. 예전과 같은 밝기가 되도록 맞춘다
+  renderer.toneMappingExposure = 1 / 0.6;
   container.appendChild(renderer.domElement);
 
   scene = new THREE.Scene();

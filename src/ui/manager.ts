@@ -1,7 +1,6 @@
 // src/ui/manager.ts
 import { getState, initVenue, setState, subscribe, commitHistory } from '../state/store';
 import { DEFAULT_LAMP } from '../engine/photometrics';
-import type { AppState } from '../types';
 import { VENUES, type VenueKey } from '../config/venues';
 
 export const initManagerUI = () => {
@@ -9,7 +8,7 @@ export const initManagerUI = () => {
   syncStageInputs();
 
   // 전역 토글 이벤트 바인딩
-  const toggleMap: Record<string, keyof AppState['ui_toggles']> = {
+  const toggleMap: Record<string, 'show_floor' | 'show_face' | 'show_beam' | 'show_field'> = {
     'tg-floor': 'show_floor',
     'tg-face': 'show_face',
     'tg-beam': 'show_beam',
@@ -30,6 +29,20 @@ export const initManagerUI = () => {
       });
     }
   });
+
+  // 바닥 빛 칠하는 방식 (빛 범위 표시 패널)
+  const floorStyleInputs = document.querySelectorAll<HTMLInputElement>('input[name="floor-style"]');
+  floorStyleInputs.forEach(input => {
+    input.addEventListener('change', () => {
+      if (input.checked) setState(state => { state.ui_toggles.floor_style = input.value as 'gradient' | 'solid'; });
+    });
+  });
+  const syncFloorStyle = () => {
+    const style = getState().ui_toggles.floor_style ?? 'gradient';
+    floorStyleInputs.forEach(input => { input.checked = input.value === style; });
+  };
+  subscribe(syncFloorStyle);
+  syncFloorStyle();
 
   getState().stage_config.reference_layers.forEach(layer => {
     const el = document.getElementById(`tg-ref-${layer.id}`) as HTMLInputElement;
