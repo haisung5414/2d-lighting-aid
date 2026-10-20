@@ -93,7 +93,7 @@ The actor always shows a small label on the 2D plan: `얼굴 642 lux` (live face
 
 | Group | Panel id | Label | Contents |
 |---|---|---|---|
-| 작업 전체 | `display` | 보기 | 2D: 바닥 빛 영역, 얼굴 높이 영역, 빔·필드 각도선. 3D: 극장 구조, 캣워크, 객석, 작업등 (moved from the 3D overlay). |
+| 작업 전체 | `display` | 보기 | 2D: 바닥에 닿는 빛 (gradient, **default on**), 배우 얼굴 높이에 닿는 빛 (default off), 각도선 with an (i) hover tip explaining beam (50 %) and field (10 %), 빔 각도선 (solid) and 필드 각도선 (dashed) — both default off. 3D: 극장 구조, 캣워크, 객석, 작업등 (moved from the 3D overlay). |
 | | `layers` | 레이어 | 극장 평면도, 캣워크 오버레이 (visibility + opacity), 이 씬의 배경 이미지 (upload / position / size / opacity / delete). |
 | | `patch` | 채널 검사 | channel usage grid with over-capacity warning (current patch panel, always expanded). |
 | | `venue` | 공연장 정보 | 공연장 name, 무대 폭·깊이, 배우 얼굴 높이, 기본 조명 높이, 램프 규격 (HPL 575/750). |
@@ -129,6 +129,10 @@ Title is always `선택한 객체 속성`.
 - When a tray panel opens, collapse 조명 설정.
 - Only one tray panel is open at a time; clicking its tray button again closes it.
 - Selecting a set or the actor opens `props`.
+
+### 5.5 2D light drawing (decided 2026-10-20, before Phase 2)
+
+By default each fixture's floor light is a soft pool: a radial gradient over the field ellipse that follows the photometric falloff `10^(-r^p)` (100 % centre → 50 % at the beam angle → 10 % at the field angle, continuing slightly past it), tinted by the gel colour, scaled by the dimmer, clipped by shutters, composited with `screen`. Beam/field outlines are opt-in in 보기 so that newcomers see "where the light is" first and the technical boundaries only on demand.
 
 ## 6. Scene drawer (bottom)
 

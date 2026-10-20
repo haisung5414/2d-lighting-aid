@@ -150,10 +150,21 @@
       <section class="float panel" data-panel="display" hidden>
         <header><h2>보기</h2><button type="button" class="ibtn" data-close-panel aria-label="닫기">✕</button></header>
         <div class="panel-body">
-          <label class="toggle-row"><input type="checkbox" id="tg-floor"> 바닥 영역 보기 (z=0)</label>
-          <label class="toggle-row"><input type="checkbox" id="tg-face"> 얼굴 높이 영역 보기 (z=Actor)</label>
-          <label class="toggle-row"><input type="checkbox" id="tg-beam"> 빔 각도 보기</label>
-          <label class="toggle-row"><input type="checkbox" id="tg-field"> 필드 각도 보기</label>
+          <label class="toggle-row"><input type="checkbox" id="tg-floor"> 바닥에 닿는 빛 (가운데일수록 진하게)</label>
+          <label class="toggle-row"><input type="checkbox" id="tg-face"> 배우 얼굴 높이에 닿는 빛</label>
+          <div class="sub-row">
+            <span class="sub">각도선</span>
+            <span class="info" tabindex="0" aria-describedby="beam-field-tip">
+              <span class="info-icon" aria-hidden="true">i</span>
+              <span class="info-tip" role="tooltip" id="beam-field-tip">
+                <b>빔 각도</b>: 조명 한가운데 밝기의 절반(50%)이 되는 경계입니다. 이 안쪽은 고르게 밝습니다.<br>
+                <b>필드 각도</b>: 밝기가 한가운데의 10%로 줄어드는 경계입니다. 빛이 닿는 바깥 끝이라고 보면 됩니다.<br>
+                무대에서는 빔 안쪽에 배우를 세우면 밝기가 고르고, 필드 근처에서는 어두워집니다.
+              </span>
+            </span>
+          </div>
+          <label class="toggle-row"><input type="checkbox" id="tg-beam"> 빔 각도선 (밝기 50% 경계, 실선)</label>
+          <label class="toggle-row"><input type="checkbox" id="tg-field"> 필드 각도선 (밝기 10% 경계, 점선)</label>
         </div>
       </section>
       <section class="float panel" data-panel="layers" hidden>

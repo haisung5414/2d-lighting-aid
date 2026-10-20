@@ -3,7 +3,8 @@
 import { getState, setState, getCurrentCue, subscribe, commitHistory } from '../state/store';
 import { GeometryEngine } from '../engine/geometry';
 import { gelDisplayHex } from '../engine/gels';
-import type { Position2D, Cue, UIToggles, StageConfig, ProbeState, SetPiece } from '../types';
+import { dimmerOutput, getPhotometry } from '../engine/photometrics';
+import type { Position2D, Cue, Fixture, UIToggles, StageConfig, ProbeState, SetPiece } from '../types';
 
 let canvas: HTMLCanvasElement | null = null;
 let ctx: CanvasRenderingContext2D | null = null;
@@ -121,6 +122,48 @@ const drawImageLayer = (
   }
 };
 
+const hexToRgb = (hex: string): [number, number, number] => {
+  const n = parseInt(hex.replace('#', ''), 16);
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+};
+
+/**
+ * 바닥에 닿는 빛을 그라데이션으로 그린다. 필드 타원을 단위원으로 보고, 가운데에서 바깥으로
+ * 광도 모델의 상대 밝기 10^(-r^p)(빔 50%, 필드 10%)를 따라 옅어진다. 젤 색과 디머를 반영한다.
+ */
+const drawLightPool = (
+  targetCtx: CanvasRenderingContext2D,
+  fix: Fixture,
+  field: { cx: number; cy: number; radiusX: number; radiusY: number; rotation: number },
+  currentScale: number,
+  isSelected: boolean
+) => {
+  const rx = toPx(field.radiusX, currentScale);
+  const ry = toPx(field.radiusY, currentScale);
+  if (rx < 0.5 || ry < 0.5) return;
+  const p = getPhotometry(fix).exponent;
+  const [r, g, b] = hexToRgb(gelDisplayHex(fix.gel));
+  const strength = (isSelected ? 0.62 : 0.5) * (0.35 + 0.65 * Math.sqrt(dimmerOutput(fix)));
+  const reach = 1.35; // 필드 바깥으로 남는 빛까지 조금 더 그린다
+
+  targetCtx.save();
+  targetCtx.translate(toPx(field.cx, currentScale), toPx(field.cy, currentScale));
+  targetCtx.rotate(field.rotation);
+  targetCtx.scale(rx, ry);
+  const gradient = targetCtx.createRadialGradient(0, 0, 0, 0, 0, reach);
+  for (let i = 0; i <= 12; i++) {
+    const t = (i / 12) * reach;
+    const rel = Math.pow(10, -Math.pow(t, p));
+    gradient.addColorStop(t / reach, `rgba(${r}, ${g}, ${b}, ${(rel * strength).toFixed(3)})`);
+  }
+  targetCtx.globalCompositeOperation = 'screen';
+  targetCtx.fillStyle = gradient;
+  targetCtx.beginPath();
+  targetCtx.arc(0, 0, reach, 0, Math.PI * 2);
+  targetCtx.fill();
+  targetCtx.restore();
+};
+
 // [추가됨] 순수하게 캔버스 Context에 조명만 그리는 헬퍼 함수
 export const drawCueToContext = (
   targetCtx: CanvasRenderingContext2D,
@@ -158,46 +201,57 @@ export const drawCueToContext = (
       GeometryEngine.projectFloorToFace(p.x, p.y, fix.position.z, actorH, fix.position.x, fix.position.y)
     );
 
-    const floorField = toggles.show_field ? GeometryEngine.calculateEllipse(fix, 0, 'field') : null;
+    // 바닥 빛 영역(그라데이션)에는 필드 타원이 늘 필요하다. 선은 보기 설정에 따라 그린다.
+    const floorField = (toggles.show_floor || toggles.show_field) ? GeometryEngine.calculateEllipse(fix, 0, 'field') : null;
     const floorBeam = toggles.show_beam ? GeometryEngine.calculateEllipse(fix, 0, 'beam') : null;
-    const faceField = toggles.show_field ? GeometryEngine.calculateEllipse(fix, actorH, 'field') : null;
-    const faceBeam = toggles.show_beam ? GeometryEngine.calculateEllipse(fix, actorH, 'beam') : null;
+    const faceField = toggles.show_face ? GeometryEngine.calculateEllipse(fix, actorH, 'field') : null;
+    const faceBeam = toggles.show_face && toggles.show_beam ? GeometryEngine.calculateEllipse(fix, actorH, 'beam') : null;
 
     targetCtx.save();
     targetCtx.translate(currentOffsetX, currentOffsetY);
 
-    /* Floor Render */
-    if (toggles.show_floor && (floorField || floorBeam)) {
+    const clipShutter = (polygon: Position2D[]) => {
+      if (!(hasShutters && fix.shutter_active)) return;
+      targetCtx.beginPath();
+      targetCtx.moveTo(toPx(polygon[0].x, currentScale), toPx(polygon[0].y, currentScale));
+      for (let k = 1; k < 4; k++) targetCtx.lineTo(toPx(polygon[k].x, currentScale), toPx(polygon[k].y, currentScale));
+      targetCtx.closePath();
+      targetCtx.clip();
+    };
+    const strokeEllipse = (e: { cx: number; cy: number; radiusX: number; radiusY: number; rotation: number }) => {
+      targetCtx.beginPath();
+      targetCtx.ellipse(toPx(e.cx, currentScale), toPx(e.cy, currentScale), toPx(e.radiusX, currentScale), toPx(e.radiusY, currentScale), e.rotation, 0, Math.PI * 2);
+      targetCtx.stroke();
+    };
+
+    /* 바닥 빛 영역: 가운데가 가장 밝고 바깥으로 갈수록 옅어진다 (광도 모델의 배광 곡선을 그대로 따름) */
+    if (toggles.show_floor && floorField) {
       targetCtx.save();
-      if (hasShutters && fix.shutter_active) {
-        targetCtx.beginPath();
-        targetCtx.moveTo(toPx(floorPolygons[0].x, currentScale), toPx(floorPolygons[0].y, currentScale));
-        for (let k = 1; k < 4; k++) targetCtx.lineTo(toPx(floorPolygons[k].x, currentScale), toPx(floorPolygons[k].y, currentScale));
-        targetCtx.closePath();
-        targetCtx.clip();
-      }
-      if (floorField) {
-        targetCtx.beginPath();
-        targetCtx.ellipse(toPx(floorField.cx, currentScale), toPx(floorField.cy, currentScale), toPx(floorField.radiusX, currentScale), toPx(floorField.radiusY, currentScale), floorField.rotation, 0, Math.PI * 2);
-        targetCtx.fillStyle = isSelected ? "rgba(255, 255, 180, 0.2)" : "rgba(200, 200, 200, 0.1)";
-        targetCtx.fill();
-        targetCtx.strokeStyle = isSelected ? "rgba(255, 255, 200, 0.6)" : "rgba(200, 200, 200, 0.4)";
-        targetCtx.lineWidth = 1;
-        targetCtx.stroke();
-      }
-      if (floorBeam) {
-        targetCtx.beginPath();
-        targetCtx.ellipse(toPx(floorBeam.cx, currentScale), toPx(floorBeam.cy, currentScale), toPx(floorBeam.radiusX, currentScale), toPx(floorBeam.radiusY, currentScale), floorBeam.rotation, 0, Math.PI * 2);
-        targetCtx.fillStyle = isSelected ? "rgba(255, 255, 200, 0.4)" : "rgba(200, 200, 200, 0.2)";
-        targetCtx.fill();
-        targetCtx.strokeStyle = isSelected ? "rgba(255, 255, 255, 0.8)" : "rgba(255, 255, 255, 0.4)";
-        targetCtx.lineWidth = 2;
-        targetCtx.stroke();
-      }
+      clipShutter(floorPolygons);
+      drawLightPool(targetCtx, fix, floorField, currentScale, isSelected);
       targetCtx.restore();
     }
 
-    /* Face Render */
+    /* 바닥 각도선: 빔(50%)과 필드(10%) 경계 */
+    if (floorField && toggles.show_field) {
+      targetCtx.save();
+      clipShutter(floorPolygons);
+      targetCtx.strokeStyle = isSelected ? "rgba(255, 255, 210, 0.85)" : "rgba(230, 230, 230, 0.55)";
+      targetCtx.lineWidth = 1;
+      targetCtx.setLineDash([6, 4]);
+      strokeEllipse(floorField);
+      targetCtx.restore();
+    }
+    if (floorBeam) {
+      targetCtx.save();
+      clipShutter(floorPolygons);
+      targetCtx.strokeStyle = isSelected ? "rgba(255, 255, 255, 0.95)" : "rgba(255, 255, 255, 0.6)";
+      targetCtx.lineWidth = 2;
+      strokeEllipse(floorBeam);
+      targetCtx.restore();
+    }
+
+    /* 얼굴 높이 영역 */
     if (toggles.show_face && (faceField || faceBeam)) {
       targetCtx.save();
       if (hasShutters && fix.shutter_active) {

@@ -100,6 +100,17 @@
 .venue-fields input { width: 96px; }
 .fixture-add-controls { display: flex; gap: 6px; margin-bottom: 10px; }
 .fixture-add-controls select { flex: 1; }
+/* 보기 패널: 소제목과 (i) 설명 말풍선 */
+.sub-row { display: flex; align-items: center; gap: 6px; margin: 12px 0 6px; }
+.sub { font-size: 11px; font-weight: 600; letter-spacing: .04em; color: var(--ink-3); }
+.info { position: relative; display: inline-grid; place-items: center; cursor: help; border-radius: 50%; }
+.info-icon { width: 16px; height: 16px; border-radius: 50%; border: 1px solid var(--ink-3); color: var(--ink-2); font: 600 10px/14px "IBM Plex Sans KR", sans-serif; text-align: center; font-style: italic; }
+.info:hover .info-icon, .info:focus .info-icon { border-color: var(--chrome-accent); color: var(--chrome-accent); }
+.info-tip { position: absolute; z-index: 30; top: 22px; left: -8px; width: 270px; padding: 10px 12px; border-radius: 8px; background: var(--ink); color: #fff; font-size: 12px; line-height: 1.55; box-shadow: var(--shadow); opacity: 0; visibility: hidden; transition: opacity .12s; }
+.info:hover .info-tip, .info:focus .info-tip, .info:focus-within .info-tip { opacity: 1; visibility: visible; }
+/* 보기 패널은 짧아서 스크롤이 필요 없다. 말풍선이 패널 밖으로 나와도 잘리지 않게 한다 */
+.panel[data-panel="display"] .panel-body { overflow: visible; }
+
 /* 채널 검사 패널 안에서는 늘 펼쳐 두므로 원래 접기 머리줄을 숨긴다 */
 .panel .patch-toggle { display: none; }
 

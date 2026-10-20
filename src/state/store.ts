@@ -34,7 +34,8 @@ const createInitialState = (venue: VenuePreset): AppState => {
       default_z: venue.stage.defaultFixtureZ,
       reference_layers: mapReferenceLayers(venue)
     },
-    ui_toggles: { show_floor: true, show_face: true, show_beam: true, show_field: true },
+    // 처음에는 바닥 빛 영역(그라데이션)만 보인다. 각도선과 얼굴 높이 영역은 "보기" 패널에서 켠다
+    ui_toggles: { show_floor: true, show_face: false, show_beam: false, show_field: false },
     cues: [
       {
         cue_id: "cue_1",
