@@ -51,6 +51,38 @@ export interface VenueReferenceArea {
   note?: string;
 }
 
+/** 평면 위의 사각형. 앱 좌표(m) */
+export interface PlanRect {
+  x0: number;
+  x1: number;
+  y0: number;
+  y1: number;
+}
+
+/**
+ * 3D 보기용 극장 골격. 좌표는 앱 좌표(m)이고 높이는 공연장 바닥 기준이다.
+ * 값은 세부 도면(벡터 PDF)에서 읽었고, 확인되지 않은 값은 note에 적는다.
+ */
+export interface VenueModel3D {
+  /** 공연장 안쪽 벽면과 천장 높이 */
+  hall: PlanRect & { height: number };
+  catwalk: {
+    z: number;
+    /** 그레이팅 통로가 덮는 영역 */
+    area: PlanRect;
+    /** 통로 사이의 개구부 (조명이 걸리는 칸) */
+    openings: PlanRect[];
+    /** 조명을 거는 파이프. x 방향으로 놓인다 */
+    pipes: { y: number; x0: number; x1: number }[];
+  };
+  galleries: (PlanRect & { z: number })[];
+  /** 계단형 객석. y가 커질수록(객석 쪽으로) 높아진다 */
+  seating: PlanRect & { rows: number; topHeight: number } | null;
+  /** 객석 쪽 벽(y = hall.y1)에 난 조정실 창 */
+  windows: { x0: number; x1: number; z0: number; z1: number }[];
+  notes: string[];
+}
+
 export interface VenuePreset {
   key: string;
   label: string;
@@ -71,6 +103,7 @@ export interface VenuePreset {
   referenceAreas: VenueReferenceArea[];
   sourceDocuments: VenueSourceDocument[];
   notes: string[];
+  model3d?: VenueModel3D;
 }
 
 export const SANDBOX_VENUE: VenuePreset = {
@@ -201,6 +234,55 @@ export const HUMANITIES_VENUE: VenuePreset = {
       note: 'CATWALK FL, 공연장 FL, 상부 조명 배치도와 관련 치수 확인용.'
     }
   ],
+  // 인문소극장_세부_도면.pdf 1~3쪽(종단면도, 2F/3F 평면도)의 벡터 좌표에서 읽은 값.
+  // 도면 Y10 그리드(무대 쪽 벽) = 앱 y 0, 도면 X3 그리드 = 앱 x 0, 도면 1m = 35.245pt.
+  model3d: {
+    // 공연장 바닥 EL +26.5, 천장(1FL) EL +34.4
+    hall: { x0: 0.5, x1: 11.5, y0: 0, y1: 19.85, height: 7.9 },
+    catwalk: {
+      // CATWALK FL EL +32.24
+      z: 5.74,
+      area: { x0: 0.5, x1: 11.5, y0: 0.25, y1: 19.8 },
+      openings: [
+        { x0: 1.1, x1: 10.9, y0: 17.6, y1: 19.8 },
+        { x0: 1.1, x1: 10.9, y0: 14.3, y1: 16.9 },
+        { x0: 1.1, x1: 10.9, y0: 11.0, y1: 13.6 },
+        { x0: 1.1, x1: 10.9, y0: 7.7, y1: 10.3 },
+        { x0: 1.1, x1: 10.9, y0: 4.4, y1: 7.0 },
+        { x0: 1.1, x1: 10.9, y0: 2.25, y1: 3.7 },
+        { x0: 0.5, x1: 11.5, y0: 0.3, y1: 1.55 }
+      ],
+      pipes: [
+        { y: 19.4, x0: 1.48, x1: 10.52 },
+        { y: 18.0, x0: 1.48, x1: 10.52 },
+        { y: 16.5, x0: 1.48, x1: 10.52 },
+        { y: 14.7, x0: 1.48, x1: 10.52 },
+        { y: 13.2, x0: 1.48, x1: 10.52 },
+        { y: 11.4, x0: 1.48, x1: 10.52 },
+        { y: 9.9, x0: 1.48, x1: 10.52 },
+        { y: 8.1, x0: 1.48, x1: 10.52 },
+        { y: 6.6, x0: 1.48, x1: 10.52 },
+        { y: 4.8, x0: 1.48, x1: 10.52 },
+        { y: 3.3, x0: 1.48, x1: 10.52 },
+        { y: 2.7, x0: 1.48, x1: 10.52 },
+        { y: 1.2, x0: 0.5, x1: 11.5 },
+        { y: 0.9, x0: 0.5, x1: 11.5 },
+        { y: 0.6, x0: 0.5, x1: 11.5 }
+      ]
+    },
+    // 2층 갤러리 바닥 B1 FL EL +29.9
+    galleries: [
+      { x0: 0.5, x1: 1.6, y0: 8.0, y1: 16.63, z: 3.4 },
+      { x0: 10.4, x1: 11.5, y0: 8.0, y1: 16.63, z: 3.4 }
+    ],
+    seating: { x0: 2.0, x1: 10.0, y0: 11.2, y1: 16.8, rows: 6, topHeight: 1.8 },
+    windows: [{ x0: 3.8, x1: 8.1, z0: 4.2, z1: 5.3 }],
+    notes: [
+      '캣워크 첫 칸(객석 쪽)의 파이프 y 19.4는 칸 폭으로 추정한 값이다.',
+      '객석 단 높이(맨 윗단 1.8m)와 조정실 창 높이는 종단면도를 눈으로 읽은 추정값이다.',
+      '천장 보, 벽의 문, 계단 등은 생략했다.'
+    ]
+  },
   notes: [
     '바텐 위치는 정확한 설치 가능 영역으로 모델링하지 않는다.',
     '전역 배경 도면을 켜고 끄며 사용자가 실제 바텐/캣워크 위치를 시각적으로 확인하는 방식을 우선한다.',

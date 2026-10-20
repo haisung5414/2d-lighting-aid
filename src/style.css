@@ -574,6 +574,19 @@
   cursor: pointer;
 }
 
+.view3d-toggle {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  background: rgba(20, 24, 30, 0.85);
+  color: #fff;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
 .view3d-presets button:hover {
   background: rgba(47, 111, 237, 0.9);
 }

@@ -9,10 +9,11 @@ import { DEFAULT_COSTUME_COLOR, getState, getCurrentCue, subscribe, setState, co
 import { DEFAULT_LAMP, dimmerOutput, getBeamFrame, getPhotometry, shutterPolygon } from '../engine/photometrics';
 import { FixtureDataTexture, createStageLightMaterial } from './stageLightMaterial';
 import { lightColorOf } from '../engine/gels';
+import { buildVenueModel, venueModelFor } from './venueModel';
 import type { Fixture, LampKey, Position2D, StageConfig } from '../types';
 
 type Vec3 = { x: number; y: number; z: number };
-type CameraPreset = 'audience' | 'top' | 'left' | 'right';
+type CameraPreset = 'audience' | 'overview' | 'top' | 'left' | 'right';
 
 const MAX_BEAM_LENGTH = 40;
 const RAY_SEGMENTS = 64;
@@ -31,6 +32,7 @@ let actorObject: THREE.Object3D | null = null;
 let isDraggingActor = false;
 let pendingDrag: { x: number; y: number } | null = null;
 let floorAlbedo: { key: string; texture: THREE.CanvasTexture } | null = null;
+let showVenue = true;
 const SKIN_COLOR = 0xc9a48a;
 
 const imageCache = new Map<string, HTMLImageElement>();
@@ -367,13 +369,19 @@ const rebuild = () => {
   floor.position.set(stage.width / 2, 0, stage.depth / 2);
   dynamicGroup.add(floor);
 
-  // 무대 외곽과 기본 조명 높이를 보여주는 선
-  const box = new THREE.LineSegments(
-    new THREE.EdgesGeometry(new THREE.BoxGeometry(stage.width, stage.default_z, stage.depth)),
-    new THREE.LineBasicMaterial({ color: 0x55606e, transparent: true, opacity: 0.5 })
-  );
-  box.position.set(stage.width / 2, stage.default_z / 2, stage.depth / 2);
-  dynamicGroup.add(box);
+  const venueModel = venueModelFor(stage);
+  if (venueModel && showVenue) {
+    // 극장 골격: 벽, 천장, 캣워크, 갤러리, 객석
+    dynamicGroup.add(buildVenueModel(venueModel, fixtureData));
+  } else if (!venueModel) {
+    // 극장 모형이 없으면 무대 외곽과 기본 조명 높이를 선으로 보여 준다
+    const box = new THREE.LineSegments(
+      new THREE.EdgesGeometry(new THREE.BoxGeometry(stage.width, stage.default_z, stage.depth)),
+      new THREE.LineBasicMaterial({ color: 0x55606e, transparent: true, opacity: 0.5 })
+    );
+    box.position.set(stage.width / 2, stage.default_z / 2, stage.depth / 2);
+    dynamicGroup.add(box);
+  }
 
   // 조명기와 빛줄기
   fixtures.forEach(fix => {
@@ -427,9 +435,14 @@ export const setCameraPreset = (preset: CameraPreset) => {
   const span = Math.max(stage.width, stage.depth);
   const target = new THREE.Vector3(cx, 1, cz);
 
-  if (preset === 'audience') {
-    // 앱의 +y(도면 아래쪽)가 객석 방향이다
-    camera.position.set(cx, 3.2, stage.depth + span * 0.35);
+  const seating = venueModelFor(stage)?.seating;
+  if (preset === 'audience' && seating) {
+    // 객석 맨 윗줄에 앉은 관객의 눈높이에서 무대를 본다
+    camera.position.set(cx, seating.topHeight + 1.15, seating.y1 - 0.4);
+    target.set(cx, 1.2, seating.y0 / 2);
+  } else if (preset === 'audience' || preset === 'overview') {
+    // 앱의 +y(도면 아래쪽)가 객석 방향이다. 객석 바깥 위쪽에서 전체를 내려다본다
+    camera.position.set(cx, preset === 'overview' ? span * 0.45 : 3.2, stage.depth + span * 0.35);
   } else if (preset === 'top') {
     camera.position.set(cx, span * 1.25, cz + 0.01);
     target.y = 0;
@@ -450,14 +463,20 @@ const createOverlay = (host: HTMLElement) => {
   overlay.innerHTML = `
     <div class="view3d-presets">
       <button data-preset="audience">객석에서</button>
+      <button data-preset="overview">전체</button>
       <button data-preset="top">위에서</button>
       <button data-preset="left">왼쪽에서</button>
       <button data-preset="right">오른쪽에서</button>
+      <label class="view3d-toggle"><input type="checkbox" id="view3d-venue" checked> 극장 구조</label>
     </div>
     <div class="view3d-hint">조명 편집은 2D 화면에서 해 주세요. 사람 모형은 여기서 끌어서 옮길 수 있습니다.<br>드래그: 회전 · 휠: 확대 · 우클릭 드래그: 이동</div>
   `;
   overlay.querySelectorAll<HTMLButtonElement>('button[data-preset]').forEach(btn => {
     btn.addEventListener('click', () => setCameraPreset(btn.dataset.preset as CameraPreset));
+  });
+  overlay.querySelector<HTMLInputElement>('#view3d-venue')?.addEventListener('change', e => {
+    showVenue = (e.target as HTMLInputElement).checked;
+    rebuild();
   });
   host.appendChild(overlay);
 };

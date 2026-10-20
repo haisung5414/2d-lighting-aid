@@ -27,6 +27,7 @@ const createInitialState = (venue: VenuePreset): AppState => {
 
   return {
     stage_config: {
+      venue_key: venue.key,
       width: venue.stage.width,
       depth: venue.stage.depth,
       actor_height: venue.stage.actorHeight,

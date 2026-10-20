@@ -121,6 +121,8 @@ export interface StageConfig {
   default_z: number;
   /** 극장에서 쓰는 HPL 램프 규격. 없으면 기본값을 쓴다 */
   lamp?: LampKey;
+  /** 공연장 프리셋 키 (3D 극장 모형을 찾는 데 쓴다) */
+  venue_key?: string;
   reference_layers: ReferenceLayer[];
 }
 
