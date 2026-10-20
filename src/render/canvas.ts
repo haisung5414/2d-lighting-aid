@@ -296,7 +296,6 @@ export const drawCueToContext = (
   currentOffsetY: number,
   toggles: UIToggles,
   stageConfig: StageConfig,
-  selectedFixtureIds: string[] = [],
   activeFixtureId: string | null = null,
   actors: Actor[] | null = null,
   selectedActorId: string | null = null
@@ -313,7 +312,7 @@ export const drawCueToContext = (
   cue.fixtures.forEach(fix => {
     if (fix.is_visible === false) return;
 
-    const isSelected = selectedFixtureIds.includes(fix.id) || fix.id === activeFixtureId;
+    const isSelected = fix.id === activeFixtureId;
     const isActiveFixture = fix.id === activeFixtureId;
     
     const hasShutters = GeometryEngine.fixtureHasShutters(fix);
@@ -507,7 +506,7 @@ export const generateThumbnail = (cue: Cue, stageConfig: StageConfig, toggles: U
   const thumbOffsetY = (offCanvas.height - sd * thumbScale) / 2;
 
   // 썸네일에서는 선택 마커 하이라이트를 주지 않기 위해 selectedFixtureId 인자를 null로 넘김
-  drawCueToContext(offCtx, cue, thumbScale, thumbOffsetX, thumbOffsetY, toggles, stageConfig, [], null, null);
+  drawCueToContext(offCtx, cue, thumbScale, thumbOffsetX, thumbOffsetY, toggles, stageConfig, null, null);
 
   return offCanvas.toDataURL('image/jpeg', 0.5);
 };
@@ -624,7 +623,7 @@ export const renderCanvas = () => {
   if (!currentCue) return;
 
   // 분리된 그리기 함수 호출
-  drawCueToContext(ctx, currentCue, scale, offsetX, offsetY, state.ui_toggles, state.stage_config, state.selected_fixture_ids, state.selected_fixture_id, state.actors, state.selected_actor_id ?? null);
+  drawCueToContext(ctx, currentCue, scale, offsetX, offsetY, state.ui_toggles, state.stage_config, state.selected_fixture_id, state.actors, state.selected_actor_id ?? null);
 };
 
 export const initCanvas = (canvasEl: HTMLCanvasElement, wrapperEl: HTMLElement) => {

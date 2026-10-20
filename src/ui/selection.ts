@@ -36,7 +36,6 @@ const emit = (kind: SelectionKind) => listeners.forEach(listener => listener(kin
 export const selectFixture = (id: string) => {
   setState(s => {
     s.selected_fixture_id = id;
-    s.selected_fixture_ids = [id];
     s.selected_set_id = null;
     s.selected_actor_id = null;
   });
@@ -47,7 +46,6 @@ export const selectSet = (id: string) => {
   setState(s => {
     s.selected_set_id = id;
     s.selected_fixture_id = null;
-    s.selected_fixture_ids = [];
     s.selected_actor_id = null;
   });
   emit('set');
@@ -58,7 +56,6 @@ export const selectActor = (id: string) => {
     s.selected_actor_id = id;
     s.selected_set_id = null;
     s.selected_fixture_id = null;
-    s.selected_fixture_ids = [];
   });
   emit('actor');
 };
@@ -70,7 +67,6 @@ export const clearSelection = () => {
     s.selected_actor_id = null;
     s.selected_set_id = null;
     s.selected_fixture_id = null;
-    s.selected_fixture_ids = [];
   });
   emit(null);
 };

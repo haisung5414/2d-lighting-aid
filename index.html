@@ -7,60 +7,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
-    <style>
-        :root {
-            --bg-panel: #f5f6f8;
-            --bg-surface: #ffffff;
-            --bg-surface-muted: #eef1f4;
-            --border-color: #d7dce2;
-            --text-main: #20242a;
-            --text-muted: #64707d;
-            --accent: #2f6fed;
-            --accent-soft: #e8f0ff;
-            --danger: #d64545;
-        }
-        * { box-sizing: border-box; }
-        body { margin: 0; display: flex; height: 100vh; font-family: "IBM Plex Sans KR", "Segoe UI", "Noto Sans KR", system-ui, sans-serif; overflow: hidden; background: #1c2026; color: var(--text-main); }
-        
-        
-        canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: block; cursor: default; touch-action: none; }
-        .grabbing { cursor: grabbing !important; }
-
-        .panel-header { min-height: 48px; padding: 12px 14px; background: var(--bg-surface); border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; gap: 10px; font-weight: 700; }
-        .panel-content { padding: 12px; overflow-y: auto; flex: 1; }
-        
-        .list-item { padding: 10px; background: var(--bg-surface); border: 1px solid var(--border-color); margin-bottom: 8px; border-radius: 6px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 8px; box-shadow: 0 1px 2px rgba(20, 26, 34, 0.04); }
-        .list-item:hover { border-color: #aeb8c4; background: #fbfcfd; }
-        .list-item.active { background: var(--accent-soft); border-color: var(--accent); box-shadow: inset 3px 0 0 var(--accent); }
-        
-        .btn { min-height: 30px; padding: 6px 11px; background: var(--accent); color: white; border: 1px solid transparent; border-radius: 6px; cursor: pointer; font-size: 0.82rem; font-weight: 650; display: flex; align-items: center; justify-content: center; gap: 5px; white-space: nowrap;}
-        .btn:hover { background: #255fcf; }
-        .btn-success { background: #2d7a52; } .btn-success:hover { background: #256744; }
-        .btn-secondary { background: var(--bg-surface); color: var(--text-main); border-color: #c5ccd5; } .btn-secondary:hover { background: #edf1f5; }
-        
-        .btn-icon { min-width: 28px; min-height: 28px; background: transparent; border: 1px solid transparent; cursor: pointer; font-size: 0.86rem; padding: 2px 6px; border-radius: 5px; color: var(--text-muted); }
-        .btn-icon:hover { background: #e9edf2; border-color: #c6ced8; color: var(--text-main); }
-        .btn-danger { background: #fff; color: var(--danger); border: 1px solid #e3b3b3; padding: 4px 8px; font-size: 0.78rem; border-radius: 5px; cursor: pointer; font-weight: 700; }
-        .btn-danger:hover { background: #fff1f1; border-color: var(--danger); }
-
-        .control-group { margin-bottom: 10px; background: var(--bg-surface); padding: 11px; border: 1px solid var(--border-color); border-radius: 6px; box-shadow: 0 1px 2px rgba(20, 26, 34, 0.03); }
-        .control-group label { display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 7px; font-weight: 650; }
-        .control-row { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; }
-        .control-row input { flex: 1; min-width: 0; width: 100%; padding: 6px 7px; border: 1px solid #c5ccd5; border-radius: 5px; background: #fff; color: var(--text-main); }
-        input[type="range"] { width: 100%; }
-        select { width: 100%; padding: 6px 7px; border: 1px solid #c5ccd5; border-radius: 5px; background: #fff; color: var(--text-main); }
-        input:focus, select:focus, button:focus-visible { outline: 2px solid rgba(47, 111, 237, 0.28); outline-offset: 1px; border-color: var(--accent); }
-        
-        .top-input { width: 64px; padding: 5px 6px; border: 1px solid #c5ccd5; border-radius: 5px; background: #fff; }
-        .toggle-row { display: flex; align-items: center; margin-bottom: 8px; font-size: 0.84rem; cursor: pointer; color: var(--text-main); }
-        .toggle-row input { margin-right: 8px; cursor: pointer; }
-
-        #error-screen { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); color: #ff5555; z-index: 9999; padding: 40px; box-sizing: border-box; overflow-y: auto; }
-    </style>
 </head>
 <body>
-
-<div id="error-screen"></div>
 
 <section id="landing-screen" aria-labelledby="landing-title">
     <div class="landing-card">
@@ -111,7 +59,7 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 14 5-5-5-5"/><path d="M20 9H9a5 5 0 0 0 0 10h3"/></svg>
       </button>
       <span class="savestate" id="save-state">내 컴퓨터</span>
-      <input type="file" id="file-upload" accept=".json" hidden onchange="loadFile(event)">
+      <input type="file" id="file-upload" accept=".json" hidden>
     </div>
 
     <!-- 위 가운데: 2D/3D -->
@@ -212,9 +160,9 @@
         <button type="button" class="trayitem" data-tray="venue" aria-expanded="false"><span class="lbl">공연장 정보</span><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20V9l9-5 9 5v11"/><path d="M8 20v-6h8v6"/></svg></span></button>
         <section class="float panel" data-panel="venue" hidden>
           <div class="panel-body venue-fields">
-            <label>무대 폭 (m) <input type="number" id="stage-w" class="top-input" value="12" step="0.1"></label>
-            <label>무대 깊이 (m) <input type="number" id="stage-d" class="top-input" value="22.7" step="0.1"></label>
-            <label>기본 조명 높이 (m) <input type="number" id="default-z" class="top-input" value="5.74" step="0.1"></label>
+            <label>무대 폭 (m) <input type="number" id="stage-w" value="12" step="0.1"></label>
+            <label>무대 깊이 (m) <input type="number" id="stage-d" value="22.7" step="0.1"></label>
+            <label>기본 조명 높이 (m) <input type="number" id="default-z" value="5.74" step="0.1"></label>
             <label>램프 규격
               <select id="venue-lamp">
                 <option value="HPL750_230">HPL 750W / 230V</option>

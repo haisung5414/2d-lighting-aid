@@ -132,7 +132,14 @@ Review fixes (user, after Phase 6):
 - The 2D face-height drawing value (`stage_config.actor_height`) moved to 빛 범위 표시 as `표시할 얼굴 높이` and no longer follows any actor.
 - Light colour reference (user request): the display white is now tungsten + Full CTB (L201, x 0.330 y 0.339) instead of bare tungsten. Open tungsten renders warm (≈ #ffc988), Full CTB white, 1/2 CTB slightly warm, Double CTB blue. Change is in `engine/gels.ts` (`DISPLAY_WHITE`); every consumer goes through `lightColorOf`, so 2D pools, 3D beams/floor, gel swatches and face colour all follow.
 
-## Phase 7 — Visual polish and cleanup `[ ]`
+## Phase 7 — Visual polish and cleanup `[x]`
 
 - Match mockup visuals (icons, spacing, light canvas look for the 2D plan if it reads better), dark theme check.
 - Remove dead code (old sidebars' CSS, multi-select remnants, unused globals), update `README`/docs, final build and full regression pass in 2D and 3D.
+
+Done notes:
+- Dark theme: chrome tokens switch with `prefers-color-scheme` (values from mockup v3), plus `:root[data-theme]` overrides for later. `style.css` legacy tokens now point at the chrome tokens, so the landing screen and form inputs follow the theme; the info tooltip keeps a fixed dark background.
+- 2D plan stays on the dark canvas on purpose: light pools use screen blending and read best on dark (a light canvas was considered and rejected).
+- Removed: ~300 lines of unused CSS (old sidebars, probe panel, gel swatch, collapsibles, 3D overlay checkboxes), the inline `<style>` block and `#error-screen` in `index.html`, `src/counter.ts` (Vite template), `selected_fixture_ids` everywhere (old files: the field is deleted on load), globals `window.addFixture` / `zoomCanvas` / `resetCanvasZoom` / `toggleView3D` / `loadFile` (file input now uses a listener), unused exports `LAMP_OPTIONS`, `LENS_LABELS`, `getVenueLayers3D`.
+- Docs: new `README.md`; `PROJECT_BRIEF.md` file tree and feature list rewritten for the new UI; `CODEX_HANDOFF.md` tree updated.
+- Regression (browser, 2D and 3D): every placing tool, set height via VCB, undo/redo, scene copy/switch, 2D↔3D round trip, dark and light themes; no console errors.

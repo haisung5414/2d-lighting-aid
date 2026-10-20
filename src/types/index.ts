@@ -191,7 +191,6 @@ export interface AppState {
   cues: Cue[];
   active_cue_index: number;
   selected_fixture_id: string | null;
-  selected_fixture_ids: string[];
   selected_set_id?: string | null;
   selected_actor_id?: string | null;
   interaction: InteractionState;

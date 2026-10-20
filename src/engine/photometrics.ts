@@ -17,11 +17,6 @@ interface DatasheetPoint {
   candela: number;
 }
 
-export const LAMP_OPTIONS: Record<LampKey, { label: string }> = {
-  HPL575_230: { label: 'HPL 575W / 230V' },
-  HPL750_230: { label: 'HPL 750W / 230V' }
-};
-
 /** 극장 확인 결과: HPL 750W */
 export const DEFAULT_LAMP: LampKey = 'HPL750_230';
 
@@ -32,13 +27,6 @@ const SOURCE_FOUR: Record<LensType, DatasheetPoint & { cdMF: Record<LampKey, num
   '36deg': { beam: 27, field: 34, candela: 90885, cdMF: { HPL750_230: 0.74, HPL575_230: 0.63 } },
   // 저장 파일 호환을 위해 키는 '51deg'로 유지한다. 실제 기종은 Source Four 50도다.
   '51deg': { beam: 36, field: 50, candela: 45650, cdMF: { HPL750_230: 0.74, HPL575_230: 0.61 } }
-};
-
-export const LENS_LABELS: Record<LensType, string> = {
-  '19deg': '19°',
-  '26deg': '26°',
-  '36deg': '36°',
-  '51deg': '50°'
 };
 
 const FRESNEL: Record<'narrow' | 'medium' | 'flood', DatasheetPoint> = {

@@ -407,7 +407,7 @@ const rebuild = () => {
   scene.add(dynamicGroup);
 
   const fixtures = (cue?.fixtures ?? []).filter(fix => fix.is_visible !== false);
-  const selectedIds = new Set([...state.selected_fixture_ids, state.selected_fixture_id ?? '']);
+  const selectedIds = new Set([state.selected_fixture_id ?? '']);
   const shadowSlots = pickShadowFixtures(fixtures.filter(fix => dimmerOutput(fix) > 0));
   fixtureData.update(fixtures, lamp, shadowSlots);
 
@@ -539,10 +539,6 @@ export const setVenueLayer3D = (layer: VenueLayer3D, on: boolean) => {
   if (layer === 'seating') showSeating = on;
   rebuild();
 };
-
-export const getVenueLayers3D = (): Record<VenueLayer3D, boolean> => ({
-  venue: showVenue, catwalk: showCatwalk, seating: showSeating, worklight: workLightOn
-});
 
 const createOverlay = (host: HTMLElement) => {
   const overlay = document.createElement('div');

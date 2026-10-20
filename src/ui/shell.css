@@ -13,6 +13,39 @@
   --chrome-accent-soft: #e3eefc;
   --font-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
   --shadow: 0 1px 2px rgba(20, 30, 45, .08), 0 4px 14px rgba(20, 30, 45, .10);
+  --warn: #b26a00;
+  --tip-bg: #1d2733;
+  color-scheme: light;
+}
+
+/* 다크 테마: 운영체제 설정을 따른다. 값은 시안 v3의 다크 색 */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --surface: #222b35;
+    --surface-2: #2a3440;
+    --line: #36414e;
+    --ink: #e4eaf0;
+    --ink-2: #a5b1be;
+    --ink-3: #75818f;
+    --chrome-accent: #6aa8ff;
+    --chrome-accent-soft: #1f3550;
+    --warn: #f0b04a;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 4px 14px rgba(0, 0, 0, .35);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --surface: #222b35;
+  --surface-2: #2a3440;
+  --line: #36414e;
+  --ink: #e4eaf0;
+  --ink-2: #a5b1be;
+  --ink-3: #75818f;
+  --chrome-accent: #6aa8ff;
+  --chrome-accent-soft: #1f3550;
+  --warn: #f0b04a;
+  --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 4px 14px rgba(0, 0, 0, .35);
+  color-scheme: dark;
 }
 
 /* 패널·메뉴·씬 목록은 hidden 특성으로 여닫는다. display를 지정한 규칙이 이를 덮어쓰지 않게 한다 */
@@ -58,7 +91,7 @@
 .filename:hover { background: var(--surface-2); }
 .filename-input { font-weight: 700; font-size: 14px; width: 200px; padding: 2px 6px; margin: 0 2px; border: 1px solid var(--chrome-accent); border-radius: 5px; color: var(--ink); background: var(--surface); }
 .savestate { color: var(--ink-3); font-size: 12px; padding: 0 8px 0 4px; white-space: nowrap; }
-.savestate.dirty { color: #b26a00; }
+.savestate.dirty { color: var(--warn); }
 .menu-wrap { position: relative; }
 .file-menu { top: 38px; left: 0; min-width: 170px; padding: 4px; display: grid; }
 .file-menu button { border: 0; background: none; text-align: left; padding: 8px 10px; border-radius: 5px; cursor: pointer; font-size: 13px; color: var(--ink); }
@@ -129,17 +162,14 @@
 .inline-num input { width: 64px; }
 .venue-fields label { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 13px; color: var(--ink-2); }
 .venue-fields input { width: 96px; }
-.fixture-add-controls { display: flex; gap: 6px; margin-bottom: 10px; }
-.fixture-add-controls select { flex: 1; }
 /* 보기 패널: 소제목과 (i) 설명 말풍선 */
 .sub-row { display: flex; align-items: center; gap: 6px; margin: 12px 0 6px; }
 .sub { font-size: 11px; font-weight: 600; letter-spacing: .04em; color: var(--ink-3); }
 .info { position: relative; display: inline-grid; place-items: center; cursor: help; border-radius: 50%; }
 .info-icon { width: 16px; height: 16px; border-radius: 50%; border: 1px solid var(--ink-3); color: var(--ink-2); font: 600 10px/14px "IBM Plex Sans KR", sans-serif; text-align: center; font-style: italic; }
 .info:hover .info-icon, .info:focus .info-icon { border-color: var(--chrome-accent); color: var(--chrome-accent); }
-.info-tip { position: absolute; z-index: 30; top: 22px; left: -8px; width: 270px; padding: 10px 12px; border-radius: 8px; background: var(--ink); color: #fff; font-size: 12px; line-height: 1.55; box-shadow: var(--shadow); opacity: 0; visibility: hidden; transition: opacity .12s; }
+.info-tip { position: absolute; z-index: 30; top: 22px; left: -8px; width: 270px; padding: 10px 12px; border-radius: 8px; background: var(--tip-bg); color: #fff; font-size: 12px; line-height: 1.55; box-shadow: var(--shadow); opacity: 0; visibility: hidden; transition: opacity .12s; }
 .info:hover .info-tip, .info:focus .info-tip, .info:focus-within .info-tip { opacity: 1; visibility: visible; }
-
 
 /* 공통: 켜고 끄는 줄, 젤 색 점 */
 .toggle-row { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink); padding: 3px 0; cursor: pointer; }
@@ -188,7 +218,7 @@
 .pp-contrib button:hover { background: var(--chrome-accent-soft); }
 .pp-contrib button > span:first-child { display: inline-flex; align-items: center; gap: 6px; }
 .pp-contrib button > span:last-child { font-family: var(--font-mono); }
-.pp-contrib .est { color: #b26a00; }
+.pp-contrib .est { color: var(--warn); }
 .pp-note { margin: 8px 0 0; font-size: 12px; color: var(--ink-3); line-height: 1.5; }
 .pp-empty { margin: 4px 0; font-size: 13px; color: var(--ink-3); line-height: 1.5; }
 .pp-ro { font-size: 13px; color: var(--ink); }

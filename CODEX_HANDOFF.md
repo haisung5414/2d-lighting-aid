@@ -9,7 +9,7 @@
 
 ## 2. 기술 스택
 * **환경:** Vite + Vanilla TypeScript (배포: GitHub Pages)
-* **엔진:** HTML5 Canvas API (2D Context)
+* **엔진:** HTML5 Canvas API (2D 평면도), three.js (3D 보기)
 * **스타일:** 순수 CSS3 (Flexbox 레이아웃 기반)
 
 ## 3. 현재 파일 구조 요약
@@ -18,6 +18,6 @@ src/
 ├── main.ts             # 엔트리 포인트 (초기화, 모듈 결합, 단축키)
 ├── types/index.ts      # [핵심] 단일 진실 공급원 (모든 타입/인터페이스 정의)
 ├── state/store.ts      # 전역 상태(state) 관리, Pub/Sub, Undo/Redo 스택
-├── engine/geometry.ts  # 3D 투사 -> 2D 타원/마스킹 수학 연산 엔진
-├── render/canvas.ts    # 다중 레이어 렌더링, 오프스크린 썸네일, 마우스 이벤트
-└── ui/                 # DOM 조작 분리 (manager.ts, scene.ts, fixture.ts)
+├── engine/             # geometry.ts(투사·밝기), photometrics.ts(실측 광도), gels.ts(젤 색)
+├── render/             # canvas.ts(2D 평면도), view3d.ts 외(3D 보기)
+└── ui/                 # shell.ts(화면 골격), tools.ts, selection.ts, 패널 모듈들 — PROJECT_BRIEF.md §4 참고

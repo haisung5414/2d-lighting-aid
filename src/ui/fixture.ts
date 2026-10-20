@@ -174,21 +174,8 @@ export const deleteFixture = (fixtureId: string) => {
     cue.fixtures = cue.fixtures.filter(f => f.id !== fixtureId);
     if (state.selected_fixture_id === fixtureId) {
       state.selected_fixture_id = null;
-      state.selected_fixture_ids = [];
     }
   });
 };
 
 // 개발 중 시험 스크립트용: 기본 엘립소이달을 무대 가운데에 하나 추가한다
-(window as any).addFixture = (type: FixtureType = 'ellipsoidal') => {
-  commitHistory();
-  setState(state => {
-    const cue = state.cues[state.active_cue_index];
-    if (!cue) return;
-    const fixture = createFixture(type, nextFixtureNumber(cue.fixtures), state.stage_config);
-    cue.fixtures.push(fixture);
-    state.selected_fixture_id = fixture.id;
-    state.selected_fixture_ids = [fixture.id];
-    state.selected_set_id = null;
-  });
-};

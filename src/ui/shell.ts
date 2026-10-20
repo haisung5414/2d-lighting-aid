@@ -279,8 +279,6 @@ const initVenue3DPanel = () => {
 const initViewSwitch = () => {
   $('view-2d')?.addEventListener('click', () => void setViewMode('2d'));
   $('view-3d')?.addEventListener('click', () => void setViewMode('3d'));
-  // 예전 코드와 시험 스크립트가 쓰던 전역 함수
-  (window as any).toggleView3D = () => setViewMode(view3DOn ? '2d' : '3d');
 };
 
 /* ---------- 씬 서랍 ---------- */

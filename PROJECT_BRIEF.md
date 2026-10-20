@@ -14,7 +14,7 @@
 
 * 빌드 도구: Vite (빠른 로컬 개발 및 간편한 GitHub Pages 배포 지원)
 * 언어: Vanilla TypeScript (엄격한 타입 정의로 런타임 에러 및 데이터 오염 방지)
-* 그래픽 엔진: HTML5 Canvas API (2D Context)
+* 그래픽 엔진: HTML5 Canvas API (2D 평면도), three.js (3D 보기, 지연 로딩)
 * 스타일링: CSS3 (Flexbox 기반 레이아웃)
 
 ---
@@ -29,7 +29,7 @@
 ### 2) 발행/구독 (Pub/Sub) 기반 상태 업데이트
 프레임워크가 없으므로 상태 변경과 화면 갱신을 일치시키기 위해 간단한 Pub/Sub 패턴을 사용합니다.
 * 상태를 변경할 때는 반드시 setState(draft => { ... }) 콜백 함수를 호출해야 합니다.
-* setState가 실행되면 내부적으로 notify()가 호출되어 등록된 렌더링 함수(renderCanvas, renderSceneList, renderFixtureUI)들이 자동으로 화면을 다시 그립니다.
+* setState가 실행되면 내부적으로 notify()가 호출되어 등록된 렌더링 함수(renderCanvas, renderSceneList, renderProperties 등)들이 자동으로 화면을 다시 그립니다.
 
 ### 3) 불변성 및 깊은 복사 (Deep Copy)
 객체 참조(Reference)로 인한 데이터 오염을 막기 위해 씬 복사나 Undo/Redo 스냅샷 저장 시 JSON.parse(JSON.stringify())를 통한 깊은 복사를 원칙으로 합니다.
@@ -40,47 +40,63 @@
 
 ```text
 2d-lighting-aid/
-├── index.html              # 앱 진입점 HTML (전체 레이아웃 및 패널 틀 정의)
+├── index.html              # 앱 진입점 HTML (시작 화면, 편집 화면의 떠 있는 요소들의 틀)
 ├── tsconfig.json           # TypeScript 설정 (verbatimModuleSyntax 켜짐)
+├── docs/redesign/          # 화면 재구성 사양(UI_REDESIGN_SPEC.md)과 단계 기록(UI_REDESIGN_PHASES.md)
 └── src/
-    ├── main.ts             # 메인 엔트리 포인트 (초기화, 모듈 결합, 단축키 등록)
-    ├── style.css           # 전역 스타일
-    ├── types/
-    │   └── index.ts        # [핵심] 모든 타입 및 인터페이스 정의 (AppState, Cue, Fixture 등)
-    ├── state/
-    │   └── store.ts        # 전역 상태(state), Pub/Sub, Undo/Redo 히스토리 스택 관리
+    ├── main.ts             # 메인 엔트리 포인트 (초기화, 모듈 결합, 실행 취소 단축키)
+    ├── style.css           # 기본 요소, 시작 화면, 3D 보기 스타일
+    ├── types/index.ts      # [핵심] 모든 타입 정의 (AppState, Cue, Fixture, SetPiece, Actor 등)
+    ├── state/store.ts      # 전역 상태, Pub/Sub, Undo/Redo, 예전 파일 형식 변환
+    ├── config/             # 공연장(venues.ts)과 채널 배선(patch.ts) 자료
     ├── engine/
-    │   └── geometry.ts     # 3D 원뿔 투사 -> 2D 타원 변환 및 렌즈 제원 수학 연산 엔진
+    │   ├── geometry.ts     # 3D 원뿔 투사 -> 2D 타원, 사람 모형 자리의 밝기 계산
+    │   ├── photometrics.ts # 실측 광도(배광, 디머 제곱 법칙, 셔터, 세트 가림)
+    │   └── gels.ts         # LEE 젤 색도 -> 화면 색 (Full CTB를 흰색 기준으로)
     ├── render/
-    │   └── canvas.ts       # Canvas 다중 레이어 그리기, 오프스크린 썸네일 생성, 마우스 드래그 이벤트
+    │   ├── canvas.ts       # 2D 평면도 그리기, 손잡이, 썸네일, 마우스 조작
+    │   ├── view3d.ts       # three.js 3D 보기 (처음 켤 때만 불러옴)
+    │   ├── stageLightMaterial.ts, fixtureShadows.ts, venueModel.ts  # 3D 조명 셰이더, 그림자, 극장 모형
     └── ui/
-        ├── manager.ts      # 전역 뷰 옵션 토글 및 파일 I/O (JSON Save/Load)
-        ├── scene.ts        # 좌측 씬(Cue) 리스트 렌더링 및 Drag & Drop 순서 변경
-        └── fixture.ts      # 우측 조명 목록 및 속성 패널 제어
+        ├── shell.ts / shell.css  # SketchUp Web식 화면 골격: 파일 알약, 2D/3D, 트레이, 씬 서랍, 상태 바
+        ├── tools.ts        # 왼쪽 도구 레일 (선택, 조명 3종, 세트·벽·덧마루·애플박스, 사람 모형)
+        ├── selection.ts    # 단일 선택 모델과 "패널 열기" 요청
+        ├── lightSettings.ts# 조명 설정 패널 (기종·렌즈, 젤, 디머, 셔터, 3D 그림자)
+        ├── properties.ts   # 선택한 객체 속성 패널 (조명 / 세트 / 사람 모형과 밝기)
+        ├── stageList.ts    # 객체 전체 목록 패널
+        ├── scene.ts        # 씬 서랍 카드, 레이어 패널의 씬 배경 이미지
+        ├── statusbar.ts    # 커서 좌표와 수치 칸 (정확한 거리, 세트 높이)
+        ├── help.ts         # 도우미 패널
+        ├── patch.ts        # 채널 검사 패널
+        ├── manager.ts      # 빛 범위 표시·공연장 정보 입력, 파일 저장/불러오기
+        └── fixture.ts, sets.ts  # 조명·세트 데이터 조작
 ```
 
 ---
 
 ## 5. 현재 구현된 핵심 기능 (Current Implemented Features)
 
-현재 코드는 마이그레이션 및 고도화 단계를 거쳐 아래 기능들이 작동하는 상태입니다.
+화면 구성은 `docs/redesign/UI_REDESIGN_SPEC.md`(SketchUp Web식 재구성)를 따른다.
 
-### 캔버스 및 광학 엔진 (geometry.ts, canvas.ts)
-* 물리 기반 렌더링: 조명기 높이(z)와 타겟 좌표를 바탕으로 중심광(Beam)과 주변광(Field)의 타원을 바닥(z=0)과 배우 얼굴 높이(z=Actor)에 정확히 분리 투사.
-* 4-Point 셔터 마스킹: 조명기 셔터 핸들을 조작하여 임의의 사각형 마스킹(클리핑) 생성 및 역투영 연산.
-* 씬별 배경 도면 로드: 씬마다 개별적인 도면 이미지(PNG/JPG)를 업로드하여 Base64로 변환 후 무대 바닥에 렌더링 (투명도 조절 가능).
+### 화면 골격
+* 캔버스가 화면 전체를 채우고, 파일 알약(☰ 메뉴·파일 이름·실행 취소·저장 상태), 2D/3D 전환, 왼쪽 도구 레일, 오른쪽 아코디언 트레이, 아래 씬 서랍과 상태 바가 그 위에 떠 있다. 운영체제의 다크 모드를 따른다.
+* 트레이: "선택한 것"(선택한 객체 속성, 도우미)과 "작업 전체"(빛 범위 표시, 3D 극장 구조, 레이어, 채널 검사, 공연장 정보, 객체 전체 목록). 조명을 고르면 맨 위에 조명 설정이 펼쳐진다. 두 패널 모두 "자동으로 열지 않기"를 고를 수 있고, 두 번 누르면 언제든 열린다.
 
-### 씬 매니저 (scene.ts)
-* HTML5 Drag & Drop: 마우스로 씬을 잡아끌어 직관적으로 재생 순서 변경 (순서 변경 시 포커스 추적 보정 완료).
-* 실시간 썸네일 생성: 오프스크린 캔버스(Off-screen Canvas)를 활용해 조명을 드래그할 때마다 좌측 목록에 해당 씬의 160x160 미리보기 썸네일을 실시간 갱신.
+### 도구와 선택
+* 도구 9개: 선택(Space), 엘립소이달(E, 렌즈 19/26/36/50/줌), 프레넬(F), PAR(P), 세트 그리기(R), 벽(W)·덧마루(D)·애플박스(B) 바로가기, 사람 모형(A). 조명은 가장 가까운 캣워크 파이프에 붙는다.
+* 단일 선택. 조명은 끌어서 옮기고 조준점·셔터 꼭짓점을 끈다. 세트는 꼭짓점 손잡이(반대쪽 고정 크기 조절)와 노란 회전 손잡이(15° 스냅)를 쓴다.
+* 수치 칸(VCB): 끈 직후 숫자를 치면 그 거리만큼 정확히 옮기고, 세트를 놓은 직후에는 높이가 된다 (m, mm, cm).
 
-### 조명기 매니저 (fixture.ts & index.html)
-* 고정형 속성 패널: 조명 개수가 늘어나도 X/Y/Z 좌표, 렌즈 선택(19°~51°), 부드러움(Softness)을 조절하는 패널이 항상 화면 우측 하단에 고정되도록 레이아웃 최적화.
-* 간섭 최소화: 복잡한 작업 시 특정 조명을 숨기는 가시성 토글 기능 지원.
+### 빛 계산과 표시
+* 실측 광도 모델(배광 10^(-r^p), 디머 제곱 법칙, HPL 575/750W), LEE 젤 색, 셔터와 세트 가림.
+* 2D: 바닥·얼굴 높이에 닿는 빛을 그라데이션으로, 빔(50%)·필드(10%) 각도선을 선택해서 표시. 표시할 얼굴 높이는 "빛 범위 표시"에서 정한다.
+* 사람 모형: 여러 명을 세울 수 있고 사람마다 키가 다르다. 각자 얼굴(키 − 120 mm) 밝기를 평면도에 늘 표시하고, 선택하면 조명별 기여도를 보여 준다.
+* 3D 보기(three.js): 같은 광도 모델의 바닥·세트·사람 모형 조명, 빛줄기, 조명별 그림자(최대 4개), 극장 구조·캣워크·객석·작업등 켜기/끄기.
 
-### 안전장치 및 부가 기능 (store.ts, main.ts)
-* Undo/Redo 시스템: Ctrl+Z (실행 취소) 및 Ctrl+Y / Ctrl+Shift+Z (다시 실행) 완벽 지원. 무의미한 연속 저장을 막기 위해 마우스 조작 시작점에만 스냅샷 기록.
-* 레이스 컨디션 방지: 전역 mouseup 이벤트가 패널의 click 이벤트를 파괴하지 않도록 드래그 상태 조건부 업데이트 적용 완료.
+### 씬과 파일
+* 씬 서랍: 썸네일 카드, 끌어서 순서 바꾸기, 새 씬·복사·그 자리에서 이름 변경·두 번 눌러 삭제. 씬별 배경 이미지는 레이어 패널에 있다.
+* 파일: JSON 저장(Ctrl+S, 다른 이름으로 저장)과 불러오기. 예전 파일(사람 모형 하나 = probe, 여러 개 선택 목록)은 불러올 때 자동으로 바뀐다.
+* Undo/Redo: Ctrl+Z, Ctrl+Y / Ctrl+Shift+Z. 끌기는 실제로 움직였을 때만 기록한다.
 
 ---
 

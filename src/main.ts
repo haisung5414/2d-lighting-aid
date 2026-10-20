@@ -1,6 +1,6 @@
 // src/main.ts
 import './style.css';
-import { initCanvas, resetCanvasZoom, zoomCanvas } from './render/canvas';
+import { initCanvas } from './render/canvas';
 import { initManagerUI } from './ui/manager';
 import { initSceneUI } from './ui/scene';
 import { initPatchUI } from './ui/patch';
@@ -39,10 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-(window as any).zoomCanvas = zoomCanvas;
-(window as any).resetCanvasZoom = resetCanvasZoom;
 
-// 2D/3D 전환(toggleView3D)은 ui/shell.ts가 맡는다
 
 // 글로벌 단축키 등록 (Undo/Redo)
 window.addEventListener('keydown', (e: KeyboardEvent) => {

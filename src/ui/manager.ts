@@ -79,6 +79,7 @@ const initLandingUI = () => {
   const landingLoadButton = document.getElementById('landing-load-file') as HTMLButtonElement | null;
   const fileUploadInput = document.getElementById('file-upload') as HTMLInputElement | null;
   landingLoadButton?.addEventListener('click', () => fileUploadInput?.click());
+  fileUploadInput?.addEventListener('change', loadFile);
 };
 
 const showEditorScreen = () => {
@@ -134,7 +135,7 @@ export const saveProject = (name: string) => {
   window.dispatchEvent(new CustomEvent('lighting:file', { detail: { name: fileName } }));
 };
 
-(window as any).loadFile = (event: Event) => {
+const loadFile = (event: Event) => {
   const target = event.target as HTMLInputElement;
   const file = target.files?.[0];
   if (!file) return;

@@ -27,7 +27,6 @@ const selectCue = (idx: number) => {
   setState(state => {
     state.active_cue_index = idx;
     state.selected_fixture_id = null; // 씬을 바꾸면 선택을 비운다
-    state.selected_fixture_ids = [];
   });
 };
 
@@ -37,7 +36,6 @@ const addCue = () => {
     state.cues.push({ cue_id: generateId('cue'), label: `Scene ${state.cues.length + 1}`, fixtures: [] });
     state.active_cue_index = state.cues.length - 1;
     state.selected_fixture_id = null;
-    state.selected_fixture_ids = [];
   });
 };
 
@@ -55,7 +53,6 @@ const copyCue = () => {
     state.cues.splice(idx + 1, 0, copy);
     state.active_cue_index = idx + 1;
     state.selected_fixture_id = null;
-    state.selected_fixture_ids = [];
   });
 };
 
@@ -66,7 +63,6 @@ const deleteCue = () => {
     state.cues.splice(state.active_cue_index, 1);
     state.active_cue_index = Math.min(state.active_cue_index, state.cues.length - 1);
     state.selected_fixture_id = null;
-    state.selected_fixture_ids = [];
   });
 };
 

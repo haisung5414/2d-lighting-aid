@@ -77,7 +77,6 @@ const createInitialState = (venue: VenuePreset): AppState => {
     ],
     active_cue_index: 0,
     selected_fixture_id: null, // 단일 선택: 처음에는 아무것도 고르지 않는다
-    selected_fixture_ids: [],
     interaction: { dragMode: null, draggedIndex: -1 },
     selected_actor_id: null,
     actors: [createActor(fixtureX, venue.stage.depth / 2, [])]
@@ -205,18 +204,10 @@ const normalizeFixtureSelection = () => {
     });
   });
 
-  if (!Array.isArray(state.selected_fixture_ids)) {
-    state.selected_fixture_ids = state.selected_fixture_id ? [state.selected_fixture_id] : [];
-  }
-
-  state.selected_fixture_ids = state.selected_fixture_ids.filter(id => validIds.has(id));
-
+  // 예전 파일의 여러 개 선택 목록은 쓰지 않는다
+  delete (state as { selected_fixture_ids?: string[] }).selected_fixture_ids;
   if (state.selected_fixture_id && !validIds.has(state.selected_fixture_id)) {
     state.selected_fixture_id = null; // 단일 선택: 지워진 조명을 골라 둔 상태면 선택을 비운다
-  }
-
-  if (state.selected_fixture_id && !state.selected_fixture_ids.includes(state.selected_fixture_id)) {
-    state.selected_fixture_ids.push(state.selected_fixture_id);
   }
 };
 
