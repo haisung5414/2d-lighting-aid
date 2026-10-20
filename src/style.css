@@ -227,7 +227,7 @@ input:focus, select:focus, button:focus-visible { outline: 2px solid rgba(47, 11
   position: absolute;
   /* 왼쪽 도구 레일과 이름표 옆 */
   top: 58px;
-  left: 200px;
+  left: 190px;
   display: flex;
   flex-direction: column;
   gap: 8px;

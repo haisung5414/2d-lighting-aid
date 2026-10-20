@@ -108,24 +108,24 @@
 .pillbtn:disabled { cursor: not-allowed; }
 
 /* 왼쪽: 도구 레일 */
-/* 버튼 54px (처음 시안의 1.5배), 오른쪽에 트레이와 같은 이름표 */
-.toolrail { top: 58px; left: 10px; width: 66px; padding: 5px 6px; display: flex; flex-direction: column; align-items: center; gap: 2px; }
-.tool { position: relative; width: 54px; height: 54px; display: grid; place-items: center; border: 0; background: none; border-radius: 8px; cursor: pointer; color: var(--ink-2); }
+/* 버튼 45px (처음 시안의 1.25배, 사용자 확인), 오른쪽에 트레이와 같은 이름표 */
+.toolrail { top: 58px; left: 10px; width: 56px; padding: 5px 5px; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.tool { position: relative; width: 45px; height: 45px; display: grid; place-items: center; border: 0; background: none; border-radius: 8px; cursor: pointer; color: var(--ink-2); }
 .tool:hover { background: var(--surface-2); color: var(--ink); }
 .tool[aria-pressed="true"] { background: var(--chrome-accent-soft); color: var(--chrome-accent); box-shadow: inset 3px 0 0 var(--chrome-accent); }
-.tool svg { width: 30px; height: 30px; }
-.tool .key { position: absolute; right: 4px; bottom: 2px; font: 500 11px var(--font-mono); color: var(--ink-3); }
-.tool .lbl { position: absolute; left: calc(100% + 14px); top: 50%; transform: translateY(-50%); background: var(--surface); border: 1px solid var(--line); border-radius: 5px; padding: 2px 8px; font-size: 12px; font-weight: 600; color: var(--ink); box-shadow: var(--shadow); white-space: nowrap; pointer-events: auto; }
+.tool svg { width: 25px; height: 25px; }
+.tool .key { position: absolute; right: 3px; bottom: 1px; font: 500 10px var(--font-mono); color: var(--ink-3); }
+.tool .lbl { position: absolute; left: calc(100% + 12px); top: 50%; transform: translateY(-50%); background: var(--surface); border: 1px solid var(--line); border-radius: 5px; padding: 2px 8px; font-size: 12px; font-weight: 600; color: var(--ink); box-shadow: var(--shadow); white-space: nowrap; pointer-events: auto; }
 .tool[aria-pressed="true"] .lbl { color: var(--chrome-accent); }
 /* 엘립소이달 렌즈를 펼치면 그 자리의 이름표는 숨긴다 */
 .toolwrap.open .tool .lbl { display: none; }
 .tool:disabled { opacity: .35; cursor: not-allowed; }
-.toolrail .sep { width: 40px; height: 1px; background: var(--line); margin: 4px 0; flex: none; }
+.toolrail .sep { width: 33px; height: 1px; background: var(--line); margin: 4px 0; flex: none; }
 /* 펼침이 있는 도구 표시 (오른쪽 위 작은 삼각형) */
-.tool .more { position: absolute; right: 4px; top: 4px; width: 0; height: 0; border-left: 6px solid transparent; border-top: 6px solid var(--ink-3); }
+.tool .more { position: absolute; right: 3px; top: 3px; width: 0; height: 0; border-left: 5px solid transparent; border-top: 5px solid var(--ink-3); }
 .toolwrap { position: relative; }
 /* 엘립소이달 렌즈 고르기: 버튼 바로 옆으로 펼쳐진다 */
-.flyout { position: absolute; left: 64px; top: 4px; display: flex; gap: 3px; padding: 4px; z-index: 25; }
+.flyout { position: absolute; left: 54px; top: 2px; display: flex; gap: 3px; padding: 4px; z-index: 25; }
 .flyout button { border: 1px solid var(--line); background: var(--surface-2); border-radius: 5px; padding: 5px 9px; cursor: pointer; font-size: 12px; font-weight: 600; white-space: nowrap; color: var(--ink); line-height: 1.2; }
 .flyout button[aria-pressed="true"] { background: var(--chrome-accent); border-color: var(--chrome-accent); color: #fff; }
 .flyout button small { display: block; font-weight: 400; font-size: 10px; color: var(--ink-3); }
@@ -255,7 +255,7 @@
 
 
 /* 아래: 씬 서랍 (도구 레일과 패널 사이) */
-.scenes { left: 90px; right: 520px; bottom: 10px; display: flex; flex-direction: column; max-height: calc(100% - 80px); }
+.scenes { left: 80px; right: 520px; bottom: 10px; display: flex; flex-direction: column; max-height: calc(100% - 80px); }
 .scenes-handle { display: flex; align-items: center; gap: 10px; border: 0; background: none; padding: 7px 12px; cursor: pointer; width: 100%; text-align: left; font-size: 13px; color: var(--ink); }
 .scenes-handle small { color: var(--ink-3); margin-left: auto; }
 .scenes-handle .chev { width: 16px; height: 16px; color: var(--ink-3); transition: transform .2s; flex: none; }
