@@ -491,7 +491,8 @@ export const generateThumbnail = (cue: Cue, stageConfig: StageConfig, toggles: U
   const offCtx = offCanvas.getContext('2d');
   if (!offCtx) return '';
 
-  offCtx.fillStyle = '#bbbbbb';
+  // 본 화면과 같은 어두운 바탕이어야 빛(screen 합성)이 보인다
+  offCtx.fillStyle = '#1f2329';
   offCtx.fillRect(0, 0, 160, 160);
 
   const sw = stageConfig.width;

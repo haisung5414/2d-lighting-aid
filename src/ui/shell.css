@@ -210,10 +210,28 @@
 .scenes-handle .chev { width: 16px; height: 16px; color: var(--ink-3); transition: transform .2s; flex: none; }
 .scenes.open .chev { transform: rotate(180deg); }
 .scenes-body { border-top: 1px solid var(--line); padding: 10px 12px; display: grid; gap: 10px; min-height: 0; }
-/* 임시: 기존 씬 목록을 가로로 늘어놓는다 (Phase 5에서 카드로 다시 만든다) */
-.scenes-body #cue-list { display: flex; gap: 8px; overflow-x: auto; padding: 0; }
-.scenes-body #cue-list .list-item { flex: none; width: 210px; margin-bottom: 0; }
-.btnrow { display: flex; gap: 6px; }
+/* 씬 카드 줄: 썸네일, 이름, 조명 수. 지금 씬은 파란 테두리, 끌어서 순서를 바꾼다 */
+.scenes-body #cue-list { display: flex; gap: 8px; overflow-x: auto; padding: 2px 2px 4px; }
+.scene-card { position: relative; flex: none; width: 128px; display: flex; flex-direction: column; gap: 2px; border: 1px solid var(--line); border-radius: 6px; padding: 5px; background: var(--surface-2); cursor: pointer; text-align: left; user-select: none; }
+.scene-card:hover { border-color: var(--ink-3); }
+.scene-card.sel { border-color: var(--chrome-accent); box-shadow: 0 0 0 1px var(--chrome-accent); background: var(--chrome-accent-soft); }
+.scene-card:focus-visible { outline: 2px solid var(--chrome-accent); outline-offset: 2px; }
+.scene-card.dragging { opacity: .4; }
+.scene-card.drop-before::before, .scene-card.drop-after::after { content: ""; position: absolute; top: 4px; bottom: 4px; width: 3px; border-radius: 2px; background: var(--chrome-accent); }
+.scene-card.drop-before::before { left: -6px; }
+.scene-card.drop-after::after { right: -6px; }
+.scene-thumb { display: block; height: 64px; border-radius: 4px; background: #1f2329; overflow: hidden; margin-bottom: 2px; }
+.scene-thumb img { width: 100%; height: 100%; object-fit: contain; display: block; pointer-events: none; }
+.scene-card b { font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.scene-card small { color: var(--ink-3); font-size: 11px; }
+.scene-rename { font-size: 12px; font-weight: 600; width: 100%; box-sizing: border-box; padding: 1px 4px; }
+.btnrow { display: flex; gap: 6px; flex-wrap: wrap; }
+.sbtn { border: 1px solid var(--line); background: var(--surface); border-radius: 5px; padding: 4px 10px; font-size: 12px; color: var(--ink); cursor: pointer; }
+.sbtn:hover:not(:disabled) { background: var(--surface-2); }
+.sbtn:disabled { color: var(--ink-3); cursor: not-allowed; }
+.sbtn.danger:hover:not(:disabled) { color: #c0392b; }
+.sbtn.danger.armed, .sbtn.danger.armed:hover { color: #fff; background: #c0392b; border-color: #c0392b; }
+#bg-settings-container .sbtn { margin-top: 6px; }
 
 /* 상태 바 */
 .statusbar { display: flex; align-items: center; gap: 10px; padding: 4px 10px; border-top: 1px solid var(--line); background: var(--surface); color: var(--ink); flex: none; min-width: 0; }

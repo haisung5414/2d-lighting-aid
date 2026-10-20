@@ -97,11 +97,19 @@ Done notes:
 - `worldToScreen` is exported from `render/canvas.ts` (used by tests now, status bar coordinates in Phase 6).
 - `SetPiece.kind` and mm fields were already done in Phases 2–3.
 
-## Phase 5 — Scene drawer `[ ]`
+## Phase 5 — Scene drawer `[x]`
 
 Spec §6.
 - Card row with thumbnails, current highlight, drag reorder; 새 씬 / 복사 / 이름 변경 / 삭제 (in-page rename, no `prompt()`).
 - Background image controls confirmed in 레이어 only.
+
+Done notes:
+- `ui/scene.ts` rewritten: no `window.*` globals, no inline styles, no `prompt()`. Buttons act on the current scene: 새 씬 (appended), 복사 (inserted right after, fixtures get new ids, name `… 복사본`), 이름 변경 (card name turns into an input; Enter/blur saves, Esc cancels; double-click on the current card's name also works), 삭제 (first click arms `한 번 더 누르면 삭제` for 3 s; disabled when only one scene is left). All are undoable.
+- Cards: thumbnail (whole stage, `object-fit: contain` on the dark canvas colour), name, `조명 N개`; current card highlighted. HTML5 drag reorder with a before/after insert bar; the current scene stays current after reordering.
+- Thumbnails now draw on `#1f2329` (light pools use screen blending and were invisible on the old `#bbb`). Scenes that were never edited since loading get a thumbnail when the drawer renders.
+- The list only renders while the drawer is open; the drawer handle defers its render with `setTimeout` (a microtask ran before shell.ts toggled `hidden` on real clicks).
+- Background image controls are rebuilt in the 레이어 panel (`#bg-settings-container`) with the panel styles; they re-render only when the background values change, so the opacity slider is not replaced mid-drag.
+- Leftover `#cue-list .list-item` rules in `style.css` are left for Phase 7.
 
 ## Phase 6 — Status bar and top bar details `[ ]`
 

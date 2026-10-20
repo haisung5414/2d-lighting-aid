@@ -230,7 +230,12 @@
       </button>
       <div class="scenes-body" id="scene-body" hidden>
         <div id="cue-list"></div>
-        <div class="btnrow"><button type="button" class="btn btn-secondary" onclick="addCue()">＋ 새 씬</button></div>
+        <div class="btnrow">
+          <button type="button" class="sbtn" id="scene-add">＋ 새 씬</button>
+          <button type="button" class="sbtn" id="scene-copy" title="지금 씬을 바로 뒤에 복사합니다 (조명 구성 포함)">복사</button>
+          <button type="button" class="sbtn" id="scene-rename" title="지금 씬의 이름을 카드에서 바로 고칩니다">이름 변경</button>
+          <button type="button" class="sbtn danger" id="scene-delete">삭제</button>
+        </div>
       </div>
     </div>
   </div>
