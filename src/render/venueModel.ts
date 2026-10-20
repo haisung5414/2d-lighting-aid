@@ -1,5 +1,5 @@
 // src/render/venueModel.ts
-// 극장 골격(벽, 천장, 캣워크, 갤러리, 객석)을 3D로 만든다.
+// 극장 골격(벽, 천장, 갤러리, 객석)과 캣워크를 3D로 만든다. 둘은 3D 화면에서 따로 켜고 끈다.
 // 벽과 천장은 안쪽을 향한 면만 그려서, 밖에 있는 카메라에서는 가까운 벽이 보이지 않는다(인형의 집 방식).
 // 표면은 무대 조명 셰이더로 비추므로 조명이 벽이나 객석에 닿는 모습도 보인다.
 
@@ -47,7 +47,7 @@ const box = (rect: PlanRect, z0: number, z1: number, material: THREE.Material): 
   return mesh;
 };
 
-const buildCatwalk = (model: VenueModel3D): THREE.Object3D => {
+export const buildCatwalk = (model: VenueModel3D): THREE.Object3D => {
   const group = new THREE.Group();
   const { area, openings, z, pipes } = model.catwalk;
 
@@ -141,8 +141,6 @@ export const buildVenueModel = (model: VenueModel3D, data: FixtureDataTexture): 
     );
     group.add(glass);
   });
-
-  group.add(buildCatwalk(model));
 
   // 갤러리: 바닥판과 난간
   const galleryMaterial = createStageLightMaterial(data, { color: GALLERY_COLOR });
