@@ -14,6 +14,8 @@ export const OCCLUDER_LAYER = 1;
 const WALL_COLOR = 0x2a2a2c;
 const SEAT_COLOR = 0x3a3434;
 const GALLERY_COLOR = 0x303032;
+/** 갤러리 아래를 가리는 검은 커튼 */
+const CURTAIN_COLOR = 0x1c1c1f;
 
 export const venueModelFor = (stage: StageConfig): VenueModel3D | null => {
   const byKey = stage.venue_key ? VENUES[stage.venue_key as keyof typeof VENUES] : undefined;
@@ -142,9 +144,14 @@ export const buildVenueModel = (model: VenueModel3D, data: FixtureDataTexture): 
     group.add(glass);
   });
 
-  // 갤러리: 바닥판과 난간
+  // 갤러리: 바닥판과 난간. 실제 극장에서는 갤러리 아래에 커튼이 쳐져 있어 그 공간이 보이지 않으므로
+  // 바닥부터 갤러리 바닥판 아래까지를 커튼 상자로 채운다
   const galleryMaterial = createStageLightMaterial(data, { color: GALLERY_COLOR });
+  const curtainMaterial = createStageLightMaterial(data, { color: CURTAIN_COLOR });
   model.galleries.forEach(g => {
+    const curtain = box(g, 0, g.z - 0.2, curtainMaterial);
+    curtain.layers.enable(OCCLUDER_LAYER);
+    group.add(curtain);
     const slab = box(g, g.z - 0.2, g.z, galleryMaterial);
     slab.layers.enable(OCCLUDER_LAYER);
     group.add(slab);
