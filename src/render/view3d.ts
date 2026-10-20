@@ -5,8 +5,8 @@
 
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { getState, getCurrentCue, subscribe } from '../state/store';
-import { DEFAULT_LAMP, getBeamFrame, getPhotometry, shutterPolygon } from '../engine/photometrics';
+import { DEFAULT_COSTUME_COLOR, getState, getCurrentCue, subscribe, setState, commitHistory } from '../state/store';
+import { DEFAULT_LAMP, dimmerOutput, getBeamFrame, getPhotometry, shutterPolygon } from '../engine/photometrics';
 import { FixtureDataTexture, createStageLightMaterial } from './stageLightMaterial';
 import { lightColorOf } from '../engine/gels';
 import type { Fixture, LampKey, Position2D, StageConfig } from '../types';
@@ -27,6 +27,11 @@ let dynamicGroup: THREE.Group | null = null;
 let fixtureData: FixtureDataTexture | null = null;
 let isActive = false;
 let lastStageKey = '';
+let actorObject: THREE.Object3D | null = null;
+let isDraggingActor = false;
+let pendingDrag: { x: number; y: number } | null = null;
+let floorAlbedo: { key: string; texture: THREE.CanvasTexture } | null = null;
+const SKIN_COLOR = 0xc9a48a;
 
 const imageCache = new Map<string, HTMLImageElement>();
 
@@ -141,6 +146,20 @@ const loadImage = (src: string): HTMLImageElement => {
     img.onload = () => rebuild();
   }
   return img;
+};
+
+/** 바닥 도면 텍스처는 무대 크기나 도면 레이어가 바뀔 때만 다시 만든다 */
+const getFloorAlbedo = (stage: StageConfig): THREE.CanvasTexture => {
+  const layers = stage.reference_layers
+    .filter(layer => layer.is_visible)
+    .map(layer => `${layer.image}:${layer.opacity}:${imageCache.get(layer.image)?.complete ? 1 : 0}`)
+    .join('|');
+  const key = `${stage.width}x${stage.depth}|${layers}`;
+  if (floorAlbedo?.key !== key) {
+    floorAlbedo?.texture.dispose();
+    floorAlbedo = { key, texture: buildFloorAlbedo(stage) };
+  }
+  return floorAlbedo.texture;
 };
 
 const buildFloorAlbedo = (stage: StageConfig): THREE.CanvasTexture => {
@@ -293,15 +312,15 @@ const buildFixtureBody = (fix: Fixture, selected: boolean): THREE.Object3D => {
   return group;
 };
 
-const buildActor = (x: number, y: number, height: number, data: FixtureDataTexture): THREE.Object3D => {
+const buildActor = (x: number, y: number, height: number, costume: string, data: FixtureDataTexture): THREE.Object3D => {
   const group = new THREE.Group();
-  // 밝은 피부색 정도의 반사율
-  const material = createStageLightMaterial(data, { color: 0xc9b8a6 });
+  const costumeMaterial = createStageLightMaterial(data, { color: costume });
+  const skinMaterial = createStageLightMaterial(data, { color: SKIN_COLOR });
   const headR = 0.12;
   const bodyH = Math.max(0.4, height - headR * 2 - 0.05);
-  const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.2, bodyH - 0.4, 6, 16), material);
+  const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.2, bodyH - 0.4, 6, 16), costumeMaterial);
   body.position.y = bodyH / 2;
-  const head = new THREE.Mesh(new THREE.SphereGeometry(headR, 24, 16), material);
+  const head = new THREE.Mesh(new THREE.SphereGeometry(headR, 24, 16), skinMaterial);
   head.position.y = height - headR;
   group.add(body, head);
   group.position.set(x, 0, y);
@@ -318,8 +337,6 @@ const disposeObject = (obj: THREE.Object3D) => {
     materials.forEach(material => {
       const withMap = material as THREE.Material & { map?: THREE.Texture | null };
       withMap.map?.dispose();
-      const albedoMap = (material as THREE.ShaderMaterial).uniforms?.uAlbedoMap?.value as THREE.Texture | null | undefined;
-      albedoMap?.dispose();
       material.dispose();
     });
   });
@@ -344,7 +361,7 @@ const rebuild = () => {
   // 바닥: Probe와 같은 광도 모델로 화면 픽셀마다 조도를 계산한다
   const floor = new THREE.Mesh(
     new THREE.PlaneGeometry(stage.width, stage.depth),
-    createStageLightMaterial(fixtureData, { map: buildFloorAlbedo(stage) })
+    createStageLightMaterial(fixtureData, { map: getFloorAlbedo(stage) })
   );
   floor.rotation.x = -Math.PI / 2;
   floor.position.set(stage.width / 2, 0, stage.depth / 2);
@@ -363,13 +380,18 @@ const rebuild = () => {
     const selected = selectedIds.has(fix.id);
     dynamicGroup!.add(buildFixtureBody(fix, selected));
 
-    const beam = buildBeamMesh(computeShapedOutline(fix, lamp), beamStrength(getPhotometry(fix, lamp).candela, selected), beamColor(fix.gel));
+    const output = dimmerOutput(fix);
+    if (output <= 0) return;
+    const strength = beamStrength(getPhotometry(fix, lamp).candela, selected) * Math.sqrt(output);
+    const beam = buildBeamMesh(computeShapedOutline(fix, lamp), strength, beamColor(fix.gel));
     if (beam) dynamicGroup!.add(beam);
   });
 
   // 밝기 측정 지점에 배우 모형을 세운다
+  actorObject = null;
   if (state.probe?.is_visible) {
-    dynamicGroup.add(buildActor(state.probe.x, state.probe.y, stage.actor_height, fixtureData));
+    actorObject = buildActor(state.probe.x, state.probe.y, stage.actor_height, state.probe.costume_color ?? DEFAULT_COSTUME_COLOR, fixtureData);
+    dynamicGroup.add(actorObject);
   }
 
   // 무대 크기가 바뀌었을 때만 카메라를 다시 맞춘다
@@ -432,12 +454,76 @@ const createOverlay = (host: HTMLElement) => {
       <button data-preset="left">왼쪽에서</button>
       <button data-preset="right">오른쪽에서</button>
     </div>
-    <div class="view3d-hint">3D 보기는 읽기 전용입니다. 조명 편집은 2D 화면에서 해 주세요.<br>드래그: 회전 · 휠: 확대 · 우클릭 드래그: 이동</div>
+    <div class="view3d-hint">조명 편집은 2D 화면에서 해 주세요. 사람 모형은 여기서 끌어서 옮길 수 있습니다.<br>드래그: 회전 · 휠: 확대 · 우클릭 드래그: 이동</div>
   `;
   overlay.querySelectorAll<HTMLButtonElement>('button[data-preset]').forEach(btn => {
     btn.addEventListener('click', () => setCameraPreset(btn.dataset.preset as CameraPreset));
   });
   host.appendChild(overlay);
+};
+
+/* ---------- 사람 모형 드래그 ---------- */
+
+const raycaster = new THREE.Raycaster();
+const FLOOR_PLANE = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+
+const pointerRay = (event: PointerEvent, element: HTMLElement) => {
+  const rect = element.getBoundingClientRect();
+  const ndc = new THREE.Vector2(
+    ((event.clientX - rect.left) / rect.width) * 2 - 1,
+    -((event.clientY - rect.top) / rect.height) * 2 + 1
+  );
+  raycaster.setFromCamera(ndc, camera!);
+  return raycaster;
+};
+
+const hitsActor = (event: PointerEvent, element: HTMLElement) =>
+  Boolean(actorObject && camera && pointerRay(event, element).intersectObject(actorObject, true).length > 0);
+
+const setupActorDrag = (element: HTMLElement) => {
+  // OrbitControls보다 먼저 받아야 회전이 시작되지 않는다
+  element.addEventListener('pointerdown', event => {
+    if (event.button !== 0 || !hitsActor(event, element)) return;
+    event.stopImmediatePropagation();
+    isDraggingActor = true;
+    controls!.enabled = false;
+    element.setPointerCapture(event.pointerId);
+    element.style.cursor = 'grabbing';
+    commitHistory();
+  }, { capture: true });
+
+  element.addEventListener('pointermove', event => {
+    if (!isDraggingActor) {
+      element.style.cursor = hitsActor(event, element) ? 'move' : 'grab';
+      return;
+    }
+    const hit = pointerRay(event, element).ray.intersectPlane(FLOOR_PLANE, new THREE.Vector3());
+    if (!hit) return;
+    const stage = getState().stage_config;
+    // three.js (x, z) = 앱 (x, y)
+    const scheduled = pendingDrag !== null;
+    pendingDrag = {
+      x: Math.min(stage.width, Math.max(0, hit.x)),
+      y: Math.min(stage.depth, Math.max(0, hit.z))
+    };
+    if (!scheduled) {
+      requestAnimationFrame(() => {
+        const next = pendingDrag;
+        pendingDrag = null;
+        if (next) setState(s => { s.probe.x = next.x; s.probe.y = next.y; });
+      });
+    }
+  });
+
+  const endDrag = (event: PointerEvent) => {
+    if (!isDraggingActor) return;
+    isDraggingActor = false;
+    controls!.enabled = true;
+    if (element.hasPointerCapture(event.pointerId)) element.releasePointerCapture(event.pointerId);
+    element.style.cursor = 'grab';
+  };
+  element.addEventListener('pointerup', endDrag);
+  element.addEventListener('pointercancel', endDrag);
 };
 
 const init = (host: HTMLElement) => {
@@ -464,6 +550,7 @@ const init = (host: HTMLElement) => {
   controls.maxPolarAngle = Math.PI / 2 - 0.02;
   controls.addEventListener('change', renderFrame);
 
+  setupActorDrag(renderer.domElement);
   createOverlay(container);
   new ResizeObserver(resize).observe(container);
   subscribe(rebuild);

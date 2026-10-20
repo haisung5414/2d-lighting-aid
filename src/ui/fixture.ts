@@ -2,7 +2,7 @@
 
 import { getState, setState, getCurrentCue, getSelectedFixture, subscribe, commitHistory } from '../state/store';
 import { GeometryEngine, LensData, ParData, ZoomAngleRanges } from '../engine/geometry';
-import { LENS_LABELS } from '../engine/photometrics';
+import { LENS_LABELS, dimmerLevel } from '../engine/photometrics';
 import { GELS, gelDisplayHex, getGel } from '../engine/gels';
 import type { Fixture, FixtureType, FresnelFocus, LensType, ParLampType, ShutterPoint, ZoomRangeType } from '../types';
 
@@ -85,7 +85,7 @@ const renderList = () => {
     const opacity = fix.is_visible !== false ? '1' : '0.5';
 
     html += `<div class='list-item ${isActive}' style='opacity:${opacity}' onclick="selectFixture('${fix.id}', event)">
-               <span style='flex:1'><span class='gel-swatch' style='background:${gelDisplayHex(fix.gel)}'></span>${fix.label}<br><small>${fixtureTypeLabels[fix.type]}${fix.gel ? ` · L${fix.gel}` : ''}</small></span>
+               <span style='flex:1'><span class='gel-swatch' style='background:${gelDisplayHex(fix.gel)}'></span>${fix.label}<br><small>${fixtureTypeLabels[fix.type]}${fix.gel ? ` · L${fix.gel}` : ''}${dimmerLevel(fix) < 100 ? ` · ${dimmerLevel(fix).toFixed(0)}%` : ''}</small></span>
                <div style='display:flex; gap:2px;'>
                  <button class='btn-icon' title='표시 전환' onclick="toggleFixVis('${fix.id}', event)">${visibilityLabel}</button>
                  <button class='btn-danger' onclick="deleteFixture('${fix.id}', event)">X</button>
@@ -191,6 +191,13 @@ const renderProperties = () => {
         <span class='gel-swatch gel-swatch-lg' style='background:${gelDisplayHex(selectedFix.gel)}'></span>
         <select onchange="updateFixProp('gel', null, this.value)">${gelOptions}</select>
       </div>
+    </div>
+    <div class='control-group'>
+      <label>디머 <span id='prop-level-label'>${dimmerLevel(selectedFix).toFixed(0)}%</span>
+        <small> · 실제 광량 약 <span id='prop-level-output'>${Math.round(Math.pow(dimmerLevel(selectedFix) / 100, 2) * 100)}%</span></small></label>
+      <input type='range' min='0' max='100' step='5' value='${dimmerLevel(selectedFix)}' style='width:100%'
+        oninput="document.getElementById('prop-level-label').textContent = this.value + '%'; document.getElementById('prop-level-output').textContent = Math.round(Math.pow(this.value / 100, 2) * 100) + '%'"
+        onchange="updateFixProp('level', null, this.value)">
     </div>`;
 
   propsPanel.innerHTML = `
@@ -313,7 +320,14 @@ const renderProperties = () => {
       replacement.target = fix.target;
       replacement.is_visible = fix.is_visible;
       replacement.gel = fix.gel;
+      replacement.level = fix.level;
       cue!.fixtures[cue!.fixtures.indexOf(fix)] = replacement;
+      return;
+    }
+
+    if (prop === 'level') {
+      const level = parseFloat(value);
+      fix.level = Number.isFinite(level) ? Math.min(100, Math.max(0, level)) : 100;
       return;
     }
 

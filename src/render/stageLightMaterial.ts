@@ -5,7 +5,7 @@
 // 좌표: three.js 월드 좌표 (x, 높이, 앱 y)
 
 import * as THREE from 'three';
-import { getBeamFrame, getPhotometry, shutterPolygon } from '../engine/photometrics';
+import { dimmerOutput, getBeamFrame, getPhotometry, shutterPolygon } from '../engine/photometrics';
 import { lightColorOf } from '../engine/gels';
 import type { Fixture, LampKey, Position3D } from '../types';
 
@@ -48,7 +48,7 @@ export class FixtureDataTexture {
         values.forEach((v, k) => { this.data[base + texel * 4 + k] = v; });
       };
 
-      write(0, [...toThree(frame.origin), phot.candela]);
+      write(0, [...toThree(frame.origin), phot.candela * dimmerOutput(fix)]);
       write(1, [...toThree(frame.dir), phot.exponent]);
       write(2, [...toThree(frame.axisA), phot.fieldA * Math.PI / 180]);
       write(3, [...toThree(frame.axisB), phot.fieldB * Math.PI / 180]);

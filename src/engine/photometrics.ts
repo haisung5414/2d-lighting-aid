@@ -249,6 +249,18 @@ export const passesShutter = (fix: Fixture, point: Vec3): boolean => {
   return pointInPolygon({ x: f.x + (point.x - f.x) * t, y: f.y + (point.y - f.y) * t }, polygon);
 };
 
+/* ---------- 디머 ---------- */
+
+/** 디머 값 0~100 % (없으면 100) */
+export const dimmerLevel = (fix: Fixture): number =>
+  Math.min(100, Math.max(0, Number.isFinite(fix.level) ? fix.level! : 100));
+
+/**
+ * 디머 값에 따른 실제 광량 비율.
+ * 텅스텐 디머는 보통 제곱 법칙 곡선을 쓰므로 광량 = 디머 값^2 로 본다. 예: 50% -> 25%
+ */
+export const dimmerOutput = (fix: Fixture): number => Math.pow(dimmerLevel(fix) / 100, 2);
+
 /* ---------- 조도 ---------- */
 
 export interface IlluminanceResult {
@@ -281,7 +293,7 @@ export const illuminanceAt = (fix: Fixture, point: Vec3, normal: Vec3 | null, la
     return { lux: 0, rgb: color.rgb, intensity: 0, distance, offAxis, blockedByShutter: true };
   }
 
-  const intensity = phot.candela * color.transmission * relativeIntensity(phot, frame, dirToPoint);
+  const intensity = phot.candela * dimmerOutput(fix) * color.transmission * relativeIntensity(phot, frame, dirToPoint);
   const cosIncidence = normal ? Math.max(0, -dot(normal, dirToPoint)) : 1;
   return {
     lux: intensity * cosIncidence / (distance * distance),

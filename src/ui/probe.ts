@@ -1,5 +1,5 @@
 import { GeometryEngine } from '../engine/geometry';
-import { getCurrentCue, getState, setState, subscribe, commitHistory } from '../state/store';
+import { DEFAULT_COSTUME_COLOR, getCurrentCue, getState, setState, subscribe, commitHistory } from '../state/store';
 import { DEFAULT_LAMP, LAMP_OPTIONS } from '../engine/photometrics';
 import { gelDisplayHex, toDisplayHex } from '../engine/gels';
 import type { LampKey } from '../types';
@@ -76,6 +76,9 @@ export const renderProbeUI = () => {
           <input type="checkbox" id="probe-visible" ${state.probe.is_visible ? 'checked' : ''}> Probe 표시
         </label>
         ${renderLampSelect(state.stage_config.lamp ?? DEFAULT_LAMP)}
+        <label class="probe-lamp">3D 사람 모형 의상 색
+          <input type="color" id="probe-costume" value="${state.probe.costume_color ?? DEFAULT_COSTUME_COLOR}">
+        </label>
         <div class="probe-total">
           <span><span class="gel-swatch gel-swatch-lg" style="background:${result.faceLux >= 1 ? toDisplayHex(result.faceRgb) : '#000'}" title="얼굴에 닿는 빛의 색"></span>얼굴 (객석 방향, 높이 ${formatNumber(result.actorHeight, 2)}m)</span>
           <strong>${formatLux(result.faceLux)} lux</strong>
@@ -96,6 +99,15 @@ export const renderProbeUI = () => {
     commitHistory();
     setState(s => {
       s.stage_config.lamp = target.value as LampKey;
+    });
+  });
+
+  const costumeInput = document.getElementById('probe-costume') as HTMLInputElement | null;
+  costumeInput?.addEventListener('change', e => {
+    const target = e.target as HTMLInputElement;
+    commitHistory();
+    setState(s => {
+      s.probe.costume_color = target.value;
     });
   });
 

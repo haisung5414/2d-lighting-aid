@@ -19,6 +19,9 @@ const mapReferenceLayers = (venue: VenuePreset): ReferenceLayer[] => (
   }))
 );
 
+/** 3D 사람 모형의 기본 의상 색: 젤 색이 잘 보이는 중간 회색 */
+export const DEFAULT_COSTUME_COLOR = '#8f8f8f';
+
 const createInitialState = (venue: VenuePreset): AppState => {
   const fixtureX = venue.stage.width / 2;
 

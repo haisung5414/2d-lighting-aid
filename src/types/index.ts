@@ -48,6 +48,8 @@ export interface BaseFixture {
   edge_softness: number;
   /** LEE 젤 번호. 없으면 젤 없는 텅스텐 빛 */
   gel?: string | null;
+  /** 디머 값 0~100 %. 없으면 100 */
+  level?: number;
 }
 
 export interface ShutterFixtureFields {
@@ -138,6 +140,8 @@ export interface ProbeState {
   x: number;
   y: number;
   is_visible: boolean;
+  /** 3D 사람 모형의 의상 색 (#rrggbb) */
+  costume_color?: string;
 }
 
 export interface AppState {
