@@ -53,13 +53,28 @@ const FRESNEL_CD_MF: Record<LampKey, { spot: number; flood: number }> = {
   HPL575_230: { spot: 0.69, flood: 0.63 }
 };
 
-/** PAR: 기종 미상. 사용자 확인에 따라 36도 엘립소이달과 비슷한 광량으로 가정한다. 반각 deg */
+/**
+ * PAR: 극장 세부 도면(장비 상세도)에 따르면 PAR64 1kW/230V.
+ * 빔 각도와 중심 광도는 Osram PAR64 1000W 240V 램프 값(CP60/61/62)을 쓴다. 반각 deg, X축이 긴 축.
+ * - 필드 각도는 제조사가 공개하지 않아 빔 각도의 1.5배로 추정한다.
+ * - WFL(CP95)은 공개 자료가 부족해 빔 70x45도, MFL과 같은 광속 수준으로 추정한다.
+ */
+const PAR_FIELD_FACTOR = 1.5;
+const parLamp = (beamFullX: number, beamFullY: number, candela: number, estimated: boolean) => ({
+  beamX: beamFullX / 2,
+  beamY: beamFullY / 2,
+  fieldX: beamFullX / 2 * PAR_FIELD_FACTOR,
+  fieldY: beamFullY / 2 * PAR_FIELD_FACTOR,
+  candela,
+  estimated
+});
+
 export const PAR_LAMPS = {
-  VNSP: { beamX: 6, beamY: 6, fieldX: 8, fieldY: 8 },
-  NSP: { beamX: 8, beamY: 8, fieldX: 12, fieldY: 12 },
-  MFL: { beamX: 12, beamY: 18, fieldX: 15, fieldY: 24 },
-  WFL: { beamX: 15, beamY: 25, fieldX: 20, fieldY: 30 }
-} as const;
+  VNSP: parLamp(11, 10, 307500, false),
+  NSP: parLamp(12, 10, 255400, false),
+  MFL: parLamp(25, 12, 116000, false),
+  WFL: parLamp(70, 45, 116000 * (25 * 12) / (70 * 45), true)
+};
 
 export interface Photometry {
   /** 램프 보정까지 적용한 중심 광도 cd */
@@ -153,17 +168,13 @@ export const getPhotometry = (fix: Fixture, lamp: LampKey = DEFAULT_LAMP): Photo
     };
   }
 
-  // PAR: 36도 엘립소이달과 같은 광속을 가정하고, 퍼지는 면적에 반비례해 중심 광도를 정한다
+  // PAR64 1kW: 자체 램프를 쓰므로 HPL 램프 보정 계수는 적용하지 않는다
   const par = PAR_LAMPS[fix.lamp_type];
-  const ref = SOURCE_FOUR['36deg'];
-  const refHalf = ref.field / 2;
-  const areaRatio = (refHalf * refHalf) / (par.fieldX * par.fieldY);
-  const ratio = (par.beamX / par.fieldX + par.beamY / par.fieldY) / 2;
   return {
-    candela: ref.candela * ref.cdMF[lamp] * areaRatio,
+    candela: par.candela,
     beamA: par.beamX, beamB: par.beamY, fieldA: par.fieldX, fieldB: par.fieldY,
-    exponent: exponentFor(ratio),
-    estimated: true
+    exponent: exponentFor(1 / PAR_FIELD_FACTOR),
+    estimated: par.estimated
   };
 };
 
