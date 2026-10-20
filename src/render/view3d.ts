@@ -7,7 +7,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { DEFAULT_COSTUME_COLOR, getState, getCurrentCue, subscribe, setState, commitHistory } from '../state/store';
 import { DEFAULT_LAMP, dimmerOutput, getBeamFrame, getPhotometry, shutterPolygon } from '../engine/photometrics';
-import { FixtureDataTexture, createStageLightMaterial } from './stageLightMaterial';
+import { FixtureDataTexture, WORK_LIGHT_LUX, createStageLightMaterial } from './stageLightMaterial';
 import { lightColorOf } from '../engine/gels';
 import { OCCLUDER_LAYER, buildCatwalk, buildVenueModel, venueModelFor } from './venueModel';
 import { pickShadowFixtures, renderFixtureShadows } from './fixtureShadows';
@@ -34,6 +34,9 @@ let pendingDrag: { x: number; y: number } | null = null;
 let floorAlbedo: { key: string; texture: THREE.CanvasTexture } | null = null;
 let showVenue = true;
 let showCatwalk = true;
+let workLightOn = false;
+let hemisphere: THREE.HemisphereLight | null = null;
+const HEMISPHERE_BASE = 0.6;
 const SKIN_COLOR = 0xc9a48a;
 
 const imageCache = new Map<string, HTMLImageElement>();
@@ -473,6 +476,13 @@ const resetCamera = () => {
   renderFrame();
 };
 
+/** 작업등: 씬을 다시 만들 필요 없이 공유 유니폼과 기본 조명 세기만 바꾼다 */
+const applyWorkLight = () => {
+  if (fixtureData) fixtureData.workLight.value = workLightOn ? WORK_LIGHT_LUX : 0;
+  if (hemisphere) hemisphere.intensity = HEMISPHERE_BASE * (workLightOn ? 2.5 : 1);
+  renderFrame();
+};
+
 const createOverlay = (host: HTMLElement) => {
   const overlay = document.createElement('div');
   overlay.className = 'view3d-overlay';
@@ -480,12 +490,17 @@ const createOverlay = (host: HTMLElement) => {
     <div class="view3d-toggles">
       <label class="view3d-toggle"><input type="checkbox" id="view3d-venue" ${showVenue ? 'checked' : ''}> 극장 구조</label>
       <label class="view3d-toggle"><input type="checkbox" id="view3d-catwalk" ${showCatwalk ? 'checked' : ''}> 캣워크</label>
+      <label class="view3d-toggle"><input type="checkbox" id="view3d-worklight" ${workLightOn ? 'checked' : ''}> 작업등</label>
     </div>
     <div class="view3d-hint">조명 편집은 2D 화면에서 해 주세요. 사람 모형은 여기서 끌어서 옮길 수 있습니다.<br>드래그: 회전 · 휠: 확대 · 우클릭 드래그: 이동</div>
   `;
   overlay.querySelector<HTMLInputElement>('#view3d-venue')?.addEventListener('change', e => {
     showVenue = (e.target as HTMLInputElement).checked;
     rebuild();
+  });
+  overlay.querySelector<HTMLInputElement>('#view3d-worklight')?.addEventListener('change', e => {
+    workLightOn = (e.target as HTMLInputElement).checked;
+    applyWorkLight();
   });
   overlay.querySelector<HTMLInputElement>('#view3d-catwalk')?.addEventListener('change', e => {
     showCatwalk = (e.target as HTMLInputElement).checked;
@@ -571,7 +586,8 @@ const init = (host: HTMLElement) => {
   container.appendChild(renderer.domElement);
 
   scene = new THREE.Scene();
-  scene.add(new THREE.HemisphereLight(0x8899aa, 0x222222, 0.6));
+  hemisphere = new THREE.HemisphereLight(0x8899aa, 0x222222, HEMISPHERE_BASE);
+  scene.add(hemisphere);
   dynamicGroup = new THREE.Group();
   scene.add(dynamicGroup);
   fixtureData = new FixtureDataTexture();

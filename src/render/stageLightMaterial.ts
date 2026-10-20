@@ -30,12 +30,16 @@ export interface ShadowUniforms {
 const EXPOSURE = 0.0045;
 /** 반사광을 대신하는 약한 기본광 lux. 조명이 닿지 않는 바닥 도면도 알아볼 수 있을 정도로 둔다 */
 const AMBIENT_LUX = 60;
+/** 작업등을 켰을 때 위에서 고르게 내려오는 빛 lux. 무대 조명보다 확실히 약하게 둔다 */
+export const WORK_LIGHT_LUX = 180;
 
 const toThree = (p: Position3D) => [p.x, p.z, p.y] as const;
 
 export class FixtureDataTexture {
   readonly texture: THREE.DataTexture;
   count = 0;
+  /** 작업등 조도 lux (꺼져 있으면 0). 모든 조명 재질이 같은 유니폼을 공유한다 */
+  readonly workLight: THREE.IUniform<number> = { value: 0 };
   readonly shadowUniforms: ShadowUniforms = {
     uShadowMap0: { value: null },
     uShadowMap1: { value: null },
@@ -111,6 +115,7 @@ const fragmentShader = /* glsl */`
   uniform vec3 uAlbedo;
   uniform float uExposure;
   uniform float uAmbient;
+  uniform float uWorkLight;
   uniform sampler2D uShadowMap0;
   uniform sampler2D uShadowMap1;
   uniform sampler2D uShadowMap2;
@@ -171,7 +176,8 @@ const fragmentShader = /* glsl */`
 
   void main() {
     vec3 N = normalize(vWorldNormal);
-    vec3 E = vec3(uAmbient);
+    // 작업등: 천장에서 고르게 내려오는 흰 빛. 위를 향한 면이 더 밝고 옆면은 조금 어둡다
+    vec3 E = vec3(uAmbient + uWorkLight * (0.55 + 0.45 * max(N.y, 0.0)));
 
     for (int i = 0; i < MAX_FIXTURES; i++) {
       if (i >= uCount) break;
@@ -232,6 +238,7 @@ export const createStageLightMaterial = (
     uAlbedo: { value: new THREE.Color(options.color ?? 0xffffff) },
     uExposure: { value: EXPOSURE },
     uAmbient: { value: AMBIENT_LUX },
+    uWorkLight: fixtures.workLight,
     ...fixtures.shadowUniforms
   },
   vertexShader,
