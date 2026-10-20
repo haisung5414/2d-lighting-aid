@@ -52,6 +52,7 @@ export interface ProbeContribution {
   /** 빔 중심에서 벗어난 각도 deg */
   angle: number;
   blockedByShutter: boolean;
+  blockedBySet: boolean;
   estimated: boolean;
   gel: string | null;
 }
@@ -126,8 +127,9 @@ export class GeometryEngine {
     const contributions = cue.fixtures
       .filter(fixture => fixture.is_visible !== false)
       .map(fixture => {
-        const face = illuminanceAt(fixture, point, FACE_NORMAL, lamp);
-        const horizontal = illuminanceAt(fixture, point, HORIZONTAL_NORMAL, lamp);
+        const sets = stageConfig.set_pieces ?? [];
+        const face = illuminanceAt(fixture, point, FACE_NORMAL, lamp, sets);
+        const horizontal = illuminanceAt(fixture, point, HORIZONTAL_NORMAL, lamp, sets);
         return {
           fixtureId: fixture.id,
           label: fixture.label,
@@ -136,6 +138,7 @@ export class GeometryEngine {
           distance: face.distance,
           angle: face.offAxis,
           blockedByShutter: face.blockedByShutter,
+          blockedBySet: face.blockedBySet,
           estimated: getPhotometry(fixture, lamp).estimated,
           gel: fixture.gel ?? null,
           faceRgb: face.rgb.map(c => c * face.lux) as [number, number, number]

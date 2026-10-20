@@ -2,7 +2,7 @@
 
 import { getState, setState, getCurrentCue, getSelectedFixture, subscribe, commitHistory } from '../state/store';
 import { GeometryEngine, LensData, ParData, ZoomAngleRanges } from '../engine/geometry';
-import { LENS_LABELS, dimmerLevel } from '../engine/photometrics';
+import { LENS_LABELS, MAX_SHADOW_FIXTURES, dimmerLevel } from '../engine/photometrics';
 import { GELS, gelDisplayHex, getGel } from '../engine/gels';
 import type { Fixture, FixtureType, FresnelFocus, LensType, ParLampType, ShutterPoint, ZoomRangeType } from '../types';
 
@@ -200,6 +200,17 @@ const renderProperties = () => {
         onchange="updateFixProp('level', null, this.value)">
     </div>`;
 
+  const shadowCount = (getCurrentCue()?.fixtures ?? []).filter(fix => fix.cast_shadow && fix.id !== selectedFix.id).length;
+  const shadowLimitReached = !selectedFix.cast_shadow && shadowCount >= MAX_SHADOW_FIXTURES;
+  const shadowControl = `
+    <div class='control-group'>
+      <label class='toggle-row'>
+        <input type='checkbox' ${selectedFix.cast_shadow ? 'checked' : ''} ${shadowLimitReached ? 'disabled' : ''}
+          onchange="updateFixProp('cast_shadow', null, this.checked)"> 3D 그림자 계산
+      </label>
+      <small class='control-help'>세트, 객석, 사람 모형이 이 조명을 가리는 모습을 3D에서 보여 줍니다. 최대 ${MAX_SHADOW_FIXTURES}개${shadowLimitReached ? ' (이미 다 사용 중)' : ''}.</small>
+    </div>`;
+
   propsPanel.innerHTML = `
     <details class='control-group collapsible-control' data-section='position' ${fixturePropertySectionsOpen.position ? 'open' : ''}>
       <summary class='collapsible-control-summary'>위치 (X, Y, Z m)</summary>
@@ -223,6 +234,7 @@ const renderProperties = () => {
     </details>
     ${gelControl}
     ${shutterControls}
+    ${shadowControl}
   `;
 
   const shutterCheck = document.getElementById('prop-shutter') as HTMLInputElement | null;
@@ -321,7 +333,13 @@ const renderProperties = () => {
       replacement.is_visible = fix.is_visible;
       replacement.gel = fix.gel;
       replacement.level = fix.level;
+      replacement.cast_shadow = fix.cast_shadow;
       cue!.fixtures[cue!.fixtures.indexOf(fix)] = replacement;
+      return;
+    }
+
+    if (prop === 'cast_shadow') {
+      fix.cast_shadow = Boolean(value);
       return;
     }
 

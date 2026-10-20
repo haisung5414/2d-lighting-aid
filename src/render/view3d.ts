@@ -10,6 +10,7 @@ import { DEFAULT_LAMP, dimmerOutput, getBeamFrame, getPhotometry, shutterPolygon
 import { FixtureDataTexture, createStageLightMaterial } from './stageLightMaterial';
 import { lightColorOf } from '../engine/gels';
 import { OCCLUDER_LAYER, buildVenueModel, venueModelFor } from './venueModel';
+import { pickShadowFixtures, renderFixtureShadows } from './fixtureShadows';
 import type { Fixture, LampKey, Position2D, SetPiece, StageConfig } from '../types';
 
 type Vec3 = { x: number; y: number; z: number };
@@ -324,6 +325,8 @@ const buildActor = (x: number, y: number, height: number, costume: string, data:
   body.position.y = bodyH / 2;
   const head = new THREE.Mesh(new THREE.SphereGeometry(headR, 24, 16), skinMaterial);
   head.position.y = height - headR;
+  body.layers.enable(OCCLUDER_LAYER);
+  head.layers.enable(OCCLUDER_LAYER);
   group.add(body, head);
   group.position.set(x, 0, y);
   return group;
@@ -371,7 +374,8 @@ const rebuild = () => {
 
   const fixtures = (cue?.fixtures ?? []).filter(fix => fix.is_visible !== false);
   const selectedIds = new Set([...state.selected_fixture_ids, state.selected_fixture_id ?? '']);
-  fixtureData.update(fixtures, lamp);
+  const shadowSlots = pickShadowFixtures(fixtures.filter(fix => dimmerOutput(fix) > 0));
+  fixtureData.update(fixtures, lamp, shadowSlots);
 
   // 바닥: Probe와 같은 광도 모델로 화면 픽셀마다 조도를 계산한다
   const floor = new THREE.Mesh(
@@ -416,6 +420,10 @@ const rebuild = () => {
     actorObject = buildActor(state.probe.x, state.probe.y, stage.actor_height, state.probe.costume_color ?? DEFAULT_COSTUME_COLOR, fixtureData);
     dynamicGroup.add(actorObject);
   }
+
+  // 그림자를 켠 조명의 깊이 맵을 만든다 (씬이 바뀔 때만 다시 그린다)
+  dynamicGroup.updateMatrixWorld(true);
+  renderFixtureShadows(renderer!, scene, fixtures, shadowSlots, lamp, fixtureData);
 
   // 무대 크기가 바뀌었을 때만 카메라를 다시 맞춘다
   const stageKey = `${stage.width}x${stage.depth}x${stage.default_z}`;

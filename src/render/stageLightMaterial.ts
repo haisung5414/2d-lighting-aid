@@ -1,16 +1,27 @@
 // src/render/stageLightMaterial.ts
 // 바닥과 사람 모형을 비추는 셰이더. photometrics.ts의 광도 모델을 GPU에서 그대로 계산한다.
 //   조도 E = I0 * 10^(-r^p) * cos(입사각) / 거리^2,  셔터는 바닥 투영으로 판정
-// 젤 색은 선형 RGB에서 더한다.
+// 젤 색은 선형 RGB에서 더한다. 그림자를 켠 조명(최대 MAX_SHADOWS개)은 그림자 맵으로 가림을 판정한다.
 // 좌표: three.js 월드 좌표 (x, 높이, 앱 y)
 
 import * as THREE from 'three';
-import { dimmerOutput, getBeamFrame, getPhotometry, shutterPolygon } from '../engine/photometrics';
+import { MAX_SHADOW_FIXTURES, dimmerOutput, getBeamFrame, getPhotometry, shutterPolygon } from '../engine/photometrics';
 import { lightColorOf } from '../engine/gels';
 import type { Fixture, LampKey, Position3D } from '../types';
 
 export const MAX_FIXTURES = 128;
+export const MAX_SHADOWS = MAX_SHADOW_FIXTURES;
 const TEXELS_PER_FIXTURE = 8;
+
+/** 모든 조명 재질이 함께 쓰는 그림자 유니폼 */
+export interface ShadowUniforms {
+  uShadowMap0: THREE.IUniform<THREE.Texture | null>;
+  uShadowMap1: THREE.IUniform<THREE.Texture | null>;
+  uShadowMap2: THREE.IUniform<THREE.Texture | null>;
+  uShadowMap3: THREE.IUniform<THREE.Texture | null>;
+  uShadowMatrix: THREE.IUniform<THREE.Matrix4[]>;
+  uShadowNearFar: THREE.IUniform<THREE.Vector2[]>;
+}
 
 /**
  * 조도(lux)를 화면 밝기로 바꾸는 노출 값. 반사율 0.5인 면에 약 1,000 lux가 닿으면
@@ -25,6 +36,14 @@ const toThree = (p: Position3D) => [p.x, p.z, p.y] as const;
 export class FixtureDataTexture {
   readonly texture: THREE.DataTexture;
   count = 0;
+  readonly shadowUniforms: ShadowUniforms = {
+    uShadowMap0: { value: null },
+    uShadowMap1: { value: null },
+    uShadowMap2: { value: null },
+    uShadowMap3: { value: null },
+    uShadowMatrix: { value: Array.from({ length: MAX_SHADOWS }, () => new THREE.Matrix4()) },
+    uShadowNearFar: { value: Array.from({ length: MAX_SHADOWS }, () => new THREE.Vector2(0.1, 40)) }
+  };
   private readonly data: Float32Array<ArrayBuffer>;
 
   constructor() {
@@ -34,7 +53,8 @@ export class FixtureDataTexture {
     this.texture.minFilter = THREE.NearestFilter;
   }
 
-  update(fixtures: Fixture[], lamp: LampKey) {
+  /** shadowSlots: 그림자를 켠 조명 id -> 그림자 맵 번호 */
+  update(fixtures: Fixture[], lamp: LampKey, shadowSlots: Map<string, number> = new Map()) {
     this.data.fill(0);
     this.count = Math.min(MAX_FIXTURES, fixtures.length);
 
@@ -60,7 +80,9 @@ export class FixtureDataTexture {
       }
       // 젤 색(휘도 1 기준 선형 RGB) x 투과율
       const color = lightColorOf(fix.gel);
-      write(7, [...color.rgb.map(c => c * color.transmission), 0]);
+      // w: 그림자 맵 번호 + 1 (0이면 그림자 없음)
+      const slot = shadowSlots.get(fix.id);
+      write(7, [...color.rgb.map(c => c * color.transmission), slot === undefined ? 0 : slot + 1]);
     }
 
     this.texture.needsUpdate = true;
@@ -89,6 +111,12 @@ const fragmentShader = /* glsl */`
   uniform vec3 uAlbedo;
   uniform float uExposure;
   uniform float uAmbient;
+  uniform sampler2D uShadowMap0;
+  uniform sampler2D uShadowMap1;
+  uniform sampler2D uShadowMap2;
+  uniform sampler2D uShadowMap3;
+  uniform mat4 uShadowMatrix[${MAX_SHADOWS}];
+  uniform vec2 uShadowNearFar[${MAX_SHADOWS}];
   varying vec3 vWorldPos;
   varying vec3 vWorldNormal;
   varying vec2 vUv;
@@ -107,6 +135,38 @@ const fragmentShader = /* glsl */`
       }
     }
     return inside;
+  }
+
+  float shadowDepth(int slot, vec2 uv) {
+    if (slot == 0) return texture2D(uShadowMap0, uv).r;
+    if (slot == 1) return texture2D(uShadowMap1, uv).r;
+    if (slot == 2) return texture2D(uShadowMap2, uv).r;
+    return texture2D(uShadowMap3, uv).r;
+  }
+
+  /** 1 = 빛이 닿음, 0 = 가려짐. 3x3 PCF로 경계를 살짝 부드럽게 한다 */
+  float shadowFactor(int slot) {
+    vec4 lp = uShadowMatrix[slot] * vec4(vWorldPos, 1.0);
+    if (lp.w <= 0.0) return 1.0;
+    vec3 ndc = lp.xyz / lp.w;
+    vec2 uv = ndc.xy * 0.5 + 0.5;
+    if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) return 1.0;
+    float n = uShadowNearFar[slot].x;
+    float f = uShadowNearFar[slot].y;
+    // 원근 투영의 w는 조명에서 잰 거리(뷰 공간 깊이)와 같다
+    float fragDepth = lp.w;
+    float bias = 0.04 + 0.004 * fragDepth;
+    float lit = 0.0;
+    vec2 texel = vec2(1.0 / 1024.0);
+    for (int dx = -1; dx <= 1; dx++) {
+      for (int dy = -1; dy <= 1; dy++) {
+        float d = shadowDepth(slot, uv + vec2(float(dx), float(dy)) * texel);
+        float zNdc = d * 2.0 - 1.0;
+        float occluder = 2.0 * n * f / (f + n - zNdc * (f - n));
+        lit += fragDepth - bias > occluder ? 0.0 : 1.0;
+      }
+    }
+    return lit / 9.0;
   }
 
   void main() {
@@ -143,8 +203,13 @@ const fragmentShader = /* glsl */`
       float tb = atan(dot(L, t3.xyz), z) / t3.w;
       float r = length(vec2(ta, tb));
       float rel = pow(10.0, -pow(r, t1.w));
-      vec3 gel = fixtureTexel(i, 7).rgb;
-      E += gel * (t0.w * rel * cosInc / (dist * dist));
+      vec4 t7 = fixtureTexel(i, 7);
+      float lit = 1.0;
+      if (t7.w > 0.5) {
+        lit = shadowFactor(int(t7.w + 0.5) - 1);
+        if (lit <= 0.0) continue;
+      }
+      E += t7.rgb * (t0.w * rel * cosInc * lit / (dist * dist));
     }
 
     vec3 albedo = uUseMap ? texture2D(uAlbedoMap, vUv).rgb : uAlbedo;
@@ -166,7 +231,8 @@ export const createStageLightMaterial = (
     uUseMap: { value: Boolean(options.map) },
     uAlbedo: { value: new THREE.Color(options.color ?? 0xffffff) },
     uExposure: { value: EXPOSURE },
-    uAmbient: { value: AMBIENT_LUX }
+    uAmbient: { value: AMBIENT_LUX },
+    ...fixtures.shadowUniforms
   },
   vertexShader,
   fragmentShader

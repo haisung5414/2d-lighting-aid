@@ -50,6 +50,8 @@ export interface BaseFixture {
   gel?: string | null;
   /** 디머 값 0~100 %. 없으면 100 */
   level?: number;
+  /** 3D에서 이 조명의 그림자를 계산할지 (최대 4개) */
+  cast_shadow?: boolean;
 }
 
 export interface ShutterFixtureFields {

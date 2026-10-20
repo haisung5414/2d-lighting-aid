@@ -342,6 +342,14 @@
   overflow-y: auto;
 }
 
+.control-help {
+  display: block;
+  margin-top: 4px;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  line-height: 1.35;
+}
+
 .set-hint {
   margin: 0 0 8px;
   color: var(--text-muted);

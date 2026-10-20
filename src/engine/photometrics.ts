@@ -3,7 +3,7 @@
 // 기준 자료: ETC Source Four 19/26/36/50 deg, Source Four Fresnel 사양서 (HPL 750/115 측정값)
 // 좌표: 앱 좌표 (x: 오른쪽, y: 객석 방향, z: 높이), 단위 m
 
-import type { Fixture, LampKey, LensType, Position2D, Position3D } from '../types';
+import type { Fixture, LampKey, LensType, Position2D, Position3D, SetPiece } from '../types';
 import { lightColorOf } from './gels';
 
 export type Vec3 = Position3D;
@@ -260,6 +260,9 @@ export const passesShutter = (fix: Fixture, point: Vec3): boolean => {
   return pointInPolygon({ x: f.x + (point.x - f.x) * t, y: f.y + (point.y - f.y) * t }, polygon);
 };
 
+/** 3D에서 그림자를 계산할 수 있는 조명 수 상한 */
+export const MAX_SHADOW_FIXTURES = 4;
+
 /* ---------- 디머 ---------- */
 
 /** 디머 값 0~100 % (없으면 100) */
@@ -271,6 +274,40 @@ export const dimmerLevel = (fix: Fixture): number =>
  * 텅스텐 디머는 보통 제곱 법칙 곡선을 쓰므로 광량 = 디머 값^2 로 본다. 예: 50% -> 25%
  */
 export const dimmerOutput = (fix: Fixture): number => Math.pow(dimmerLevel(fix) / 100, 2);
+
+/* ---------- 세트에 가려짐 ---------- */
+
+/** 조명에서 점까지의 선분이 세트 상자를 지나는지 (상자 좌표계에서 slab 판정) */
+export const blockedBySetPieces = (from: Vec3, to: Vec3, pieces: SetPiece[]): boolean => pieces.some(piece => {
+  const r = -piece.rotation * Math.PI / 180;
+  const local = (p: Vec3): Vec3 => {
+    const dx = p.x - piece.x;
+    const dy = p.y - piece.y;
+    return { x: dx * Math.cos(r) - dy * Math.sin(r), y: dx * Math.sin(r) + dy * Math.cos(r), z: p.z };
+  };
+  const a = local(from);
+  const b = local(to);
+  const min = [-piece.width / 2, -piece.depth / 2, 0];
+  const max = [piece.width / 2, piece.depth / 2, piece.height];
+  const start = [a.x, a.y, a.z];
+  const delta = [b.x - a.x, b.y - a.y, b.z - a.z];
+  let t0 = 0;
+  // 끝점(측정 지점)이 상자 표면에 닿아 있는 경우는 가려진 것으로 보지 않는다
+  let t1 = 0.999;
+  for (let k = 0; k < 3; k++) {
+    if (Math.abs(delta[k]) < 1e-9) {
+      if (start[k] < min[k] || start[k] > max[k]) return false;
+      continue;
+    }
+    let ta = (min[k] - start[k]) / delta[k];
+    let tb = (max[k] - start[k]) / delta[k];
+    if (ta > tb) [ta, tb] = [tb, ta];
+    t0 = Math.max(t0, ta);
+    t1 = Math.min(t1, tb);
+    if (t0 > t1) return false;
+  }
+  return true;
+});
 
 /* ---------- 조도 ---------- */
 
@@ -285,13 +322,15 @@ export interface IlluminanceResult {
   /** 빔 중심에서 벗어난 각도 deg */
   offAxis: number;
   blockedByShutter: boolean;
+  /** 세트 상자에 가려짐 */
+  blockedBySet: boolean;
 }
 
 /**
  * 조도 E = I(각도) * cos(입사각) / 거리^2
  * normal을 생략하면 빛을 정면으로 받는 면(법선 조도)으로 계산한다.
  */
-export const illuminanceAt = (fix: Fixture, point: Vec3, normal: Vec3 | null, lamp: LampKey = DEFAULT_LAMP): IlluminanceResult => {
+export const illuminanceAt = (fix: Fixture, point: Vec3, normal: Vec3 | null, lamp: LampKey = DEFAULT_LAMP, setPieces: SetPiece[] = []): IlluminanceResult => {
   const phot = getPhotometry(fix, lamp);
   const frame = getBeamFrame(fix);
   const toPoint = sub(point, frame.origin);
@@ -301,7 +340,10 @@ export const illuminanceAt = (fix: Fixture, point: Vec3, normal: Vec3 | null, la
 
   const color = lightColorOf(fix.gel);
   if (!passesShutter(fix, point)) {
-    return { lux: 0, rgb: color.rgb, intensity: 0, distance, offAxis, blockedByShutter: true };
+    return { lux: 0, rgb: color.rgb, intensity: 0, distance, offAxis, blockedByShutter: true, blockedBySet: false };
+  }
+  if (blockedBySetPieces(frame.origin, point, setPieces)) {
+    return { lux: 0, rgb: color.rgb, intensity: 0, distance, offAxis, blockedByShutter: false, blockedBySet: true };
   }
 
   const intensity = phot.candela * dimmerOutput(fix) * color.transmission * relativeIntensity(phot, frame, dirToPoint);
@@ -312,7 +354,8 @@ export const illuminanceAt = (fix: Fixture, point: Vec3, normal: Vec3 | null, la
     intensity,
     distance,
     offAxis,
-    blockedByShutter: false
+    blockedByShutter: false,
+    blockedBySet: false
   };
 };
 

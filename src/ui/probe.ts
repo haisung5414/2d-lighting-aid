@@ -67,6 +67,7 @@ export const renderProbeUI = () => {
 
   const result = GeometryEngine.calculateProbeBrightness(cue, state.stage_config, state.probe);
   const blockedCount = result.contributions.filter(item => item.blockedByShutter).length;
+  const setBlockedCount = result.contributions.filter(item => item.blockedBySet).length;
 
   panel.innerHTML = `
     <details class="probe-panel-body" ${isProbePanelOpen ? 'open' : ''}>
@@ -89,6 +90,7 @@ export const renderProbeUI = () => {
         </div>
         ${renderContributionList(result)}
         ${blockedCount > 0 ? `<div class="probe-note">셔터로 차단된 조명 ${blockedCount}개</div>` : ''}
+        ${setBlockedCount > 0 ? `<div class="probe-note">세트에 가려진 조명 ${setBlockedCount}개</div>` : ''}
       </div>
     </details>
   `;
