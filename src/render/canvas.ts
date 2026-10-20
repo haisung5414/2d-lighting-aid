@@ -4,7 +4,7 @@ import { getState, setState, getCurrentCue, subscribe, commitHistory } from '../
 import { GeometryEngine } from '../engine/geometry';
 import { gelDisplayHex } from '../engine/gels';
 import { dimmerOutput, getPhotometry } from '../engine/photometrics';
-import { getSetDraft, onToolRedraw, toolPointerDown, toolPointerMove, toolPointerUp } from '../ui/tools';
+import { getSetDraft, getTool, onToolRedraw, toolPointerDown, toolPointerMove, toolPointerUp } from '../ui/tools';
 import { clearSelection, isActorSelected, selectActor, selectFixture, selectSet } from '../ui/selection';
 import type { Position2D, Cue, Fixture, UIToggles, StageConfig, ProbeState, SetPiece } from '../types';
 
@@ -21,6 +21,8 @@ const viewListeners = new Set<() => void>();
 export const getViewZoom = () => viewZoom;
 /** 화면 확대·이동이 바뀔 때마다 부른다 (상태 바 표시용) */
 export const onViewChange = (listener: () => void) => { viewListeners.add(listener); };
+/** 무대 좌표(m)를 캔버스 안의 CSS 픽셀 좌표로 바꾼다 (상태 바·시험용) */
+export const worldToScreen = (p: Position2D): Position2D => ({ x: offsetX + p.x * scale, y: offsetY + p.y * scale });
 let viewPanX = 0;
 let viewPanY = 0;
 let isViewPanning = false;
@@ -33,6 +35,120 @@ const imageCache = new Map<string, HTMLImageElement>();
 let setDragOffset: Position2D = { x: 0, y: 0 };
 /** 끌기를 시작했지만 아직 움직이지 않음 (움직이는 순간 실행 취소 기록을 남긴다) */
 let dragHistoryPending = false;
+/** 세트 꼭짓점을 끌 때 움직이지 않는 반대쪽 꼭짓점 (m) */
+let setFixedCorner: Position2D = { x: 0, y: 0 };
+
+/* ---------- 세트 손잡이 (파워포인트 방식, 사양 §4) ---------- */
+const HANDLE_RADIUS_PX = 6;
+const HANDLE_HIT_PX = 10;
+const ROTATE_STICK_PX = 26;
+const ROTATE_SNAP_DEG = 15;
+const ROTATE_SNAP_RANGE_DEG = 3;
+const MIN_SET_SIZE = 0.05;
+
+/** 세트의 지역 좌표(가로 축 lx, 깊이 축 ly)를 무대 좌표로 바꾼다 */
+const setLocalToWorld = (piece: SetPiece, lx: number, ly: number): Position2D => {
+  const r = piece.rotation * Math.PI / 180;
+  return { x: piece.x + lx * Math.cos(r) - ly * Math.sin(r), y: piece.y + lx * Math.sin(r) + ly * Math.cos(r) };
+};
+
+/** 회전 손잡이: 위쪽 변(깊이 축 음수 쪽) 가운데에서 화면 기준 일정 거리만큼 떨어져 있다 */
+const setRotateHandle = (piece: SetPiece): Position2D =>
+  setLocalToWorld(piece, 0, -piece.depth / 2 - ROTATE_STICK_PX / scale);
+
+type SetHandleHit = { kind: 'corner'; index: number } | { kind: 'rotate' } | null;
+
+const hitSetHandle = (piece: SetPiece, point: Position2D): SetHandleHit => {
+  const near = (p: Position2D) => Math.hypot(point.x - p.x, point.y - p.y) * scale <= HANDLE_HIT_PX;
+  if (near(setRotateHandle(piece))) return { kind: 'rotate' };
+  const corners = setPieceCorners(piece);
+  for (let i = 0; i < 4; i++) if (near(corners[i])) return { kind: 'corner', index: i };
+  return null;
+};
+
+/** 15° 배수 근처(±3°)면 그 각도로 붙인다. 결과는 -180 초과 180 이하 */
+const snapRotation = (deg: number) => {
+  const nearest = Math.round(deg / ROTATE_SNAP_DEG) * ROTATE_SNAP_DEG;
+  const snapped = Math.abs(deg - nearest) <= ROTATE_SNAP_RANGE_DEG ? nearest : Math.round(deg);
+  const wrapped = ((snapped + 180) % 360 + 360) % 360 - 180;
+  return wrapped === -180 ? 180 : wrapped;
+};
+
+/** 꼭짓점 커서: 회전한 세트에서도 대각선 방향에 맞는 화살표를 고른다 */
+const cornerCursor = (piece: SetPiece, index: number) => {
+  const c = setPieceCorners(piece)[index];
+  const angle = Math.atan2(c.y - piece.y, c.x - piece.x) * 180 / Math.PI;
+  const a = ((angle % 180) + 180) % 180; // 0~180
+  if (a < 22.5 || a >= 157.5) return 'ew-resize';
+  if (a < 67.5) return 'nwse-resize';
+  if (a < 112.5) return 'ns-resize';
+  return 'nesw-resize';
+};
+
+const drawSetHandles = (targetCtx: CanvasRenderingContext2D, piece: SetPiece) => {
+  const sx = (p: Position2D) => offsetX + toPx(p.x);
+  const sy = (p: Position2D) => offsetY + toPx(p.y);
+  const topMid = setLocalToWorld(piece, 0, -piece.depth / 2);
+  const rot = setRotateHandle(piece);
+  targetCtx.save();
+  // 회전 손잡이 막대와 노란 원
+  targetCtx.strokeStyle = '#1f6fd1';
+  targetCtx.lineWidth = 1.5;
+  targetCtx.beginPath();
+  targetCtx.moveTo(sx(topMid), sy(topMid));
+  targetCtx.lineTo(sx(rot), sy(rot));
+  targetCtx.stroke();
+  targetCtx.fillStyle = '#f5c400';
+  targetCtx.beginPath();
+  targetCtx.arc(sx(rot), sy(rot), HANDLE_RADIUS_PX + 1, 0, Math.PI * 2);
+  targetCtx.fill();
+  targetCtx.stroke();
+  // 꼭짓점: 흰 원 + 파란 테두리
+  targetCtx.fillStyle = '#ffffff';
+  setPieceCorners(piece).forEach(c => {
+    targetCtx.beginPath();
+    targetCtx.arc(sx(c), sy(c), HANDLE_RADIUS_PX, 0, Math.PI * 2);
+    targetCtx.fill();
+    targetCtx.stroke();
+  });
+  targetCtx.restore();
+};
+
+/** 선택 도구로 세트 손잡이 위에 있으면 알맞은 커서를 보여 준다 */
+const updateHoverCursor = (e: MouseEvent) => {
+  if (!canvas) return;
+  let cursor = '';
+  const state = getState();
+  const piece = (state.stage_config.set_pieces ?? []).find(p => p.id === state.selected_set_id);
+  if (piece && getTool() === 'select' && !isViewPanning) {
+    const rect = canvas.getBoundingClientRect();
+    const hit = hitSetHandle(piece, toWorld(e.clientX - rect.left, e.clientY - rect.top));
+    if (hit?.kind === 'rotate') cursor = 'grab';
+    else if (hit?.kind === 'corner') cursor = cornerCursor(piece, hit.index);
+  }
+  if (canvas.style.cursor !== cursor) canvas.style.cursor = cursor;
+};
+
+/** 크기·회전을 바꾸는 동안 세트 옆에 치수나 각도를 띄운다 */
+const drawSetDragReadout = (targetCtx: CanvasRenderingContext2D, piece: SetPiece, mode: 'set-corner' | 'set-rotate') => {
+  const text = mode === 'set-corner'
+    ? `${Math.round(piece.width * 1000)} × ${Math.round(piece.depth * 1000)} mm`
+    : `${Math.round(piece.rotation)}°`;
+  const anchor = mode === 'set-rotate' ? setRotateHandle(piece) : setLocalToWorld(piece, 0, piece.depth / 2);
+  const x = offsetX + toPx(anchor.x);
+  const y = offsetY + toPx(anchor.y) + (mode === 'set-rotate' ? -18 : 20);
+  targetCtx.save();
+  targetCtx.font = '600 12px "IBM Plex Mono", Consolas, monospace';
+  const w = targetCtx.measureText(text).width + 12;
+  targetCtx.fillStyle = 'rgba(29, 39, 51, 0.92)';
+  targetCtx.beginPath();
+  targetCtx.roundRect(x - w / 2, y - 11, w, 22, 5);
+  targetCtx.fill();
+  targetCtx.fillStyle = '#ffffff';
+  targetCtx.textAlign = 'center';
+  targetCtx.fillText(text, x, y + 4);
+  targetCtx.restore();
+};
 
 const setPieceCorners = (piece: SetPiece): Position2D[] => {
   const r = piece.rotation * Math.PI / 180;
@@ -470,6 +586,12 @@ export const renderCanvas = () => {
   }
 
   drawSetPieces(ctx, state.stage_config.set_pieces ?? [], state.selected_set_id);
+  const selectedSet = (state.stage_config.set_pieces ?? []).find(p => p.id === state.selected_set_id);
+  if (selectedSet) {
+    drawSetHandles(ctx, selectedSet);
+    const mode = state.interaction.dragMode;
+    if (mode === 'set-corner' || mode === 'set-rotate') drawSetDragReadout(ctx, selectedSet, mode);
+  }
 
   // 세트 그리기 중인 사각형 미리보기
   const draft = getSetDraft();
@@ -531,11 +653,23 @@ export const initCanvas = (canvasEl: HTMLCanvasElement, wrapperEl: HTMLElement) 
 
     const selectedFix = cue.fixtures.find(f => f.id === state.selected_fixture_id);
     // 끌기는 실제로 움직였을 때만 실행 취소 기록을 남긴다 (그냥 누르기만 하면 기록하지 않음)
-    const startDrag = (mode: 'position' | 'target' | 'shutter' | 'probe' | 'set', index = -1) => {
+    const startDrag = (mode: 'position' | 'target' | 'shutter' | 'probe' | 'set' | 'set-corner' | 'set-rotate', index = -1) => {
       dragHistoryPending = true;
       setState(s => { s.interaction.dragMode = mode; s.interaction.draggedIndex = index; });
       canvas!.classList.add('grabbing');
     };
+
+    // 0) 선택한 세트의 손잡이: 꼭짓점(크기), 노란 원(회전)
+    const selectedSet = (state.stage_config.set_pieces ?? []).find(p => p.id === state.selected_set_id);
+    if (selectedSet) {
+      const hit = hitSetHandle(selectedSet, worldPos);
+      if (hit?.kind === 'rotate') { startDrag('set-rotate'); return; }
+      if (hit?.kind === 'corner') {
+        setFixedCorner = setPieceCorners(selectedSet)[(hit.index + 2) % 4];
+        startDrag('set-corner', hit.index);
+        return;
+      }
+    }
 
     // 1) 선택한 조명의 손잡이: 조준점, 셔터 꼭짓점
     if (selectedFix && selectedFix.is_visible !== false) {
@@ -595,7 +729,10 @@ export const initCanvas = (canvasEl: HTMLCanvasElement, wrapperEl: HTMLElement) 
   canvas.addEventListener('mousemove', (e: MouseEvent) => {
     {
       const rect = canvas!.getBoundingClientRect();
-      if (toolPointerMove(toWorld(e.clientX - rect.left, e.clientY - rect.top))) return;
+      if (toolPointerMove(toWorld(e.clientX - rect.left, e.clientY - rect.top))) {
+        canvas!.style.cursor = ''; // 놓기 도구의 십자 커서가 보이게 손잡이 커서를 지운다
+        return;
+      }
     }
     if (isViewPanning) {
       if ((e.buttons & 1) === 0) {
@@ -615,7 +752,10 @@ export const initCanvas = (canvasEl: HTMLCanvasElement, wrapperEl: HTMLElement) 
 
     const state = getState();
     const { dragMode, draggedIndex } = state.interaction;
-    if (!dragMode) return;
+    if (!dragMode) {
+      updateHoverCursor(e);
+      return;
+    }
     if (dragHistoryPending) {
       commitHistory();
       dragHistoryPending = false;
@@ -628,6 +768,33 @@ export const initCanvas = (canvasEl: HTMLCanvasElement, wrapperEl: HTMLElement) 
       if (dragMode === 'probe') {
         s.probe.x = Math.min(s.stage_config.width, Math.max(0, worldPos.x));
         s.probe.y = Math.min(s.stage_config.depth, Math.max(0, worldPos.y));
+        return;
+      }
+
+      if (dragMode === 'set-corner' || dragMode === 'set-rotate') {
+        const piece = (s.stage_config.set_pieces ?? []).find(item => item.id === s.selected_set_id);
+        if (!piece) return;
+        if (dragMode === 'set-rotate') {
+          // 손잡이가 마우스 쪽을 가리키는 각도: 지역 (0, -1) 방향을 돌린 결과가 (sin θ, -cos θ)
+          const deg = Math.atan2(worldPos.x - piece.x, -(worldPos.y - piece.y)) * 180 / Math.PI;
+          piece.rotation = snapRotation(deg);
+          return;
+        }
+        // 반대쪽 꼭짓점을 고정하고, 마우스까지의 벡터를 세트의 지역 축으로 나눠 크기를 정한다
+        const r = piece.rotation * Math.PI / 180;
+        const dx = worldPos.x - setFixedCorner.x;
+        const dy = worldPos.y - setFixedCorner.y;
+        const lx = dx * Math.cos(r) + dy * Math.sin(r);
+        const ly = -dx * Math.sin(r) + dy * Math.cos(r);
+        const round = (v: number) => Math.round(v * 100) / 100; // 10 mm 단위
+        const w = Math.max(MIN_SET_SIZE, round(Math.abs(lx)));
+        const d = Math.max(MIN_SET_SIZE, round(Math.abs(ly)));
+        const hx = (lx < 0 ? -w : w) / 2;
+        const hy = (ly < 0 ? -d : d) / 2;
+        piece.width = w;
+        piece.depth = d;
+        piece.x = Number((setFixedCorner.x + hx * Math.cos(r) - hy * Math.sin(r)).toFixed(3));
+        piece.y = Number((setFixedCorner.y + hx * Math.sin(r) + hy * Math.cos(r)).toFixed(3));
         return;
       }
 

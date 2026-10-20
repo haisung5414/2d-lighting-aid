@@ -82,12 +82,20 @@ Done notes:
 - `selected_fixture_ids` still exists in state as a one-element mirror for the renderers; remove in Phase 7.
 - Leftover CSS (`#probe-panel`, `.fixture-add-controls`, `.shutter-control`) is left for Phase 7 cleanup.
 
-## Phase 4 — Set handles `[ ]`
+## Phase 4 — Set handles `[x]`
 
 Spec §4 (set rows).
 - Selected set shows 4 corner handles + yellow rotation handle (2D).
 - Corner drag resizes with the opposite corner fixed (rotation-aware); rotation drag with 15° snapping; body drag moves.
 - `SetPiece.kind`; set props show 종류 and mm values.
+
+Done notes:
+- `DragMode` gains `set-corner` and `set-rotate`. Handle hit-testing is in screen pixels (10 px), so handles stay grabbable at any zoom; the rotation stick is 26 px long.
+- Corner drag: the opposite corner is stored at mousedown and the mouse vector is projected onto the set's local axes; sizes round to 10 mm, minimum 50 mm. Dragging past the fixed corner flips the side instead of going negative.
+- Rotation snaps to the nearest 15° within ±3°, otherwise whole degrees; range (-180, 180].
+- While resizing or rotating, a dark readout shows `W × D mm` or the angle. Hover cursors match the corner direction (rotation-aware) and `grab` on the rotation handle.
+- `worldToScreen` is exported from `render/canvas.ts` (used by tests now, status bar coordinates in Phase 6).
+- `SetPiece.kind` and mm fields were already done in Phases 2–3.
 
 ## Phase 5 — Scene drawer `[ ]`
 

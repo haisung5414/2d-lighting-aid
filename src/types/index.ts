@@ -5,7 +5,7 @@ export type FixtureType = 'ellipsoidal' | 'zoom' | 'fresnel' | 'par';
 export type ZoomRangeType = 'narrow' | 'medium';
 export type FresnelFocus = 'narrow' | 'medium' | 'flood';
 export type ParLampType = 'VNSP' | 'NSP' | 'MFL' | 'WFL';
-export type DragMode = 'position' | 'target' | 'shutter' | 'probe' | 'set' | null;
+export type DragMode = 'position' | 'target' | 'shutter' | 'probe' | 'set' | 'set-corner' | 'set-rotate' | null;
 
 export interface Position3D {
   x: number;
