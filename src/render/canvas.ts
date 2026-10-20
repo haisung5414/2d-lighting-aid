@@ -2,6 +2,7 @@
 
 import { getState, setState, getCurrentCue, subscribe, commitHistory } from '../state/store';
 import { GeometryEngine } from '../engine/geometry';
+import { gelDisplayHex } from '../engine/gels';
 import type { Position2D, Cue, UIToggles, StageConfig, ProbeState } from '../types';
 
 let canvas: HTMLCanvasElement | null = null;
@@ -175,7 +176,13 @@ export const drawCueToContext = (
     /* Markers */
     targetCtx.fillStyle = isSelected ? "#0d6efd" : "#6c757d";
     targetCtx.fillRect(toPx(fix.position.x, currentScale) - 8, toPx(fix.position.y, currentScale) - 8, 16, 16);
-    
+    if (fix.gel) {
+      targetCtx.fillStyle = gelDisplayHex(fix.gel);
+      targetCtx.beginPath();
+      targetCtx.arc(toPx(fix.position.x, currentScale), toPx(fix.position.y, currentScale), 5, 0, Math.PI * 2);
+      targetCtx.fill();
+    }
+
     targetCtx.fillStyle = isSelected ? "yellow" : "#aaa";
     targetCtx.beginPath();
     targetCtx.arc(toPx(fix.target.x, currentScale), toPx(fix.target.y, currentScale), 5, 0, Math.PI * 2);

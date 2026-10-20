@@ -1,14 +1,16 @@
 // src/render/stageLightMaterial.ts
 // 바닥과 사람 모형을 비추는 셰이더. photometrics.ts의 광도 모델을 GPU에서 그대로 계산한다.
 //   조도 E = I0 * 10^(-r^p) * cos(입사각) / 거리^2,  셔터는 바닥 투영으로 판정
+// 젤 색은 선형 RGB에서 더한다.
 // 좌표: three.js 월드 좌표 (x, 높이, 앱 y)
 
 import * as THREE from 'three';
 import { getBeamFrame, getPhotometry, shutterPolygon } from '../engine/photometrics';
+import { lightColorOf } from '../engine/gels';
 import type { Fixture, LampKey, Position3D } from '../types';
 
 export const MAX_FIXTURES = 128;
-const TEXELS_PER_FIXTURE = 7;
+const TEXELS_PER_FIXTURE = 8;
 
 /**
  * 조도(lux)를 화면 밝기로 바꾸는 노출 값. 반사율 0.5인 면에 약 1,000 lux가 닿으면
@@ -56,6 +58,9 @@ export class FixtureDataTexture {
         write(5, [polygon[1].x, polygon[1].y, polygon[2].x, polygon[2].y]);
         write(6, [polygon[3].x, polygon[3].y, 0, 0]);
       }
+      // 젤 색(휘도 1 기준 선형 RGB) x 투과율
+      const color = lightColorOf(fix.gel);
+      write(7, [...color.rgb.map(c => c * color.transmission), 0]);
     }
 
     this.texture.needsUpdate = true;
@@ -106,7 +111,7 @@ const fragmentShader = /* glsl */`
 
   void main() {
     vec3 N = normalize(vWorldNormal);
-    float E = uAmbient;
+    vec3 E = vec3(uAmbient);
 
     for (int i = 0; i < MAX_FIXTURES; i++) {
       if (i >= uCount) break;
@@ -138,7 +143,8 @@ const fragmentShader = /* glsl */`
       float tb = atan(dot(L, t3.xyz), z) / t3.w;
       float r = length(vec2(ta, tb));
       float rel = pow(10.0, -pow(r, t1.w));
-      E += t0.w * rel * cosInc / (dist * dist);
+      vec3 gel = fixtureTexel(i, 7).rgb;
+      E += gel * (t0.w * rel * cosInc / (dist * dist));
     }
 
     vec3 albedo = uUseMap ? texture2D(uAlbedoMap, vUv).rgb : uAlbedo;

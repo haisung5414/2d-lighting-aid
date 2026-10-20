@@ -53,6 +53,7 @@ export interface ProbeContribution {
   angle: number;
   blockedByShutter: boolean;
   estimated: boolean;
+  gel: string | null;
 }
 
 export interface ProbeResult {
@@ -61,6 +62,8 @@ export interface ProbeResult {
   actorHeight: number;
   faceLux: number;
   horizontalLux: number;
+  /** 얼굴에 닿는 빛을 모두 더한 색 (선형 sRGB, 밝기 포함) */
+  faceRgb: [number, number, number];
   contributions: ProbeContribution[];
 }
 
@@ -133,7 +136,9 @@ export class GeometryEngine {
           distance: face.distance,
           angle: face.offAxis,
           blockedByShutter: face.blockedByShutter,
-          estimated: getPhotometry(fixture, lamp).estimated
+          estimated: getPhotometry(fixture, lamp).estimated,
+          gel: fixture.gel ?? null,
+          faceRgb: face.rgb.map(c => c * face.lux) as [number, number, number]
         };
       })
       .sort((a, b) => b.faceLux - a.faceLux);
@@ -144,7 +149,11 @@ export class GeometryEngine {
       actorHeight: point.z,
       faceLux: contributions.reduce((sum, item) => sum + item.faceLux, 0),
       horizontalLux: contributions.reduce((sum, item) => sum + item.horizontalLux, 0),
-      contributions
+      faceRgb: contributions.reduce<[number, number, number]>(
+        (sum, item) => [sum[0] + item.faceRgb[0], sum[1] + item.faceRgb[1], sum[2] + item.faceRgb[2]],
+        [0, 0, 0]
+      ),
+      contributions: contributions.map(({ faceRgb: _faceRgb, ...item }) => item)
     };
   }
 

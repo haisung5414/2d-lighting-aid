@@ -1,6 +1,7 @@
 import { GeometryEngine } from '../engine/geometry';
 import { getCurrentCue, getState, setState, subscribe, commitHistory } from '../state/store';
 import { DEFAULT_LAMP, LAMP_OPTIONS } from '../engine/photometrics';
+import { gelDisplayHex, toDisplayHex } from '../engine/gels';
 import type { LampKey } from '../types';
 
 const formatNumber = (value: number, digits = 1) => Number.isFinite(value) ? value.toFixed(digits) : '0.0';
@@ -35,7 +36,7 @@ const renderContributionList = (result: ReturnType<typeof GeometryEngine.calcula
       </div>
       ${activeItems.slice(0, 8).map(item => `
         <div class="probe-contribution">
-          <span class="probe-fixture-label">${item.label}${item.estimated ? ' <span class="probe-estimated" title="사양서가 없어 추정한 값">추정</span>' : ''}</span>
+          <span class="probe-fixture-label"><span class="gel-swatch" style="background:${gelDisplayHex(item.gel)}" title="${item.gel ? `L${item.gel}` : '젤 없음'}"></span>${item.label}${item.estimated ? ' <span class="probe-estimated" title="사양서가 없어 추정한 값">추정</span>' : ''}</span>
           <span class="probe-fixture-value">${formatLux(item.faceLux)} / ${formatLux(item.horizontalLux)}</span>
         </div>
       `).join('')}
@@ -76,7 +77,7 @@ export const renderProbeUI = () => {
         </label>
         ${renderLampSelect(state.stage_config.lamp ?? DEFAULT_LAMP)}
         <div class="probe-total">
-          <span>얼굴 (객석 방향, 높이 ${formatNumber(result.actorHeight, 2)}m)</span>
+          <span><span class="gel-swatch gel-swatch-lg" style="background:${result.faceLux >= 1 ? toDisplayHex(result.faceRgb) : '#000'}" title="얼굴에 닿는 빛의 색"></span>얼굴 (객석 방향, 높이 ${formatNumber(result.actorHeight, 2)}m)</span>
           <strong>${formatLux(result.faceLux)} lux</strong>
         </div>
         <div class="probe-subtotal">

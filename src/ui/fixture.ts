@@ -3,6 +3,7 @@
 import { getState, setState, getCurrentCue, getSelectedFixture, subscribe, commitHistory } from '../state/store';
 import { GeometryEngine, LensData, ParData, ZoomAngleRanges } from '../engine/geometry';
 import { LENS_LABELS } from '../engine/photometrics';
+import { GELS, gelDisplayHex, getGel } from '../engine/gels';
 import type { Fixture, FixtureType, FresnelFocus, LensType, ParLampType, ShutterPoint, ZoomRangeType } from '../types';
 
 const generateId = (prefix: string) => `${prefix}_${Math.random().toString(36).substring(2, 11)}`;
@@ -84,7 +85,7 @@ const renderList = () => {
     const opacity = fix.is_visible !== false ? '1' : '0.5';
 
     html += `<div class='list-item ${isActive}' style='opacity:${opacity}' onclick="selectFixture('${fix.id}', event)">
-               <span style='flex:1'>${fix.label}<br><small>${fixtureTypeLabels[fix.type]}</small></span>
+               <span style='flex:1'><span class='gel-swatch' style='background:${gelDisplayHex(fix.gel)}'></span>${fix.label}<br><small>${fixtureTypeLabels[fix.type]}${fix.gel ? ` · L${fix.gel}` : ''}</small></span>
                <div style='display:flex; gap:2px;'>
                  <button class='btn-icon' title='표시 전환' onclick="toggleFixVis('${fix.id}', event)">${visibilityLabel}</button>
                  <button class='btn-danger' onclick="deleteFixture('${fix.id}', event)">X</button>
@@ -179,6 +180,19 @@ const renderProperties = () => {
       </div>`
     : "";
 
+  const currentGel = getGel(selectedFix.gel);
+  const gelOptions = [`<option value='' ${currentGel ? '' : 'selected'}>젤 없음 (텅스텐 그대로)</option>`]
+    .concat(GELS.map(gel => `<option value='${gel.code}' ${currentGel?.code === gel.code ? 'selected' : ''}>L${gel.code} ${gel.name} (${gel.transmission.toFixed(0)}%)</option>`))
+    .join('');
+  const gelControl = `
+    <div class='control-group'>
+      <label>젤 (LEE)</label>
+      <div class='gel-select-row'>
+        <span class='gel-swatch gel-swatch-lg' style='background:${gelDisplayHex(selectedFix.gel)}'></span>
+        <select onchange="updateFixProp('gel', null, this.value)">${gelOptions}</select>
+      </div>
+    </div>`;
+
   propsPanel.innerHTML = `
     <details class='control-group collapsible-control' data-section='position' ${fixturePropertySectionsOpen.position ? 'open' : ''}>
       <summary class='collapsible-control-summary'>위치 (X, Y, Z m)</summary>
@@ -200,6 +214,7 @@ const renderProperties = () => {
         ${renderBeamControls(selectedFix)}
       </div>
     </details>
+    ${gelControl}
     ${shutterControls}
   `;
 
@@ -297,7 +312,13 @@ const renderProperties = () => {
       replacement.position = fix.position;
       replacement.target = fix.target;
       replacement.is_visible = fix.is_visible;
+      replacement.gel = fix.gel;
       cue!.fixtures[cue!.fixtures.indexOf(fix)] = replacement;
+      return;
+    }
+
+    if (prop === 'gel') {
+      fix.gel = getGel(value) ? value : null;
       return;
     }
 

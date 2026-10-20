@@ -4,6 +4,7 @@
 // 좌표: 앱 좌표 (x: 오른쪽, y: 객석 방향, z: 높이), 단위 m
 
 import type { Fixture, LampKey, LensType, Position2D, Position3D } from '../types';
+import { lightColorOf } from './gels';
 
 export type Vec3 = Position3D;
 
@@ -251,8 +252,10 @@ export const passesShutter = (fix: Fixture, point: Vec3): boolean => {
 /* ---------- 조도 ---------- */
 
 export interface IlluminanceResult {
-  /** 법선 방향 면의 조도 lux */
+  /** 법선 방향 면의 조도 lux (젤 투과율 반영) */
   lux: number;
+  /** 빛의 색. 선형 sRGB, 휘도 1 기준 */
+  rgb: [number, number, number];
   /** 이 지점을 향하는 광도 cd */
   intensity: number;
   distance: number;
@@ -273,14 +276,16 @@ export const illuminanceAt = (fix: Fixture, point: Vec3, normal: Vec3 | null, la
   const dirToPoint = scale(toPoint, 1 / distance);
   const offAxis = Math.acos(Math.min(1, Math.max(-1, dot(dirToPoint, frame.dir)))) * 180 / Math.PI;
 
+  const color = lightColorOf(fix.gel);
   if (!passesShutter(fix, point)) {
-    return { lux: 0, intensity: 0, distance, offAxis, blockedByShutter: true };
+    return { lux: 0, rgb: color.rgb, intensity: 0, distance, offAxis, blockedByShutter: true };
   }
 
-  const intensity = phot.candela * relativeIntensity(phot, frame, dirToPoint);
+  const intensity = phot.candela * color.transmission * relativeIntensity(phot, frame, dirToPoint);
   const cosIncidence = normal ? Math.max(0, -dot(normal, dirToPoint)) : 1;
   return {
     lux: intensity * cosIncidence / (distance * distance),
+    rgb: color.rgb,
     intensity,
     distance,
     offAxis,

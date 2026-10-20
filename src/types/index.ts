@@ -46,6 +46,8 @@ export interface BaseFixture {
   target: Position2D;
   is_visible: boolean;
   edge_softness: number;
+  /** LEE 젤 번호. 없으면 젤 없는 텅스텐 빛 */
+  gel?: string | null;
 }
 
 export interface ShutterFixtureFields {

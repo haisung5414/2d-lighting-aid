@@ -8,6 +8,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { getState, getCurrentCue, subscribe } from '../state/store';
 import { DEFAULT_LAMP, getBeamFrame, getPhotometry, shutterPolygon } from '../engine/photometrics';
 import { FixtureDataTexture, createStageLightMaterial } from './stageLightMaterial';
+import { lightColorOf } from '../engine/gels';
 import type { Fixture, LampKey, Position2D, StageConfig } from '../types';
 
 type Vec3 = { x: number; y: number; z: number };
@@ -172,8 +173,8 @@ const buildFloorAlbedo = (stage: StageConfig): THREE.CanvasTexture => {
 
 /* ---------- 빔 볼륨 메시 ---------- */
 
-const beamMaterial = (strength: number) => new THREE.ShaderMaterial({
-  uniforms: { uStrength: { value: strength } },
+const beamMaterial = (strength: number, color: [number, number, number]) => new THREE.ShaderMaterial({
+  uniforms: { uStrength: { value: strength }, uColor: { value: new THREE.Vector3(...color) } },
   vertexShader: /* glsl */`
     attribute float along;
     varying float vAlong;
@@ -189,6 +190,7 @@ const beamMaterial = (strength: number) => new THREE.ShaderMaterial({
   `,
   fragmentShader: /* glsl */`
     uniform float uStrength;
+    uniform vec3 uColor;
     varying float vAlong;
     varying vec3 vNormal;
     varying vec3 vViewDir;
@@ -197,7 +199,7 @@ const beamMaterial = (strength: number) => new THREE.ShaderMaterial({
       float facing = abs(dot(normalize(vNormal), normalize(vViewDir)));
       float edge = mix(0.55, 1.0, 1.0 - facing);
       float fade = mix(1.0, 0.25, vAlong);
-      gl_FragColor = vec4(vec3(1.0, 0.93, 0.82) * uStrength * edge * fade, 1.0);
+      gl_FragColor = vec4(uColor * uStrength * edge * fade, 1.0);
     }
   `,
   transparent: true,
@@ -212,7 +214,15 @@ const beamStrength = (candela: number, selected: boolean) => {
   return (selected ? 0.13 : 0.07) * k;
 };
 
-const buildBeamMesh = (outline: ConeOutline, strength: number): THREE.Mesh | null => {
+/** 빛줄기 색: 젤 색의 가장 큰 성분을 1로 맞추고, 진한 젤일수록 조금 어둡게 한다 */
+const beamColor = (gelCode: string | null | undefined): [number, number, number] => {
+  const { rgb, transmission } = lightColorOf(gelCode);
+  const peak = Math.max(1e-6, ...rgb);
+  const k = Math.sqrt(transmission) / peak;
+  return [rgb[0] * k, rgb[1] * k, rgb[2] * k];
+};
+
+const buildBeamMesh = (outline: ConeOutline, strength: number, color: [number, number, number]): THREE.Mesh | null => {
   const n = outline.points.length;
   if (n < 3) return null;
 
@@ -230,7 +240,7 @@ const buildBeamMesh = (outline: ConeOutline, strength: number): THREE.Mesh | nul
   geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
   geometry.setAttribute('along', new THREE.Float32BufferAttribute(along, 1));
   geometry.computeVertexNormals();
-  const mesh = new THREE.Mesh(geometry, beamMaterial(strength));
+  const mesh = new THREE.Mesh(geometry, beamMaterial(strength, color));
   mesh.renderOrder = 2;
   return mesh;
 };
@@ -353,7 +363,7 @@ const rebuild = () => {
     const selected = selectedIds.has(fix.id);
     dynamicGroup!.add(buildFixtureBody(fix, selected));
 
-    const beam = buildBeamMesh(computeShapedOutline(fix, lamp), beamStrength(getPhotometry(fix, lamp).candela, selected));
+    const beam = buildBeamMesh(computeShapedOutline(fix, lamp), beamStrength(getPhotometry(fix, lamp).candela, selected), beamColor(fix.gel));
     if (beam) dynamicGroup!.add(beam);
   });
 
