@@ -86,7 +86,8 @@
 .ibtn svg { width: 18px; height: 18px; }
 
 /* 왼쪽 위: 파일 */
-.filepill { top: 10px; left: 10px; display: flex; align-items: center; gap: 2px; padding: 4px 6px; }
+/* 파일 메뉴가 펼쳐지면 아래 도구 레일을 덮어야 하므로 다른 떠 있는 요소(20)보다 위에 둔다 */
+.filepill { z-index: 30; top: 10px; left: 10px; display: flex; align-items: center; gap: 2px; padding: 4px 6px; }
 .filename { font-family: inherit; font-weight: 700; font-size: 14px; color: var(--ink); background: none; border: 0; border-radius: 5px; padding: 3px 8px; white-space: nowrap; max-width: 260px; overflow: hidden; text-overflow: ellipsis; cursor: text; }
 .filename:hover { background: var(--surface-2); }
 .filename-input { font-weight: 700; font-size: 14px; width: 200px; padding: 2px 6px; margin: 0 2px; border: 1px solid var(--chrome-accent); border-radius: 5px; color: var(--ink); background: var(--surface); }
