@@ -130,6 +130,7 @@ Review fixes (user, after Phase 6):
 - Double-click opens the selected object's panel (2D canvas, 3D view, 객체 전체 목록 rows) via `selection.openSelected()` / `onOpenRequest`, ignoring the auto-open opt-outs. Selecting anything other than a fixture now collapses 조명 설정.
 - Multiple actors: `AppState.actors` + `selected_actor_id` replace `probe` and the UI-only actor flag; new tool 사람 모형 놓기 (A); each actor has its own 키 (face height = 키 − 120 mm) used for its lux label, properties brightness and 3D figure. Canvas labels read `배우1 · 얼굴 N lux`. Legacy files convert on load.
 - The 2D face-height drawing value (`stage_config.actor_height`) moved to 빛 범위 표시 as `표시할 얼굴 높이` and no longer follows any actor.
+- Light colour reference (user request): the display white is now tungsten + Full CTB (L201, x 0.330 y 0.339) instead of bare tungsten. Open tungsten renders warm (≈ #ffc988), Full CTB white, 1/2 CTB slightly warm, Double CTB blue. Change is in `engine/gels.ts` (`DISPLAY_WHITE`); every consumer goes through `lightColorOf`, so 2D pools, 3D beams/floor, gel swatches and face colour all follow.
 
 ## Phase 7 — Visual polish and cleanup `[ ]`
 

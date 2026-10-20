@@ -3,8 +3,10 @@
 // LEE가 공개하는 텅스텐 3200K 기준 색도(x, y)와 투과율(Y)을 그대로 쓴다.
 // 이 값은 "텅스텐 빛이 젤을 통과한 결과"이므로 광원 색과 젤 색을 따로 곱할 필요가 없다.
 //
-// 표시 방식: 관객의 눈이 텅스텐 빛에 적응했다고 보고, 젤 없는 텅스텐 빛을 흰색으로 맞춘다
-// (3200K -> D65 Bradford 색순응). 조명끼리의 합성은 선형 RGB에서 더한다(XYZ에서 더하는 것과 같다).
+// 표시 방식: Full CTB(L201)를 통과한 빛을 흰색으로 맞춘다 (그 색도 -> D65 Bradford 색순응).
+// 그래서 젤 없는 텅스텐은 실제처럼 노랗게, Full CTB는 흰색, Double CTB는 푸르게 보인다.
+// (예전에는 텅스텐 자체를 흰색으로 맞춰서, CTB를 넣으면 흰색이 아니라 푸른색으로 보였다)
+// 조명끼리의 합성은 선형 RGB에서 더한다(XYZ에서 더하는 것과 같다).
 
 export interface GelSpec {
   /** LEE 번호 */
@@ -74,9 +76,11 @@ const xyToXYZ = (x: number, y: number): Vec3 => [x / y, 1, (1 - x - y) / y];
 
 /** 3200K 흑체 색도 (LEE 텅스텐 측정 기준 광원) */
 export const TUNGSTEN_WHITE = { x: 0.4234, y: 0.3990 };
+/** 화면에서 흰색으로 보이는 빛: 텅스텐 + Full CTB(L201). 텅스텐을 주광 쪽으로 바꾸는 표준 보정 */
+export const DISPLAY_WHITE = { x: 0.330, y: 0.339 };
 const D65: Vec3 = [0.95047, 1, 1.08883];
 
-const SOURCE_CONE = mul(BRADFORD, xyToXYZ(TUNGSTEN_WHITE.x, TUNGSTEN_WHITE.y));
+const SOURCE_CONE = mul(BRADFORD, xyToXYZ(DISPLAY_WHITE.x, DISPLAY_WHITE.y));
 const D65_CONE = mul(BRADFORD, D65);
 
 const adaptToD65 = (xyz: Vec3): Vec3 => {
@@ -95,17 +99,18 @@ export interface LightColor {
   transmission: number;
 }
 
-const OPEN_WHITE: LightColor = { rgb: [1, 1, 1], transmission: 1 };
-
 const colorFromXY = (x: number, y: number): Vec3 => {
   const linear = mul(XYZ_TO_LINEAR_SRGB, adaptToD65(xyToXYZ(x, y)));
   return linear.map(v => Math.max(0, v)) as Vec3;
 };
 
+/** 젤 없는 텅스텐 빛: 흰색 기준(Full CTB)보다 노랗다 */
+const OPEN_TUNGSTEN: LightColor = { rgb: colorFromXY(TUNGSTEN_WHITE.x, TUNGSTEN_WHITE.y), transmission: 1 };
+
 /** 조명 하나가 내는 빛의 색과 투과율 */
 export const lightColorOf = (gelCode: string | null | undefined): LightColor => {
   const gel = getGel(gelCode);
-  if (!gel) return OPEN_WHITE;
+  if (!gel) return OPEN_TUNGSTEN;
   return { rgb: colorFromXY(gel.x, gel.y), transmission: gel.transmission / 100 };
 };
 
