@@ -135,6 +135,8 @@ const updateStageConfig = () => {
   dlAnchorElem.setAttribute("href", dataStr);
   dlAnchorElem.setAttribute("download", fileName); // 👈 입력받은 파일 이름 적용
   dlAnchorElem.click();
+  // 화면 왼쪽 위 파일 이름 표시 (ui/shell.ts)
+  window.dispatchEvent(new CustomEvent('lighting:file', { detail: { name: fileName } }));
 };
 
 (window as any).loadFile = (event: Event) => {
@@ -163,6 +165,7 @@ const updateStageConfig = () => {
       (document.getElementById('actor-h') as HTMLInputElement).value = parsed.stage_config.actor_height.toString();
       (document.getElementById('default-z') as HTMLInputElement).value = parsed.stage_config.default_z.toString();
       showEditorScreen();
+      window.dispatchEvent(new CustomEvent('lighting:file', { detail: { name: file.name } }));
     } catch (err) {
       alert("파일 파싱 오류. 올바른 JSON 파일인지 확인해주세요.");
     }

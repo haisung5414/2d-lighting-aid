@@ -1,0 +1,124 @@
+/* src/ui/shell.css
+ * SketchUp Web식 화면 골격: 캔버스 위에 떠 있는 파일 알약, 보기 전환, 도구 레일, 패널 트레이, 씬 서랍, 아래 상태 바.
+ * 값은 docs/design/sketchup-redesign/layout-mockup-v3.html 시안에서 가져왔다. */
+
+:root {
+  --surface: #ffffff;
+  --surface-2: #f3f5f8;
+  --line: #d3d9e0;
+  --ink: #1d2733;
+  --ink-2: #5b6878;
+  --ink-3: #8a96a4;
+  --chrome-accent: #1f6fd1;
+  --chrome-accent-soft: #e3eefc;
+  --font-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+  --shadow: 0 1px 2px rgba(20, 30, 45, .08), 0 4px 14px rgba(20, 30, 45, .10);
+}
+
+/* 패널·메뉴·씬 목록은 hidden 특성으로 여닫는다. display를 지정한 규칙이 이를 덮어쓰지 않게 한다 */
+[hidden] { display: none !important; }
+
+#canvas-wrapper {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  background: #1f2329;
+}
+
+/* 캔버스와 3D 화면 위에 뜨는 요소 */
+.float {
+  position: absolute;
+  z-index: 20;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  color: var(--ink);
+}
+
+.ibtn {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  background: none;
+  border-radius: 6px;
+  cursor: pointer;
+  color: var(--ink-2);
+  font-size: 15px;
+}
+.ibtn:hover { background: var(--surface-2); color: var(--ink); }
+.ibtn svg { width: 18px; height: 18px; }
+
+/* 왼쪽 위: 파일 */
+.filepill { top: 10px; left: 10px; display: flex; align-items: center; gap: 2px; padding: 4px 6px; }
+.filename { font-weight: 700; font-size: 14px; padding: 0 8px; white-space: nowrap; max-width: 260px; overflow: hidden; text-overflow: ellipsis; }
+.savestate { color: var(--ink-3); font-size: 12px; padding: 0 8px 0 4px; white-space: nowrap; }
+.menu-wrap { position: relative; }
+.file-menu { top: 38px; left: 0; min-width: 170px; padding: 4px; display: grid; }
+.file-menu button { border: 0; background: none; text-align: left; padding: 8px 10px; border-radius: 5px; cursor: pointer; font-size: 13px; color: var(--ink); }
+.file-menu button:hover { background: var(--surface-2); }
+
+/* 위 가운데: 2D/3D */
+.viewswitch { top: 10px; left: 50%; transform: translateX(-50%); display: flex; padding: 3px; border-radius: 999px; }
+.viewswitch button { border: 0; background: none; padding: 5px 14px; border-radius: 999px; cursor: pointer; font-weight: 600; color: var(--ink-2); font-size: 13px; }
+.viewswitch button[aria-pressed="true"] { background: var(--chrome-accent); color: #fff; }
+
+/* 오른쪽 위: 계정 (나중 기능) */
+.account { top: 10px; right: 10px; display: flex; gap: 4px; padding: 4px 6px; }
+.pillbtn { height: 28px; padding: 0 10px; border-radius: 999px; border: 0; background: var(--surface-2); color: var(--ink-3); font-size: 12px; white-space: nowrap; }
+.pillbtn:disabled { cursor: not-allowed; }
+
+/* 왼쪽: 도구 레일 */
+.toolrail { top: 58px; left: 10px; width: 46px; padding: 5px 4px; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.tool { position: relative; width: 36px; height: 36px; display: grid; place-items: center; border: 0; background: none; border-radius: 6px; cursor: pointer; color: var(--ink-2); }
+.tool:hover { background: var(--surface-2); color: var(--ink); }
+.tool[aria-pressed="true"] { background: var(--chrome-accent-soft); color: var(--chrome-accent); box-shadow: inset 3px 0 0 var(--chrome-accent); }
+.tool svg { width: 20px; height: 20px; }
+.tool .key { position: absolute; right: 2px; bottom: 1px; font: 500 8.5px var(--font-mono); color: var(--ink-3); }
+
+/* 오른쪽: 패널 트레이 */
+.tray { position: absolute; z-index: 20; top: 58px; right: 10px; display: flex; flex-direction: column; gap: 5px; padding: 2px; }
+.tray .grp { font-size: 10px; font-weight: 600; letter-spacing: .06em; color: #c3cad3; text-align: right; padding: 6px 4px 0; }
+.trayitem { display: flex; align-items: center; justify-content: flex-end; gap: 6px; border: 0; background: none; padding: 0; cursor: pointer; }
+.trayitem .lbl { background: var(--surface); border: 1px solid var(--line); border-radius: 5px; padding: 2px 8px; font-size: 12px; font-weight: 600; color: var(--ink); box-shadow: var(--shadow); white-space: nowrap; }
+.trayitem .ico { width: 38px; height: 38px; display: grid; place-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: 7px; box-shadow: var(--shadow); color: var(--ink-2); }
+.trayitem .ico svg { width: 19px; height: 19px; }
+.trayitem[aria-expanded="true"] .ico { background: var(--chrome-accent); border-color: var(--chrome-accent); color: #fff; }
+.trayitem[aria-expanded="true"] .lbl { color: var(--chrome-accent); }
+
+/* 열린 패널: 트레이 왼쪽 세로 칸 */
+.panelcol { position: absolute; z-index: 20; top: 58px; right: 196px; bottom: 64px; width: 320px; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+.panel { position: relative; pointer-events: auto; display: flex; flex-direction: column; max-height: 100%; min-height: 0; }
+.panel > header { display: flex; justify-content: space-between; align-items: center; padding: 8px 8px 8px 12px; border-bottom: 1px solid var(--line); flex: none; }
+.panel > header h2 { margin: 0; font-size: 14px; }
+.panel-body { padding: 10px 12px 12px; overflow-y: auto; min-height: 0; }
+.venue-fields { display: grid; gap: 10px; }
+.venue-fields label { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 13px; color: var(--ink-2); }
+.venue-fields input { width: 96px; }
+.fixture-add-controls { display: flex; gap: 6px; margin-bottom: 10px; }
+.fixture-add-controls select { flex: 1; }
+/* 채널 검사 패널 안에서는 늘 펼쳐 두므로 원래 접기 머리줄을 숨긴다 */
+.panel .patch-toggle { display: none; }
+
+/* 아래: 씬 서랍 (도구 레일과 패널 사이) */
+.scenes { left: 70px; right: 520px; bottom: 10px; display: flex; flex-direction: column; max-height: calc(100% - 80px); }
+.scenes-handle { display: flex; align-items: center; gap: 10px; border: 0; background: none; padding: 7px 12px; cursor: pointer; width: 100%; text-align: left; font-size: 13px; color: var(--ink); }
+.scenes-handle small { color: var(--ink-3); margin-left: auto; }
+.scenes-handle .chev { width: 16px; height: 16px; color: var(--ink-3); transition: transform .2s; flex: none; }
+.scenes.open .chev { transform: rotate(180deg); }
+.scenes-body { border-top: 1px solid var(--line); padding: 10px 12px; display: grid; gap: 10px; min-height: 0; }
+/* 임시: 기존 씬 목록을 가로로 늘어놓는다 (Phase 5에서 카드로 다시 만든다) */
+.scenes-body #cue-list { display: flex; gap: 8px; overflow-x: auto; padding: 0; }
+.scenes-body #cue-list .list-item { flex: none; width: 210px; margin-bottom: 0; }
+.btnrow { display: flex; gap: 6px; }
+
+/* 상태 바 */
+.statusbar { display: flex; align-items: center; gap: 10px; padding: 4px 10px; border-top: 1px solid var(--line); background: var(--surface); color: var(--ink); flex: none; min-width: 0; }
+.statusbar .hint { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 13px; }
+.zoomctl { display: flex; align-items: center; gap: 2px; }
+.zoom { border: 1px solid var(--line); background: var(--surface-2); border-radius: 4px; padding: 3px 8px; cursor: pointer; font: 500 12px var(--font-mono); color: var(--ink); min-width: 56px; }
+
+@media (prefers-reduced-motion: reduce) { .scenes-handle .chev { transition: none; } }

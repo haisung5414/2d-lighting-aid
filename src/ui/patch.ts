@@ -6,7 +6,8 @@ interface ChannelAssignment {
   fixtureLabel: string;
 }
 
-let isPatchPanelOpen = false;
+// 오른쪽 "채널 검사" 패널 안에 있으므로 늘 펼쳐 둔다
+let isPatchPanelOpen = true;
 let selectedChannel: number | null = null;
 
 const getChannelAssignments = (): Record<number, ChannelAssignment[]> => {

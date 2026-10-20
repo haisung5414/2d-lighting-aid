@@ -13,7 +13,7 @@ Status: `[ ]` todo · `[~]` in progress · `[x]` done
 
 ---
 
-## Phase 1 — Shell and relocation `[~]`
+## Phase 1 — Shell and relocation `[x]`
 
 Goal: the new screen structure (spec §2) with every existing feature moved into its new container. Behaviour of the features themselves does not change yet.
 
@@ -39,6 +39,11 @@ Acceptance
 - Every feature from the old UI is reachable (scenes, fixtures add/edit, sets, probe, patch, toggles, layers, background image, stage settings, file load/save, undo/redo, 2D/3D).
 - Opening a tray panel closes the previous one; the stage plan is not hidden under the rail or tray at default zoom.
 - Typecheck and build pass; no console errors.
+
+Done notes
+- New files: `src/ui/shell.ts` (tray, file menu, 2D/3D switch, undo/redo buttons, scene drawer, zoom %), `src/ui/shell.css` (chrome tokens and layout).
+- `canvas.ts`: `fitFrame()` fits the plan inside the chrome insets; `getViewZoom()` / `onViewChange()` feed the zoom %.
+- Deferred on purpose: chrome dark theme (Phase 7); save-state dirty tracking and file rename (Phase 6). The 3D overlay checkboxes sit next to the tool rail until Phase 3 moves them into 보기.
 
 ## Phase 2 — Tools `[ ]`
 

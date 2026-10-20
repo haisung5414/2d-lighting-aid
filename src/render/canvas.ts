@@ -12,6 +12,12 @@ let scale = 1;
 let offsetX = 0;
 let offsetY = 0;
 let viewZoom = 1;
+const viewListeners = new Set<() => void>();
+
+/** 확대 비율(1 = 무대 전체가 보이는 크기) */
+export const getViewZoom = () => viewZoom;
+/** 화면 확대·이동이 바뀔 때마다 부른다 (상태 바 표시용) */
+export const onViewChange = (listener: () => void) => { viewListeners.add(listener); };
 let viewPanX = 0;
 let viewPanY = 0;
 let isViewPanning = false;
@@ -306,17 +312,35 @@ export const generateThumbnail = (cue: Cue, stageConfig: StageConfig, toggles: U
   return offCanvas.toDataURL('image/jpeg', 0.5);
 };
 
+/**
+ * 무대를 화면에 맞추는 기준. 떠 있는 도구 레일(왼쪽), 패널 트레이(오른쪽), 위쪽 버튼, 아래 씬 서랍에
+ * 가려지지 않는 영역 안에 무대가 들어가도록 한다.
+ */
+const fitFrame = (scaleForOffset?: number) => {
+  const w = canvas!.width;
+  const h = canvas!.height;
+  const wide = w >= 700;
+  const inset = wide ? { l: 70, r: 200, t: 56, b: 64 } : { l: 8, r: 8, t: 56, b: 48 };
+  const availW = Math.max(50, w - inset.l - inset.r);
+  const availH = Math.max(50, h - inset.t - inset.b);
+  const { width: sw, depth: sd } = getState().stage_config;
+  const fitScale = Math.min(availW / sw, availH / sd) * 0.94;
+  const s = scaleForOffset ?? fitScale * viewZoom;
+  return {
+    fitScale,
+    baseX: inset.l + (availW - sw * s) / 2,
+    baseY: inset.t + (availH - sd * s) / 2
+  };
+};
+
 const zoomCanvasAt = (screenX: number, screenY: number, factor: number) => {
   if (!canvas) return;
 
   const worldBefore = toWorld(screenX, screenY);
   viewZoom = Math.min(6, Math.max(0.35, viewZoom * factor));
 
-  const state = getState();
-  const fitScale = Math.min(canvas.width / state.stage_config.width, canvas.height / state.stage_config.depth) * 0.85;
-  const nextScale = fitScale * viewZoom;
-  const baseOffsetX = (canvas.width - state.stage_config.width * nextScale) / 2;
-  const baseOffsetY = (canvas.height - state.stage_config.depth * nextScale) / 2;
+  const nextScale = fitFrame(0).fitScale * viewZoom;
+  const { baseX: baseOffsetX, baseY: baseOffsetY } = fitFrame(nextScale);
 
   viewPanX = screenX - worldBefore.x * nextScale - baseOffsetX;
   viewPanY = screenY - worldBefore.y * nextScale - baseOffsetY;
@@ -336,10 +360,11 @@ export const renderCanvas = () => {
   const sw = state.stage_config.width;
   const sd = state.stage_config.depth;
 
-  const fitScale = Math.min(canvas.width / sw, canvas.height / sd) * 0.85;
-  scale = fitScale * viewZoom;
-  offsetX = (canvas.width - sw * scale) / 2 + viewPanX;
-  offsetY = (canvas.height - sd * scale) / 2 + viewPanY;
+  scale = fitFrame(0).fitScale * viewZoom;
+  const { baseX, baseY } = fitFrame(scale);
+  offsetX = baseX + viewPanX;
+  offsetY = baseY + viewPanY;
+  viewListeners.forEach(listener => listener());
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.fillStyle = "#535353";

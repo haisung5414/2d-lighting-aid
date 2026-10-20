@@ -94,8 +94,10 @@
   margin-top: 20px;
 }
 
+/* 에디터: 캔버스가 전체를 채우고 아래에 상태 바가 있다 (SketchUp Web식). display는 store/manager가 flex로 바꾼다 */
 #editor-screen {
   display: none;
+  flex-direction: column;
   width: 100%;
   height: 100vh;
   min-width: 0;
@@ -574,8 +576,9 @@
 
 .view3d-overlay {
   position: absolute;
-  top: 12px;
-  left: 12px;
+  /* 왼쪽 도구 레일 옆 (임시: Phase 3에서 이 체크박스들은 "보기" 패널로 옮긴다) */
+  top: 58px;
+  left: 70px;
   display: flex;
   flex-direction: column;
   gap: 8px;
