@@ -31,10 +31,11 @@
 ### A-1. FindMeATime 일시 정지
 무료 요금제는 동시에 켜 둘 수 있는 프로젝트가 2개뿐이라서, 하나를 꺼야 새 프로젝트를 만들 수 있습니다.
 
-1. https://supabase.com/dashboard 에 들어갑니다.
-2. **FindMeATime** 프로젝트를 누릅니다.
-3. 왼쪽 아래 톱니바퀴 **Project Settings → General**로 갑니다.
-4. 아래쪽 **Pause project** 버튼을 누르고 확인합니다. 데이터는 지워지지 않고, 나중에 **Restore**로 다시 켤 수 있습니다.
+1. 바로 가기: https://supabase.com/dashboard/project/anelszynxtvxoxqvzgqt/settings/general (FindMeATime의 설정 화면)
+   - 직접 찾아갈 때: 대시보드 첫 화면에서 **FindMeATime**(FindMeATime2가 아닌 것)을 누르고, 왼쪽 맨 아래 톱니바퀴 **Project Settings**를 누르면 **General** 화면이 열립니다.
+2. General 화면을 아래로 내리면 **Project availability** 칸에 **Restart project**와 **Pause project**가 있습니다.
+3. **Pause project**를 누르고, 확인 창에서 다시 **Pause**를 누릅니다. 몇 분 뒤 프로젝트 목록에 "Paused"로 보입니다.
+4. 데이터는 지워지지 않습니다. 나중에 같은 화면이나 프로젝트 첫 화면의 **Restore project**로 다시 켤 수 있습니다.
 
 ### A-2. 새 프로젝트 만들기
 1. 대시보드 첫 화면에서 **New project**를 누릅니다.
