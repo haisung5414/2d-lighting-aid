@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>개인정보 처리방침 · 조명 시뮬레이터</title>
+  <!-- Google OAuth 동의 화면(브랜딩)에 등록하는 개인정보 처리방침. docs/cloud/SETUP_GUIDE.md C-4 -->
+  <style>
+    :root { --bg: #f6f7f9; --surface: #fff; --ink: #1d2733; --ink-2: #5b6878; --line: #d3d9e0; --accent: #1f6fd1; }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg: #161c23; --surface: #222b35; --ink: #e4eaf0; --ink-2: #a5b1be; --line: #36414e; --accent: #6aa8ff; }
+    }
+    body { margin: 0; background: var(--bg); color: var(--ink); font-family: "IBM Plex Sans KR", system-ui, sans-serif; line-height: 1.7; }
+    main { max-width: 720px; margin: 32px auto; padding: 28px 32px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+    h1 { margin-top: 0; font-size: 1.5rem; }
+    h2 { margin-top: 1.8em; font-size: 1.1rem; }
+    p, li { color: var(--ink-2); }
+    a { color: var(--accent); }
+    .muted { font-size: 0.9rem; }
+    @media (max-width: 760px) { main { margin: 0; border: 0; border-radius: 0; padding: 20px 16px; } }
+  </style>
+</head>
+<body>
+<main>
+  <h1>개인정보 처리방침</h1>
+  <p class="muted">조명 시뮬레이터 · 시행일 2026년 10월 21일</p>
+
+  <p>조명 시뮬레이터(이하 "앱")는 학생 연극 동아리가 무대 조명을 계획할 때 쓰는 비영리 웹 앱입니다. 이 문서는 앱이 어떤 정보를 왜 받고, 어떻게 보관하는지 설명합니다.</p>
+
+  <h2>1. 로그인하지 않고 쓸 때</h2>
+  <p>로그인하지 않으면 앱은 개인정보를 받지 않습니다. 작업 파일은 사용자의 컴퓨터에 JSON 파일로만 저장됩니다. 보기 설정 같은 일부 화면 설정은 브라우저의 저장소(localStorage)에 남습니다.</p>
+
+  <h2>2. Google로 로그인할 때 받는 정보</h2>
+  <ul>
+    <li>Google 계정의 이름, 이메일 주소, 프로필 사진 주소</li>
+    <li>로그인 상태를 유지하기 위한 인증 정보(세션)</li>
+  </ul>
+  <p>앱은 Google 계정의 비밀번호를 받지 않으며, Gmail·드라이브·캘린더 같은 다른 Google 데이터에 접근하지 않습니다.</p>
+
+  <h2>3. 온라인에 저장하는 정보</h2>
+  <p>사용자가 "온라인에 저장"을 누르면, 작업 이름과 작업 내용(조명·세트·씬 배치 등, 내 컴퓨터에 저장하는 파일과 같은 내용)이 저장됩니다. 각 작업은 저장한 사람의 계정에만 연결되며, 다른 사용자는 읽거나 고칠 수 없습니다.</p>
+
+  <h2>4. 이용 목적</h2>
+  <p>받은 정보는 로그인한 사람을 구분하고, 그 사람의 작업을 저장하고 다시 불러오는 데에만 씁니다. 광고, 분석, 판매, 제3자 제공에는 쓰지 않습니다.</p>
+
+  <h2>5. 보관 장소와 처리 위탁</h2>
+  <p>로그인과 온라인 저장은 <a href="https://supabase.com/privacy" rel="noopener">Supabase</a>의 서비스를 이용하며, 데이터는 Supabase가 운영하는 서버(호주 시드니 지역)에 보관됩니다. 로그인 과정은 <a href="https://policies.google.com/privacy" rel="noopener">Google</a>이 처리합니다. 앱 화면은 GitHub Pages에서 제공됩니다.</p>
+
+  <h2>6. 보관 기간과 삭제</h2>
+  <ul>
+    <li>온라인에 저장한 작업은 사용자가 지울 때까지 보관합니다. 작업 목록에서 직접 지울 수 있습니다.</li>
+    <li>계정 정보(이름, 이메일 등)까지 모두 지우고 싶다면 아래 문의처로 요청해 주세요. 확인 후 계정과 그 계정의 작업을 모두 삭제합니다.</li>
+    <li>앱 운영을 끝내면 저장된 정보를 모두 삭제합니다.</li>
+  </ul>
+
+  <h2>7. 문의</h2>
+  <p>개인정보에 관한 문의와 삭제 요청은 <a href="https://github.com/haisung5414/2d-lighting-aid/issues" rel="noopener">GitHub 저장소의 Issues</a>에 남겨 주세요. 이메일 주소처럼 공개되면 안 되는 내용은 Issues에 적지 마세요.</p>
+
+  <h2>8. 바뀔 때</h2>
+  <p>이 방침이 바뀌면 이 페이지에 새 내용과 시행일을 적습니다.</p>
+
+  <p class="muted"><a href="./">조명 시뮬레이터로 돌아가기</a></p>
+</main>
+</body>
+</html>
