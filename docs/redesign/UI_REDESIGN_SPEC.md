@@ -94,7 +94,7 @@ The actor always shows a small label on the 2D plan: `얼굴 642 lux` (live face
 | Group | Panel id | Label | Contents |
 |---|---|---|---|
 | 작업 전체 | `display` | 빛 범위 표시 | 2D light drawing only: 바닥에 닿는 빛 (gradient, default **on**), 배우 얼굴 높이에 닿는 빛 (default **on**), 각도선 with an (i) hover tip explaining beam (50 %) and field (10 %), 빔 각도선 (solid, default off), 필드 각도선 (dashed, default **on**). |
-| | `venue3d` | 3D 극장 구조 | 3D only: 극장 구조, 캣워크, 객석, 작업등. The tray button is **disabled in 2D** and the panel closes when switching back to 2D. Separate from 빛 범위 표시 on purpose (user decision 2026-10-20). |
+| | `venue3d` | 3D 극장 구조 | 3D only: 극장 구조 (default on), 캣워크 (default **off**), 객석 (on), 작업등 (on). The tray button is **disabled in 2D** and the panel closes when switching back to 2D. Separate from 빛 범위 표시 on purpose (user decision 2026-10-20). |
 | | `layers` | 레이어 | 극장 평면도, 캣워크 오버레이 (visibility + opacity), 이 씬의 배경 이미지 (upload / position / size / opacity / delete). |
 | | `patch` | 채널 검사 | channel usage grid with over-capacity warning (current patch panel, always expanded). |
 | | `venue` | 공연장 정보 | 공연장 name, 무대 폭·깊이, 배우 얼굴 높이, 기본 조명 높이, 램프 규격 (HPL 575/750). |
@@ -130,6 +130,17 @@ Title is always `선택한 객체 속성`.
 - When a tray panel opens, collapse 조명 설정.
 - Only one tray panel is open at a time; clicking its tray button again closes it.
 - Selecting a set or the actor opens `props`.
+
+### 5.6 Tray as an accordion (decided 2026-10-21, implement in Phase 3)
+
+SketchUp Web reference: `reference/sketchUp/cad_right_button_click.png` (the 태그 panel opens **in place** between 스타일 and 그림자).
+
+- Clicking a tray item expands its panel **inline, right under that item, inside the tray column**. The items below it are pushed down; nothing floats beside the tray any more. The separate "panel column" (§2) goes away.
+- The expanded panel is as wide as the panel cards (~300 px); the tray column widens while a panel is open and scrolls vertically if it does not fit.
+- Still one panel open at a time (§5.4 rules unchanged). Clicking the item header again collapses it.
+- 조명 설정 (§5.2) becomes an expanded section at the **top of the tray**, above the 작업 전체 group, pushing all items down; it still appears on every fixture selection and closes any other open panel.
+- **3D 극장 구조 auto-opens when entering 3D view.** The panel shows a checkbox `3D로 들어갈 때 자동으로 열지 않기`; when checked, entering 3D no longer opens it. Store this preference in `localStorage` (per browser, not in project files; wrap access in try/catch).
+- The 2D plan fit insets must account for the wider tray while a panel is open (or the plan simply stays under it — choose whichever keeps the stage readable).
 
 ### 5.5 2D light drawing (decided 2026-10-20, before Phase 2)
 

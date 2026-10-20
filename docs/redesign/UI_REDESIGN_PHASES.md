@@ -44,7 +44,7 @@ Done notes
 - New files: `src/ui/shell.ts` (tray, file menu, 2D/3D switch, undo/redo buttons, scene drawer, zoom %), `src/ui/shell.css` (chrome tokens and layout).
 - `canvas.ts`: `fitFrame()` fits the plan inside the chrome insets; `getViewZoom()` / `onViewChange()` feed the zoom %.
 - Deferred on purpose: chrome dark theme (Phase 7); save-state dirty tracking and file rename (Phase 6).
-- Follow-ups before Phase 2 (user requests): 2D light drawn as a photometric gradient; 보기 renamed 빛 범위 표시 with an (i) beam/field tip; defaults floor + face + field on, beam off; new tray panel 3D 극장 구조 (3D only) replaces the checkboxes in the 3D overlay.
+- Follow-ups before Phase 2 (user requests): 2D light drawn as a photometric gradient; 보기 renamed 빛 범위 표시 with an (i) beam/field tip; defaults floor + face + field on, beam off; new tray panel 3D 극장 구조 (3D only) replaces the checkboxes in the 3D overlay, defaults catwalk off and structure/seating/work light on.
 
 ## Phase 2 — Tools `[ ]`
 
@@ -65,6 +65,8 @@ Spec §4, §5.
 - 무대 위 목록 tree (조명 / 세트 / 사람 모형) with select, hide, delete.
 - Lamp choice moves to 공연장 정보. (The 3D overlay toggles already moved to the 3D 극장 구조 tray panel before Phase 2.)
 - Panel exclusivity rules (spec §5.4). Remove the TEMP probe panel.
+- Tray becomes an accordion: panels open inline under their tray item and push the others down; 조명 설정 opens at the top of the tray (spec §5.6). Remove the floating panel column.
+- 3D 극장 구조 auto-opens on entering 3D, with a `3D로 들어갈 때 자동으로 열지 않기` checkbox stored in localStorage.
 
 ## Phase 4 — Set handles `[ ]`
 

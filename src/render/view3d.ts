@@ -33,9 +33,10 @@ let isDraggingActor = false;
 let pendingDrag: { x: number; y: number } | null = null;
 let floorAlbedo: { key: string; texture: THREE.CanvasTexture } | null = null;
 let showVenue = true;
-let showCatwalk = true;
+// 3D 극장 구조 기본값: 캣워크만 끄고, 극장 구조·객석·작업등은 켠다 (index.html 체크박스와 같아야 한다)
+let showCatwalk = false;
 let showSeating = true;
-let workLightOn = false;
+let workLightOn = true;
 let hemisphere: THREE.HemisphereLight | null = null;
 const HEMISPHERE_BASE = 0.6;
 /** 극장 구조를 보여 줄 때의 바깥 배경과 땅 색. 어두운 극장 안과 구분되도록 밝은 회색으로 둔다 */
@@ -628,6 +629,7 @@ const init = (host: HTMLElement) => {
   dynamicGroup = new THREE.Group();
   scene.add(dynamicGroup);
   fixtureData = new FixtureDataTexture();
+  applyWorkLight();
 
   camera = new THREE.PerspectiveCamera(50, 1, 0.1, 300);
   controls = new OrbitControls(camera, renderer.domElement);
