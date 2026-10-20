@@ -21,7 +21,8 @@ export const LAMP_OPTIONS: Record<LampKey, { label: string }> = {
   HPL750_230: { label: 'HPL 750W / 230V' }
 };
 
-export const DEFAULT_LAMP: LampKey = 'HPL575_230';
+/** 극장 확인 결과: HPL 750W */
+export const DEFAULT_LAMP: LampKey = 'HPL750_230';
 
 /** 사양서의 렌즈별 측정값과 램프 보정 계수(Cd MF) */
 const SOURCE_FOUR: Record<LensType, DatasheetPoint & { cdMF: Record<LampKey, number> }> = {
