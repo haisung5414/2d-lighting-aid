@@ -8,6 +8,7 @@ import { commitHistory, getState, setState } from '../state/store';
 import { VENUES } from '../config/venues';
 import { createFixture, nextFixtureNumber } from './fixture';
 import { selectFixture, selectSet } from './selection';
+import { reportSetPlaced, resetVcb } from './statusbar';
 import type { Fixture, LensType, Position2D, SetPiece, SetPieceKind } from '../types';
 
 export type ToolId = 'select' | 'ellip' | 'fresnel' | 'par' | SetPieceKind;
@@ -71,6 +72,37 @@ let view3D = false;
 let draft: { start: Position2D; end: Position2D } | null = null;
 
 const redrawListeners = new Set<() => void>();
+const changeListeners = new Set<() => void>();
+
+const VIEW3D_HINT = '3D 보기: 조명을 누르면 조명 설정이 열리고, 사람 모형은 끌어서 옮깁니다. 빈 곳을 끌면 시점이 돌아갑니다. 조명 놓기와 세트 그리기는 2D 평면에서 합니다.';
+
+/** 도우미 패널의 "다음에 일어나는 일" */
+const TOOL_NEXT: Record<ToolId, string> = {
+  select: '고른 대상에 따라 오른쪽에 조명 설정이나 선택한 객체 속성이 열립니다. 조명·세트·사람 모형을 끈 직후 숫자를 치고 Enter를 누르면, 끈 방향으로 그 거리만큼 정확히 옮깁니다 (예: 2.5, 900mm).',
+  ellip: '놓은 뒤에는 선택 도구로 돌아오고, 새 조명의 조명 설정이 열립니다. 조준점은 무대 앞쪽 연기 공간 가운데를 향합니다.',
+  fresnel: '놓은 뒤에는 선택 도구로 돌아오고, 새 조명의 조명 설정이 열립니다.',
+  par: '놓은 뒤에는 선택 도구로 돌아오고, 새 조명의 조명 설정이 열립니다. PAR 램프와 회전은 조명 설정에서 바꿉니다.',
+  set: '그린 직후 숫자를 치고 Enter를 누르면 그 값이 세트 높이가 됩니다 (예: 0.9, 900mm). 크기와 각도는 손잡이로 고칩니다.',
+  wall: '놓은 뒤에는 선택 도구로 돌아옵니다. 꼭짓점 손잡이로 크기를, 노란 손잡이로 각도를 바꾸고, 바로 숫자를 치면 높이가 바뀝니다.',
+  deck: '놓은 뒤에는 선택 도구로 돌아옵니다. 꼭짓점 손잡이로 크기를, 노란 손잡이로 각도를 바꾸고, 바로 숫자를 치면 높이가 바뀝니다.',
+  apple: '놓은 뒤에는 선택 도구로 돌아옵니다. 꼭짓점 손잡이로 크기를, 노란 손잡이로 각도를 바꾸고, 바로 숫자를 치면 높이가 바뀝니다.'
+};
+
+export interface ToolHelp { name: string; keyLabel: string; hint: string; next: string; view3D: boolean; }
+
+/** 도우미 패널에 보여 줄 지금 도구의 설명 */
+export const getToolHelp = (): ToolHelp => {
+  const def = toolById.get(tool)!;
+  return {
+    name: view3D ? '3D 보기' : def.name,
+    keyLabel: def.keyLabel === '␣' ? 'Space' : def.keyLabel,
+    hint: view3D ? VIEW3D_HINT : def.id === 'ellip' ? `${def.hint} (지금 렌즈: ${LENSES[lensIndex].label})` : def.hint,
+    next: view3D ? '3D에서는 선택 도구만 씁니다. 2D 평면으로 돌아가면 다른 도구를 다시 쓸 수 있습니다.' : TOOL_NEXT[def.id],
+    view3D
+  };
+};
+/** 도구나 렌즈, 2D/3D가 바뀔 때 (도우미 패널이 등록한다) */
+export const onToolChange = (listener: () => void) => { changeListeners.add(listener); };
 
 export const getTool = () => tool;
 export const getSetDraft = () => draft;
@@ -96,14 +128,10 @@ const renderRail = () => {
     return `<div class="toolwrap">${button}${flyout}</div>`;
   }).join('');
 
-  const def = toolById.get(tool)!;
   const hint = document.getElementById('tool-hint');
-  if (hint) {
-    hint.textContent = view3D
-      ? '3D 보기: 조명을 누르면 조명 설정이 열리고, 사람 모형은 끌어서 옮깁니다. 빈 곳을 끌면 시점이 돌아갑니다. 조명 놓기와 세트 그리기는 2D 평면에서 합니다.'
-      : def.id === 'ellip' ? `${def.hint} (지금 렌즈: ${LENSES[lensIndex].label})` : def.hint;
-  }
+  if (hint) hint.textContent = getToolHelp().hint;
   document.getElementById('canvas-wrapper')?.classList.toggle('placing', tool !== 'select');
+  changeListeners.forEach(listener => listener());
 };
 
 export const setTool = (id: ToolId, opts: { fromKey?: boolean } = {}) => {
@@ -205,6 +233,8 @@ const placeSet = (kind: SetPieceKind, center: Position2D, size?: { width: number
 
 /** 놓은 뒤에는 선택 도구로 돌아오고, 새 대상을 골라 그 패널을 연다 */
 const finishPlacement = (kind: 'fixture' | 'set', id: string | null) => {
+  // 세트를 놓은 직후에는 아래 "수치" 칸에 높이를 칠 수 있다
+  if (kind === 'set' && id) reportSetPlaced(id); else resetVcb();
   setTool('select');
   if (!id) return;
   if (kind === 'fixture') selectFixture(id); else selectSet(id);

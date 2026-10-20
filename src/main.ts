@@ -8,6 +8,8 @@ import { initLightSettings } from './ui/lightSettings';
 import { initProperties } from './ui/properties';
 import { initStageList } from './ui/stageList';
 import { initShell } from './ui/shell';
+import { initStatusBar } from './ui/statusbar';
+import { initHelp } from './ui/help';
 import { undo, redo } from './state/store';
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -27,6 +29,8 @@ document.addEventListener('DOMContentLoaded', () => {
     initLightSettings();
     initProperties();
     initStageList();
+    initStatusBar();
+    initHelp();
     initShell();
     
     console.log("애플리케이션 초기화 완료");

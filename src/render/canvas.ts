@@ -4,6 +4,7 @@ import { getState, setState, getCurrentCue, subscribe, commitHistory } from '../
 import { GeometryEngine } from '../engine/geometry';
 import { gelDisplayHex } from '../engine/gels';
 import { dimmerOutput, getPhotometry } from '../engine/photometrics';
+import { reportMove, reportPointer, type MovableKind } from '../ui/statusbar';
 import { getSetDraft, getTool, onToolRedraw, toolPointerDown, toolPointerMove, toolPointerUp } from '../ui/tools';
 import { clearSelection, isActorSelected, selectActor, selectFixture, selectSet } from '../ui/selection';
 import type { Position2D, Cue, Fixture, UIToggles, StageConfig, ProbeState, SetPiece } from '../types';
@@ -35,6 +36,8 @@ const imageCache = new Map<string, HTMLImageElement>();
 let setDragOffset: Position2D = { x: 0, y: 0 };
 /** 끌기를 시작했지만 아직 움직이지 않음 (움직이는 순간 실행 취소 기록을 남긴다) */
 let dragHistoryPending = false;
+/** 옮기기 끌기의 시작 위치: 아래 "수치" 칸이 정확한 거리로 다시 옮길 때 쓴다 */
+let moveStart: { kind: MovableKind; id: string; from: Position2D } | null = null;
 /** 세트 꼭짓점을 끌 때 움직이지 않는 반대쪽 꼭짓점 (m) */
 let setFixedCorner: Position2D = { x: 0, y: 0 };
 
@@ -696,6 +699,7 @@ export const initCanvas = (canvasEl: HTMLCanvasElement, wrapperEl: HTMLElement) 
       if (fix.is_visible === false) continue;
       if (Math.hypot(worldPos.x - fix.position.x, worldPos.y - fix.position.y) < 0.6) {
         selectFixture(fix.id);
+        moveStart = { kind: 'fixture', id: fix.id, from: { x: fix.position.x, y: fix.position.y } };
         startDrag('position');
         return;
       }
@@ -704,6 +708,7 @@ export const initCanvas = (canvasEl: HTMLCanvasElement, wrapperEl: HTMLElement) 
     // 3) 사람 모형
     if (state.probe?.is_visible && Math.hypot(worldPos.x - state.probe.x, worldPos.y - state.probe.y) < 0.6) {
       selectActor();
+      moveStart = { kind: 'actor', id: 'actor', from: { x: state.probe.x, y: state.probe.y } };
       startDrag('probe');
       return;
     }
@@ -715,6 +720,7 @@ export const initCanvas = (canvasEl: HTMLCanvasElement, wrapperEl: HTMLElement) 
       if (!pointInSetPiece(worldPos, piece)) continue;
       setDragOffset = { x: worldPos.x - piece.x, y: worldPos.y - piece.y };
       selectSet(piece.id);
+      moveStart = { kind: 'set', id: piece.id, from: { x: piece.x, y: piece.y } };
       startDrag('set');
       return;
     }
@@ -727,9 +733,12 @@ export const initCanvas = (canvasEl: HTMLCanvasElement, wrapperEl: HTMLElement) 
     canvas!.classList.add('grabbing');
   });
 
+  canvas.addEventListener('mouseleave', () => reportPointer(null));
+
   canvas.addEventListener('mousemove', (e: MouseEvent) => {
     {
       const rect = canvas!.getBoundingClientRect();
+      reportPointer(toWorld(e.clientX - rect.left, e.clientY - rect.top));
       if (toolPointerMove(toWorld(e.clientX - rect.left, e.clientY - rect.top))) {
         canvas!.style.cursor = ''; // 놓기 도구의 십자 커서가 보이게 손잡이 커서를 지운다
         return;
@@ -824,6 +833,14 @@ export const initCanvas = (canvasEl: HTMLCanvasElement, wrapperEl: HTMLElement) 
         fix.shutter_polygon[draggedIndex].dy = worldPos.y - fix.target.y;
       }
     });
+
+    if (moveStart && (dragMode === 'position' || dragMode === 'probe' || dragMode === 'set')) {
+      const now = getState();
+      const to = moveStart.kind === 'actor' ? { x: now.probe.x, y: now.probe.y }
+        : moveStart.kind === 'set' ? (now.stage_config.set_pieces ?? []).find(p => p.id === moveStart!.id)
+          : now.cues[now.active_cue_index]?.fixtures.find(f => f.id === moveStart!.id)?.position;
+      if (to) reportMove(moveStart.kind, moveStart.id, moveStart.from, { x: to.x, y: to.y });
+    }
   });
 
   canvas.addEventListener('wheel', (e: WheelEvent) => {

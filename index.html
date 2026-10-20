@@ -100,9 +100,10 @@
           <button type="button" role="menuitem" data-menu="workspace">작업 공간 바꾸기</button>
           <button type="button" role="menuitem" data-menu="load">불러오기</button>
           <button type="button" role="menuitem" data-menu="save">저장</button>
+          <button type="button" role="menuitem" data-menu="saveas">다른 이름으로 저장</button>
         </div>
       </div>
-      <span class="filename" id="file-name">이름 없는 작업</span>
+      <button type="button" class="filename" id="file-name" title="눌러서 이름 바꾸기">이름 없는 작업</button>
       <button class="ibtn" id="undo-btn" type="button" title="실행 취소 (Ctrl+Z)" aria-label="실행 취소">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/></svg>
       </button>
@@ -145,6 +146,13 @@
         </section>
       </div>
 
+
+      <div class="tray-entry">
+        <button type="button" class="trayitem" data-tray="help" aria-expanded="false"><span class="lbl">도우미</span><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.7.3-1 1-1 1.7M12 17h.01"/></svg></span></button>
+        <section class="float panel" data-panel="help" hidden>
+          <div class="panel-body" id="help-body"></div>
+        </section>
+      </div>
 
       <div class="grp">작업 전체</div>
       <div class="tray-entry">
@@ -242,7 +250,10 @@
 
   <!-- 상태 바 -->
   <footer class="statusbar">
+    <button type="button" class="ibtn" id="help-btn" title="도우미 열기" aria-label="도우미 열기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.7.3-1 1-1 1.7M12 17h.01"/></svg></button>
     <span class="hint" id="tool-hint">선택: 조명·세트·사람 모형을 눌러 고르고 끌어서 옮기세요. 빈 곳을 끌면 화면이 움직이고, 휠로 확대·축소합니다.</span>
+    <span class="cursorpos" id="cursor-pos" title="커서 위치 (무대 왼쪽 위 기준)">X —  Y —</span>
+    <div class="vcb"><label id="vcb-label" for="vcb">수치</label><input id="vcb" type="text" autocomplete="off" spellcheck="false" placeholder="예: 2.5"></div>
     <div class="zoomctl">
       <button type="button" class="ibtn" id="zoom-out" aria-label="축소">−</button>
       <button type="button" class="zoom" id="zoom-fit" title="무대 전체 보기">100%</button>

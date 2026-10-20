@@ -111,7 +111,8 @@ const updateStageConfig = () => {
   const d = parseFloat((document.getElementById('stage-d') as HTMLInputElement).value);
   const h = parseFloat((document.getElementById('actor-h') as HTMLInputElement).value);
   const z = parseFloat((document.getElementById('default-z') as HTMLInputElement).value);
-  
+
+  commitHistory();
   setState(state => {
     state.stage_config.width = w;
     state.stage_config.depth = d;
@@ -120,35 +121,16 @@ const updateStageConfig = () => {
   });
 };
 
-// 전역(window) 객체에 연결하여 HTML의 onclick 속성에서 호출 가능하게 함
-// src/ui/manager.ts 내 saveFile 함수 수정
-
-(window as any).saveFile = () => {
-  const state = getState();
-  
-  // 1. 사용자에게 저장할 파일 이름을 입력받음
-  let fileName = prompt("저장할 파일 이름을 입력하세요 (확장자 제외):", "lighting_sim_save");
-
-  // 사용자가 취소를 눌렀을 경우 중단
-  if (fileName === null) return;
-
-  // 빈 칸일 경우 기본 이름 설정
-  if (fileName.trim() === "") fileName = "lighting_sim_save";
-
-  // 확장자가 .json으로 끝나지 않으면 자동으로 붙여줌
-  if (!fileName.toLowerCase().endsWith(".json")) {
-    fileName += ".json";
-  }
-
-  // 2. JSON 데이터 생성
-  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state, null, 2));
-  
-  // 3. 다운로드용 링크 생성 및 실행
-  const dlAnchorElem = document.createElement('a');
-  dlAnchorElem.setAttribute("href", dataStr);
-  dlAnchorElem.setAttribute("download", fileName); // 👈 입력받은 파일 이름 적용
-  dlAnchorElem.click();
-  // 화면 왼쪽 위 파일 이름 표시 (ui/shell.ts)
+/** 작업을 JSON 파일로 내려받는다. 이름은 위쪽 바의 파일 이름 (ui/shell.ts가 정한다) */
+export const saveProject = (name: string) => {
+  const base = name.trim().replace(/\.json$/i, '') || '이름 없는 작업';
+  const fileName = `${base}.json`;
+  const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(getState(), null, 2));
+  const link = document.createElement('a');
+  link.setAttribute('href', dataStr);
+  link.setAttribute('download', fileName);
+  link.click();
+  // 위쪽 바의 파일 이름과 "저장됨" 표시 (ui/shell.ts)
   window.dispatchEvent(new CustomEvent('lighting:file', { detail: { name: fileName } }));
 };
 

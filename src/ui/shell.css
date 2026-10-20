@@ -54,8 +54,11 @@
 
 /* 왼쪽 위: 파일 */
 .filepill { top: 10px; left: 10px; display: flex; align-items: center; gap: 2px; padding: 4px 6px; }
-.filename { font-weight: 700; font-size: 14px; padding: 0 8px; white-space: nowrap; max-width: 260px; overflow: hidden; text-overflow: ellipsis; }
+.filename { font-family: inherit; font-weight: 700; font-size: 14px; color: var(--ink); background: none; border: 0; border-radius: 5px; padding: 3px 8px; white-space: nowrap; max-width: 260px; overflow: hidden; text-overflow: ellipsis; cursor: text; }
+.filename:hover { background: var(--surface-2); }
+.filename-input { font-weight: 700; font-size: 14px; width: 200px; padding: 2px 6px; margin: 0 2px; border: 1px solid var(--chrome-accent); border-radius: 5px; color: var(--ink); background: var(--surface); }
 .savestate { color: var(--ink-3); font-size: 12px; padding: 0 8px 0 4px; white-space: nowrap; }
+.savestate.dirty { color: #b26a00; }
 .menu-wrap { position: relative; }
 .file-menu { top: 38px; left: 0; min-width: 170px; padding: 4px; display: grid; }
 .file-menu button { border: 0; background: none; text-align: left; padding: 8px 10px; border-radius: 5px; cursor: pointer; font-size: 13px; color: var(--ink); }
@@ -236,6 +239,23 @@
 /* 상태 바 */
 .statusbar { display: flex; align-items: center; gap: 10px; padding: 4px 10px; border-top: 1px solid var(--line); background: var(--surface); color: var(--ink); flex: none; min-width: 0; }
 .statusbar .hint { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 13px; }
+.statusbar .ibtn { width: 28px; height: 28px; }
+.cursorpos { flex: none; font: 500 12px var(--font-mono); color: var(--ink-2); white-space: pre; min-width: 150px; }
+.vcb { display: flex; align-items: center; gap: 6px; flex: none; }
+.vcb label { color: var(--ink-2); font-size: 12px; min-width: 24px; text-align: right; }
+.vcb input { width: 110px; border: 1px solid var(--line); border-radius: 4px; padding: 3px 6px; background: var(--surface-2); color: var(--ink); font: 500 12px var(--font-mono); }
+.vcb input:focus { outline: none; border-color: var(--chrome-accent); background: var(--surface); }
+.vcb input.invalid { border-color: #c0392b; }
+/* 좁은 화면에서는 좌표와 안내 문장을 먼저 줄인다 */
+@media (max-width: 760px) { .cursorpos { display: none; } }
+
+/* 도우미 패널 */
+.help-tool { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+.help-hint { margin: 6px 0 0; font-size: 13px; line-height: 1.55; color: var(--ink); }
+kbd { display: inline-block; min-width: 18px; padding: 1px 6px; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; background: var(--surface-2); font: 500 11px var(--font-mono); color: var(--ink); text-align: center; }
+.help-keys { display: grid; grid-template-columns: auto 1fr; gap: 5px 10px; margin: 0; font-size: 12px; align-items: center; }
+.help-keys dt { margin: 0; }
+.help-keys dd { margin: 0; color: var(--ink-2); }
 .zoomctl { display: flex; align-items: center; gap: 2px; }
 .zoom { border: 1px solid var(--line); background: var(--surface-2); border-radius: 4px; padding: 3px 8px; cursor: pointer; font: 500 12px var(--font-mono); color: var(--ink); min-width: 56px; }
 

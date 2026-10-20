@@ -161,12 +161,16 @@ By default each fixture's floor light is a soft pool: a radial gradient over the
 
 Left to right: help icon (opens 도우미), **hint sentence for the current tool** (mockup copy), cursor position `X 6.20 m  Y 7.45 m`, numeric input `수치` (SketchUp VCB: while dragging, typing a number and Enter applies an exact distance; right after drawing a set it sets the height), zoom `100%` (click → fit). Zoom in/out also via wheel.
 
+VCB details (implemented in Phase 6): the field label reads `거리` after a move and `높이` after placing a set, `수치` otherwise. Values are metres unless suffixed `mm` or `cm`. Typing digits anywhere outside an input jumps into the field while it has a target. A move is re-applied from the drag start along the drag direction.
+
 ## 8. Top bar details
 
 - ☰ menu: 작업 공간 바꾸기 (back to landing), 불러오기, 저장, 다른 이름으로 저장.
 - File name: shows the loaded/saved file name (or `이름 없는 작업`); click to rename.
 - Undo / Redo buttons call the existing store `undo()` / `redo()` (shortcuts stay).
 - Save state: `저장 안 됨 · 내 컴퓨터` after a change, `저장됨 · 내 컴퓨터` after saving.
+- 저장 (also Ctrl+S) saves under the current file name, asking for one first when the work is untitled; 다른 이름으로 저장 always asks. Names are typed in place in the file pill, never in a `prompt()`.
+- 작업 공간 바꾸기 asks for confirmation only when there are unsaved changes.
 - 2D/3D switch replaces the old `3D 보기` header button.
 
 ## 9. Data model changes

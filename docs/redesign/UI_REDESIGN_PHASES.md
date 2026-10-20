@@ -111,12 +111,19 @@ Done notes:
 - Background image controls are rebuilt in the 레이어 panel (`#bg-settings-container`) with the panel styles; they re-render only when the background values change, so the opacity slider is not replaced mid-drag.
 - Leftover `#cue-list .list-item` rules in `style.css` are left for Phase 7.
 
-## Phase 6 — Status bar and top bar details `[ ]`
+## Phase 6 — Status bar and top bar details `[x]`
 
 Spec §7, §8.
 - Live cursor coordinates (m); numeric input (VCB) for exact move distance and set height; zoom % display.
 - 도우미 panel content per tool; help icon opens it.
 - File name rename, save state (`저장 안 됨` / `저장됨`), ☰ "다른 이름으로 저장".
+
+Done notes:
+- New `ui/statusbar.ts`: cursor position from canvas `mousemove` (`X —  Y —` off-canvas and in 3D). VCB context is the last action: after/while dragging a fixture, set or actor → `거리` (Enter re-applies the move from the drag start along the drag direction at exactly that distance; ends an in-progress drag); right after placing/drawing a set → `높이`. Units: plain number = m, or `mm` / `cm` suffix. Digits typed anywhere (not in an input) go into the VCB while a context exists, SketchUp-style. Invalid input gets a red border.
+- New `ui/help.ts`: 도우미 tray panel (선택한 것 group, under 선택한 객체 속성) shows the current tool name + key, hint, "다음에 일어나는 일" and a shortcut list; follows tool / lens / 2D-3D changes via `onToolChange`. The `?` button at the left of the status bar toggles it.
+- Top bar: file name is a button; clicking turns it into an inline input (Enter saves the name, Esc cancels, blur keeps the name). ☰ 저장 / Ctrl+S download `<name>.json` directly; without a name they open the name input first. ☰ 다른 이름으로 저장 always asks. `prompt()` is gone from saving.
+- Save state: store `onEdit` fires on `commitHistory` / undo / redo → `저장 안 됨 · 내 컴퓨터`; saving or loading → `저장됨 · 내 컴퓨터`; new work → `내 컴퓨터`. 작업 공간 바꾸기 only asks for confirmation when there are unsaved changes.
+- Stage size inputs in 공연장 정보 now commit history (they were not undoable before).
 
 ## Phase 7 — Visual polish and cleanup `[ ]`
 

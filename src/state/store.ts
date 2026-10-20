@@ -82,7 +82,13 @@ let future: AppState[] = [];
 // 상태를 깊은 복사하는 유틸리티 함수
 const cloneState = (s: AppState): AppState => JSON.parse(JSON.stringify(s));
 
+/** 작업 내용이 바뀐 순간 (실행 취소 기록이 생기거나 되돌릴 때). 위쪽 바의 "저장 안 됨" 표시용 */
+const editListeners = new Set<() => void>();
+export const onEdit = (listener: () => void) => { editListeners.add(listener); };
+const emitEdit = () => editListeners.forEach(listener => listener());
+
 export const commitHistory = () => {
+  emitEdit();
   past.push(cloneState(state));
   if (past.length > MAX_HISTORY) {
     past.shift(); // 메모리 누수 방지 (최대 개수 초과 시 가장 오래된 기록 삭제)
@@ -96,6 +102,7 @@ export const undo = () => {
   if (previous) {
     future.push(cloneState(state));
     state = previous;
+    emitEdit();
     state.interaction.dragMode = null; // 안전을 위해 드래그 상태 초기화
     notify();
   }
@@ -107,6 +114,7 @@ export const redo = () => {
   if (next) {
     past.push(cloneState(state));
     state = next;
+    emitEdit();
     state.interaction.dragMode = null;
     notify();
   }
@@ -261,4 +269,6 @@ export const initVenue = (venueKey: VenueKey) => {
   syncVenueFormControls();
   showEditorScreen();
   notify();
+  // 새 작업: 파일 이름과 저장 상태를 처음으로 (ui/shell.ts)
+  window.dispatchEvent(new CustomEvent('lighting:file', { detail: { name: null } }));
 };
