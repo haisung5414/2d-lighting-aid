@@ -15,12 +15,13 @@ Status: `[ ]` todo · `[~]` in progress · `[x]` done
 
 ## Phase 0 — Supabase and Google setup (user) `[ ]`
 
-Done by the user; Claude does not touch accounts or keys.
+Step-by-step Korean guide: [SETUP_GUIDE.md](SETUP_GUIDE.md). The user creates the project and the Google client and pastes the client secret into Supabase; Claude links the repo with the Supabase CLI, applies the schema and writes only the public key to `.env.local`.
+Project: new `lighting-aid` project in the `dodo4114@snu.ac.kr's Org` organization (FindMeATime paused to stay within the 2 free active projects).
 
 1. https://supabase.com → New project (free plan, any region near Korea, e.g. Northeast Asia (Seoul)). Keep the database password to yourself.
 2. SQL Editor → paste `docs/cloud/schema.sql` → Run.
 3. Google Cloud Console → APIs & Services → Credentials → *Create OAuth client ID* (Web application).
-   - Authorized JavaScript origins: `https://haisung5414.github.io`, `http://localhost:5173`, `http://localhost:5180`.
+   - Authorized JavaScript origins: leave empty (Supabase does the redirect).
    - Authorized redirect URI: the callback shown in Supabase → Auth → Providers → Google (`https://<project-ref>.supabase.co/auth/v1/callback`).
    - OAuth consent screen: External, app name `조명 시뮬레이터`; while in *Testing* mode add club members as test users, or publish it.
 4. Supabase → Auth → Providers → Google: enable, paste the client ID and client secret.
