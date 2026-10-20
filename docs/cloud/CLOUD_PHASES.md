@@ -13,7 +13,7 @@ Status: `[ ]` todo · `[~]` in progress · `[x]` done
 
 ---
 
-## Phase 0 — Supabase and Google setup (user) `[ ]`
+## Phase 0 — Supabase and Google setup (user) `[x]`
 
 Step-by-step Korean guide: [SETUP_GUIDE.md](SETUP_GUIDE.md). The user creates the project and the Google client and pastes the client secret into Supabase; Claude links the repo with the Supabase CLI, applies the schema and writes only the public key to `.env.local`.
 Project: `lighting-aid-pipe` (ref `ijyzinbpxtoujwwotfrh`, ap-southeast-2) in a new `lighting-aid` organization. Steps 1–2 and the local `.env.local` are done (2026-10-21; RLS checked with anonymous REST calls: select returns `[]`, insert is rejected).
@@ -32,7 +32,9 @@ Project: `lighting-aid-pipe` (ref `ijyzinbpxtoujwwotfrh`, ap-southeast-2) in a n
 
 Acceptance: the user can share the Project URL (not secret) and confirm `.env.local` exists.
 
-## Phase 1 — Config, client and sign-in `[~]`
+Done notes: steps 3–6 done by the user on 2026-10-21 (Google client, Branding with `public/privacy.html`, app published, Supabase Google provider and redirect URLs, GitHub Variables).
+
+## Phase 1 — Config, client and sign-in `[x]`
 
 Spec §1, §2, §4, §6, §8.
 - `@supabase/supabase-js` dependency; `src/cloud/config.ts` reads the env vars; `client.ts` creates the client lazily with dynamic `import()` (PKCE, persisted session).
@@ -47,8 +49,8 @@ Acceptance
 - With `.env.local`: Google sign-in round trip works on `localhost:5173`; work open in the editor before sign-in is back afterwards; reload keeps the session; 로그아웃 returns to `로그인`.
 - Local 불러오기 / 저장 unchanged. Typecheck and build pass; no console errors.
 
-Done notes (awaiting real sign-in test after Phase 0)
-- Checked in the browser: not configured (button disabled, no Supabase chunk requested); configured with a dummy project (login button, sign-in dialog, landing line); simulated return from sign-in (fake stored session + stashed dirty work → work restored with `저장 안 됨`, account chip and menu); sign-out keeps the work on screen. The real Google round trip is not tested yet.
+Done notes
+- Checked in the browser: not configured (button disabled, no Supabase chunk requested); configured with a dummy project (login button, sign-in dialog, landing line); simulated return from sign-in (fake stored session + stashed dirty work → work restored with `저장 안 됨`, account chip and menu); sign-out keeps the work on screen. Real Google round trip tested on `localhost:5180` (2026-10-21): passkey sign-in, consent, return to the app with the open Humanities work restored (`저장 안 됨` kept), account chip with the Google avatar, session kept after reload. Supabase `/auth/v1/settings`: google on, email off. The Google consent screen shows `ijyzinbpxtoujwwotfrh.supabase.co` instead of the app name (no brand verification; expected). The Google app is published (In production) with only openid/email/profile.
 - Supabase is a separate ~55 kB gzip chunk loaded only when configured.
 - Dev server for this worktree: `cloud-dev` on port 5180 (5173/5174 are used by other sessions); `#account` gets `z-index: 21` so the account menu opens above the tray.
 - `shell.ts`: `getFileState()` export; the `lighting:file` event accepts `dirty`. `manager.ts`: `loadProjectData(parsed, name)`.
