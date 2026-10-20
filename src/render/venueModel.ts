@@ -1,5 +1,5 @@
 // src/render/venueModel.ts
-// 극장 골격(벽, 천장, 갤러리, 객석)과 캣워크를 3D로 만든다. 둘은 3D 화면에서 따로 켜고 끈다.
+// 극장 골격(벽, 천장, 갤러리, 조정실 앞 단), 객석, 캣워크를 3D로 만든다. 셋은 3D 화면에서 따로 켜고 끈다.
 // 벽과 천장은 안쪽을 향한 면만 그려서, 밖에 있는 카메라에서는 가까운 벽이 보이지 않는다(인형의 집 방식).
 // 표면은 무대 조명 셰이더로 비추므로 조명이 벽이나 객석에 닿는 모습도 보인다.
 
@@ -11,11 +11,12 @@ import type { StageConfig } from '../types';
 /** 그림자를 만드는 물체가 쓰는 레이어 (Phase D3) */
 export const OCCLUDER_LAYER = 1;
 
-const WALL_COLOR = 0x2a2a2c;
-const SEAT_COLOR = 0x3a3434;
-const GALLERY_COLOR = 0x303032;
+// 실제로는 검은 마감이지만, 완전히 검게 두면 빛이 닿은 모습이 거의 보이지 않아 조금 밝게 둔다
+const WALL_COLOR = 0x4d4d52;
+const SEAT_COLOR = 0x564c4c;
+const GALLERY_COLOR = 0x45454a;
 /** 갤러리 아래를 가리는 검은 커튼 */
-const CURTAIN_COLOR = 0x1c1c1f;
+const CURTAIN_COLOR = 0x333337;
 
 export const venueModelFor = (stage: StageConfig): VenueModel3D | null => {
   const byKey = stage.venue_key ? VENUES[stage.venue_key as keyof typeof VENUES] : undefined;
@@ -162,18 +163,32 @@ export const buildVenueModel = (model: VenueModel3D, data: FixtureDataTexture): 
     group.add(rail);
   });
 
-  // 계단형 객석: 단마다 상자를 쌓는다
-  if (model.seating) {
-    const s = model.seating;
-    const seatMaterial = createStageLightMaterial(data, { color: SEAT_COLOR });
-    const depth = (s.y1 - s.y0) / s.rows;
-    for (let i = 0; i < s.rows; i++) {
-      const top = s.topHeight * (i + 1) / s.rows;
-      const step = box({ x0: s.x0, x1: s.x1, y0: s.y0 + depth * i, y1: s.y0 + depth * (i + 1) }, 0, top, seatMaterial);
-      step.layers.enable(OCCLUDER_LAYER);
-      group.add(step);
-    }
-  }
+  // 조정실 앞 단: 양쪽 갤러리와 같은 높이로 이어진다. 아래(의자 수납고)는 막혀 있으므로 바닥부터 채운다
+  model.platforms.forEach(p => {
+    const block = box(p, 0, p.z, galleryMaterial);
+    block.layers.enable(OCCLUDER_LAYER);
+    group.add(block);
+    // 무대 쪽 가장자리에 높이 1m 난간
+    const rail = box({ x0: p.x0, x1: p.x1, y0: p.y0 - 0.03, y1: p.y0 + 0.03 }, p.z, p.z + 1.0, galleryMaterial);
+    rail.layers.enable(OCCLUDER_LAYER);
+    group.add(rail);
+  });
 
+  return group;
+};
+
+/** 계단형 객석: 단마다 상자를 쌓는다. 맨 윗단 뒤는 조정실 앞 단과 맞닿는다 */
+export const buildSeating = (model: VenueModel3D, data: FixtureDataTexture): THREE.Object3D | null => {
+  const s = model.seating;
+  if (!s) return null;
+  const group = new THREE.Group();
+  const seatMaterial = createStageLightMaterial(data, { color: SEAT_COLOR });
+  const depth = (s.y1 - s.y0) / s.rows;
+  for (let i = 0; i < s.rows; i++) {
+    const top = s.topHeight * (i + 1) / s.rows;
+    const step = box({ x0: s.x0, x1: s.x1, y0: s.y0 + depth * i, y1: s.y0 + depth * (i + 1) }, 0, top, seatMaterial);
+    step.layers.enable(OCCLUDER_LAYER);
+    group.add(step);
+  }
   return group;
 };

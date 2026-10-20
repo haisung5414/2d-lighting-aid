@@ -9,7 +9,7 @@ import { DEFAULT_COSTUME_COLOR, getState, getCurrentCue, subscribe, setState, co
 import { DEFAULT_LAMP, dimmerOutput, getBeamFrame, getPhotometry, shutterPolygon } from '../engine/photometrics';
 import { FixtureDataTexture, WORK_LIGHT_LUX, createStageLightMaterial } from './stageLightMaterial';
 import { lightColorOf } from '../engine/gels';
-import { OCCLUDER_LAYER, buildCatwalk, buildVenueModel, venueModelFor } from './venueModel';
+import { OCCLUDER_LAYER, buildCatwalk, buildSeating, buildVenueModel, venueModelFor } from './venueModel';
 import { pickShadowFixtures, renderFixtureShadows } from './fixtureShadows';
 import type { Fixture, LampKey, Position2D, SetPiece, StageConfig } from '../types';
 
@@ -34,6 +34,7 @@ let pendingDrag: { x: number; y: number } | null = null;
 let floorAlbedo: { key: string; texture: THREE.CanvasTexture } | null = null;
 let showVenue = true;
 let showCatwalk = true;
+let showSeating = true;
 let workLightOn = false;
 let hemisphere: THREE.HemisphereLight | null = null;
 const HEMISPHERE_BASE = 0.6;
@@ -421,9 +422,11 @@ const rebuild = () => {
   if (showOutside) dynamicGroup.add(buildOutsideGround(stage));
 
   if (venueModel) {
-    // 극장 골격(벽, 천장, 갤러리, 객석)과 캣워크는 따로 켜고 끈다
+    // 극장 골격(벽, 천장, 갤러리, 조정실 앞 단), 캣워크, 객석은 따로 켜고 끈다
     if (showVenue) dynamicGroup.add(buildVenueModel(venueModel, fixtureData));
     if (showCatwalk) dynamicGroup.add(buildCatwalk(venueModel));
+    const seating = showSeating ? buildSeating(venueModel, fixtureData) : null;
+    if (seating) dynamicGroup.add(seating);
   } else {
     // 극장 모형이 없으면 무대 외곽과 기본 조명 높이를 선으로 보여 준다
     const box = new THREE.LineSegments(
@@ -478,6 +481,8 @@ const resize = () => {
   if (!container || !renderer || !camera) return;
   const { clientWidth: w, clientHeight: h } = container;
   if (w === 0 || h === 0) return;
+  // 창을 배율이 다른 모니터로 옮기면 화면 배율이 바뀌므로 매번 다시 맞춘다
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.setSize(w, h, false);
   camera.aspect = w / h;
   camera.updateProjectionMatrix();
@@ -520,6 +525,7 @@ const createOverlay = (host: HTMLElement) => {
     <div class="view3d-toggles">
       <label class="view3d-toggle"><input type="checkbox" id="view3d-venue" ${showVenue ? 'checked' : ''}> 극장 구조</label>
       <label class="view3d-toggle"><input type="checkbox" id="view3d-catwalk" ${showCatwalk ? 'checked' : ''}> 캣워크</label>
+      <label class="view3d-toggle"><input type="checkbox" id="view3d-seating" ${showSeating ? 'checked' : ''}> 객석</label>
       <label class="view3d-toggle"><input type="checkbox" id="view3d-worklight" ${workLightOn ? 'checked' : ''}> 작업등</label>
     </div>
     <div class="view3d-hint">조명 편집은 2D 화면에서 해 주세요. 사람 모형은 여기서 끌어서 옮길 수 있습니다.<br>드래그: 회전 · 휠: 확대 · 우클릭 드래그: 이동</div>
@@ -531,6 +537,10 @@ const createOverlay = (host: HTMLElement) => {
   overlay.querySelector<HTMLInputElement>('#view3d-worklight')?.addEventListener('change', e => {
     workLightOn = (e.target as HTMLInputElement).checked;
     applyWorkLight();
+  });
+  overlay.querySelector<HTMLInputElement>('#view3d-seating')?.addEventListener('change', e => {
+    showSeating = (e.target as HTMLInputElement).checked;
+    rebuild();
   });
   overlay.querySelector<HTMLInputElement>('#view3d-catwalk')?.addEventListener('change', e => {
     showCatwalk = (e.target as HTMLInputElement).checked;
