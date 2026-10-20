@@ -1,6 +1,6 @@
 # lighting-aid → SketchUp식 UI 적용안
 
-> 입력: `01-sketchup-web-ui-analysis.md`, `02-lighting-aid-current-analysis.md`
+> 입력: `01-sketchup-web-left-right-layout.md`, `02-lighting-aid-current-analysis.md`
 > 디자인 시안(Artifact, 비공개): https://claude.ai/artifact/2ipsoq4gMdhpMJY7YWwMxY
 > 시안 원본 파일: `docs/design/sketchup-redesign/` (`.dc.html` 5종 + `canvas.json`)
 
