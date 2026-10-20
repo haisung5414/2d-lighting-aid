@@ -1,12 +1,24 @@
 // src/engine/geometry.ts
 
-import type { Cue, Fixture, FresnelDataMap, LensDataMap, LensSpec, ParDataMap, Position2D, ProbeState, StageConfig, ZoomRangeType } from '../types';
+import type { Cue, Fixture, LensDataMap, LensSpec, ParDataMap, Position2D, ProbeState, StageConfig, ZoomRangeType } from '../types';
+import { DEFAULT_LAMP, FACE_NORMAL, HORIZONTAL_NORMAL, PAR_LAMPS, getPhotometry, illuminanceAt } from './photometrics';
+
+// 2D 화면용 반각 값. 실제 값은 photometrics.ts의 사양서 데이터에서 온다.
+const fixedLensHalfAngles = (lens: keyof LensDataMap): LensSpec => {
+  const phot = getPhotometry({
+    id: '', label: '', type: 'ellipsoidal', lens_type: lens,
+    position: { x: 0, y: 0, z: 1 }, target: { x: 0, y: 0 },
+    is_visible: true, edge_softness: 0, shutter_active: false,
+    shutter_polygon: [{ dx: 0, dy: 0 }, { dx: 0, dy: 0 }, { dx: 0, dy: 0 }, { dx: 0, dy: 0 }]
+  });
+  return { beam: phot.beamA, field: phot.fieldA };
+};
 
 export const LensData: LensDataMap = {
-  "19deg": { beam: 7.5, field: 9.5 },
-  "26deg": { beam: 9.5, field: 13 },
-  "36deg": { beam: 13, field: 18 },
-  "51deg": { beam: 18, field: 25.5 }
+  "19deg": fixedLensHalfAngles('19deg'),
+  "26deg": fixedLensHalfAngles('26deg'),
+  "36deg": fixedLensHalfAngles('36deg'),
+  "51deg": fixedLensHalfAngles('51deg')
 };
 
 export const ZoomAngleRanges: Record<ZoomRangeType, { min: number; max: number; label: string }> = {
@@ -14,18 +26,7 @@ export const ZoomAngleRanges: Record<ZoomRangeType, { min: number; max: number; 
   medium: { min: 25, max: 50, label: 'Medium Zoom 25-50 deg' }
 };
 
-export const FresnelData: FresnelDataMap = {
-  narrow: { beam: 4.5, field: 10 },
-  medium: { beam: 10.5, field: 20 },
-  flood: { beam: 26, field: 32.5 }
-};
-
-export const ParData: ParDataMap = {
-  VNSP: { beamX: 6, beamY: 6, fieldX: 8, fieldY: 8 },
-  NSP: { beamX: 8, beamY: 8, fieldX: 12, fieldY: 12 },
-  MFL: { beamX: 12, beamY: 18, fieldX: 15, fieldY: 24 },
-  WFL: { beamX: 15, beamY: 25, fieldX: 20, fieldY: 30 }
-};
+export const ParData: ParDataMap = PAR_LAMPS;
 
 export interface EllipseResult {
   cx: number;
@@ -43,24 +44,27 @@ export interface FixtureAngles {
 export interface ProbeContribution {
   fixtureId: string;
   label: string;
-  brightness: number;
-  profile: number;
+  /** 객석 방향을 향한 얼굴 면의 조도 lux */
+  faceLux: number;
+  /** 수평면 조도 lux */
+  horizontalLux: number;
   distance: number;
+  /** 빔 중심에서 벗어난 각도 deg */
   angle: number;
   blockedByShutter: boolean;
+  estimated: boolean;
 }
 
 export interface ProbeResult {
   x: number;
   y: number;
   actorHeight: number;
-  total: number;
+  faceLux: number;
+  horizontalLux: number;
   contributions: ProbeContribution[];
 }
 
 export class GeometryEngine {
-  private static readonly REFERENCE_DISTANCE = 5;
-
   static toRad(deg: number): number {
     return deg * Math.PI / 180;
   }
@@ -89,41 +93,13 @@ export class GeometryEngine {
     return fixture.type === 'ellipsoidal' || fixture.type === 'zoom';
   }
 
+  /** 빔(50%)과 필드(10%)의 반각 deg. PAR는 두 축의 평균 */
   static getFixtureAngleSpec(fixture: Fixture): LensSpec {
-    if (fixture.type === 'ellipsoidal') {
-      return LensData[fixture.lens_type];
-    }
-
-    if (fixture.type === 'zoom') {
-      const range = ZoomAngleRanges[fixture.zoom_range];
-      const fullAngle = Math.min(range.max, Math.max(range.min, fixture.zoom_angle));
-      const halfAngle = fullAngle / 2;
-      return { beam: Math.max(1, halfAngle * 0.72), field: halfAngle };
-    }
-
-    if (fixture.type === 'fresnel') {
-      const level = Math.min(1, Math.max(0, fixture.focus_level));
-      const start = level <= 0.5 ? FresnelData.narrow : FresnelData.medium;
-      const end = level <= 0.5 ? FresnelData.medium : FresnelData.flood;
-      const t = level <= 0.5 ? level * 2 : (level - 0.5) * 2;
-
-      return {
-        beam: start.beam + (end.beam - start.beam) * t,
-        field: start.field + (end.field - start.field) * t
-      };
-    }
-
-    const par = ParData[fixture.lamp_type];
+    const phot = getPhotometry(fixture);
     return {
-      beam: (par.beamX + par.beamY) / 2,
-      field: (par.fieldX + par.fieldY) / 2
+      beam: (phot.beamA + phot.beamB) / 2,
+      field: (phot.fieldA + phot.fieldB) / 2
     };
-  }
-
-  static smoothstep(edge0: number, edge1: number, value: number): number {
-    if (edge0 === edge1) return value < edge0 ? 0 : 1;
-    const t = Math.min(1, Math.max(0, (value - edge0) / (edge1 - edge0)));
-    return t * t * (3 - 2 * t);
   }
 
   static pointInPolygon(point: Position2D, polygon: Position2D[]): boolean {
@@ -141,101 +117,35 @@ export class GeometryEngine {
   }
 
   static calculateProbeBrightness(cue: Cue, stageConfig: StageConfig, probe: ProbeState): ProbeResult {
-    const probePoint = { x: probe.x, y: probe.y };
-    const probeZ = stageConfig.actor_height;
+    const lamp = stageConfig.lamp ?? DEFAULT_LAMP;
+    const point = { x: probe.x, y: probe.y, z: stageConfig.actor_height };
+
     const contributions = cue.fixtures
       .filter(fixture => fixture.is_visible !== false)
       .map(fixture => {
-        let blockedByShutter = false;
-        if (this.fixtureHasShutters(fixture) && fixture.shutter_active) {
-          const facePolygon = fixture.shutter_polygon.map(p => this.projectFloorToFace(
-            fixture.target.x + p.dx,
-            fixture.target.y + p.dy,
-            fixture.position.z,
-            probeZ,
-            fixture.position.x,
-            fixture.position.y
-          ));
-          blockedByShutter = !this.pointInPolygon(probePoint, facePolygon);
-        }
-
-        const centerVector = {
-          x: fixture.target.x - fixture.position.x,
-          y: fixture.target.y - fixture.position.y,
-          z: -fixture.position.z
-        };
-        const probeVector = {
-          x: probe.x - fixture.position.x,
-          y: probe.y - fixture.position.y,
-          z: probeZ - fixture.position.z
-        };
-
-        const centerLength = Math.hypot(centerVector.x, centerVector.y, centerVector.z);
-        const probeDistance = Math.hypot(probeVector.x, probeVector.y, probeVector.z);
-        const dot = centerVector.x * probeVector.x + centerVector.y * probeVector.y + centerVector.z * probeVector.z;
-        const angle = Math.acos(Math.min(1, Math.max(-1, dot / Math.max(0.000001, centerLength * probeDistance))));
-        const spec = this.getFixtureAngleSpec(fixture);
-        const beam = this.toRad(spec.beam);
-        const field = this.toRad(spec.field);
-
-        let profile = 0;
-        if (!blockedByShutter && angle < field) {
-          profile = angle <= beam ? 1 : 1 - this.smoothstep(beam, field, angle);
-        }
-
-        if (!blockedByShutter && fixture.type === 'par') {
-          profile = this.calculateParProbeProfile(fixture, probePoint, probeZ);
-        }
-
-        const distanceFactor = Math.pow(this.REFERENCE_DISTANCE / Math.max(0.1, probeDistance), 2);
-        const brightness = blockedByShutter ? 0 : profile * distanceFactor * 100;
-
+        const face = illuminanceAt(fixture, point, FACE_NORMAL, lamp);
+        const horizontal = illuminanceAt(fixture, point, HORIZONTAL_NORMAL, lamp);
         return {
           fixtureId: fixture.id,
           label: fixture.label,
-          brightness,
-          profile,
-          distance: probeDistance,
-          angle: this.toDeg(angle),
-          blockedByShutter
+          faceLux: face.lux,
+          horizontalLux: horizontal.lux,
+          distance: face.distance,
+          angle: face.offAxis,
+          blockedByShutter: face.blockedByShutter,
+          estimated: getPhotometry(fixture, lamp).estimated
         };
       })
-      .sort((a, b) => b.brightness - a.brightness);
+      .sort((a, b) => b.faceLux - a.faceLux);
 
     return {
       x: probe.x,
       y: probe.y,
-      actorHeight: probeZ,
-      total: contributions.reduce((sum, item) => sum + item.brightness, 0),
+      actorHeight: point.z,
+      faceLux: contributions.reduce((sum, item) => sum + item.faceLux, 0),
+      horizontalLux: contributions.reduce((sum, item) => sum + item.horizontalLux, 0),
       contributions
     };
-  }
-
-  private static calculateParProbeProfile(fixture: Extract<Fixture, { type: 'par' }>, point: Position2D, targetZ: number): number {
-    const beam = this.calculateEllipse(fixture, targetZ, 'beam');
-    const field = this.calculateEllipse(fixture, targetZ, 'field');
-    if (!beam || !field) return 0;
-
-    const normalizedDistance = (ellipse: EllipseResult): number => {
-      const cos = Math.cos(-ellipse.rotation);
-      const sin = Math.sin(-ellipse.rotation);
-      const dx = point.x - ellipse.cx;
-      const dy = point.y - ellipse.cy;
-      const rx = Math.max(0.0001, ellipse.radiusX);
-      const ry = Math.max(0.0001, ellipse.radiusY);
-      const localX = dx * cos - dy * sin;
-      const localY = dx * sin + dy * cos;
-      return Math.hypot(localX / rx, localY / ry);
-    };
-
-    const beamDistance = normalizedDistance(beam);
-    if (beamDistance <= 1) return 1;
-
-    const fieldDistance = normalizedDistance(field);
-    if (fieldDistance >= 1) return 0;
-
-    const t = (beamDistance - 1) / Math.max(0.0001, beamDistance - fieldDistance);
-    return 1 - this.smoothstep(0, 1, t);
   }
 
   static calculateEllipse(fixture: Fixture, targetZ: number, angleType: 'beam' | 'field'): EllipseResult | null {

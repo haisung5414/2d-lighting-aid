@@ -108,11 +108,15 @@ export interface Cue {
   background?: BackgroundImage;
 }
 
+export type LampKey = 'HPL575_230' | 'HPL750_230';
+
 export interface StageConfig {
   width: number;
   depth: number;
   actor_height: number;
   default_z: number;
+  /** 극장에서 쓰는 HPL 램프 규격. 없으면 기본값을 쓴다 */
+  lamp?: LampKey;
   reference_layers: ReferenceLayer[];
 }
 

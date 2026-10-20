@@ -276,6 +276,49 @@
   font-weight: 700;
 }
 
+.probe-lamp {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.probe-lamp select {
+  flex: 1;
+  min-width: 0;
+}
+
+.probe-subtotal {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 10px 0;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.probe-contribution-head {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+}
+
+.probe-contribution-head .probe-fixture-value {
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.probe-estimated {
+  margin-left: 4px;
+  padding: 0 4px;
+  border-radius: 3px;
+  background: #fff3d6;
+  color: #8a5a00;
+  font-size: 0.68rem;
+}
+
 .probe-empty,
 .probe-note {
   margin-top: 8px;

@@ -2,6 +2,7 @@
 
 import { getState, setState, getCurrentCue, getSelectedFixture, subscribe, commitHistory } from '../state/store';
 import { GeometryEngine, LensData, ParData, ZoomAngleRanges } from '../engine/geometry';
+import { LENS_LABELS } from '../engine/photometrics';
 import type { Fixture, FixtureType, FresnelFocus, LensType, ParLampType, ShutterPoint, ZoomRangeType } from '../types';
 
 const generateId = (prefix: string) => `${prefix}_${Math.random().toString(36).substring(2, 11)}`;
@@ -96,7 +97,7 @@ const renderList = () => {
 const renderFixedLensControl = (selectedFix: Extract<Fixture, { type: 'ellipsoidal' }>) => {
   const lensOptions = (Object.keys(LensData) as LensType[]).map(lens => {
     const sel = selectedFix.lens_type === lens ? "selected" : "";
-    return `<option value='${lens}' ${sel}>${lens}</option>`;
+    return `<option value='${lens}' ${sel}>${LENS_LABELS[lens]}</option>`;
   }).join('');
 
   return `
