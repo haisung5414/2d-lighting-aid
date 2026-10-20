@@ -33,7 +33,14 @@ const focusLabel = (level: number): FresnelFocus => {
   return 'medium';
 };
 
-const createFixture = (type: FixtureType, index: number): Fixture => {
+/** 지금 씬에서 아직 쓰지 않은 다음 조명 번호 (L1, L2, ...) */
+export const nextFixtureNumber = (fixtures: Fixture[]): number =>
+  fixtures.reduce((max, fixture) => {
+    const match = /^L(\d+)/.exec(fixture.label);
+    return match ? Math.max(max, Number(match[1])) : max;
+  }, 0) + 1;
+
+export const createFixture = (type: FixtureType, index: number): Fixture => {
   const state = getState();
   const id = generateId('fixture');
   const base = {
@@ -261,7 +268,7 @@ const renderProperties = () => {
     if (!cue) return;
     const typeSelect = document.getElementById('fixture-add-type') as HTMLSelectElement | null;
     const fixtureType = type ?? (typeSelect?.value as FixtureType | undefined) ?? 'ellipsoidal';
-    const fixture = createFixture(fixtureType, cue.fixtures.length + 1);
+    const fixture = createFixture(fixtureType, nextFixtureNumber(cue.fixtures));
     cue.fixtures.push(fixture);
     state.selected_fixture_id = fixture.id;
     state.selected_fixture_ids = [fixture.id];

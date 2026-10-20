@@ -6,6 +6,7 @@
 import './shell.css';
 import { getState, subscribe, undo, redo } from '../state/store';
 import { getViewZoom, onViewChange, resetCanvasZoom, zoomCanvas } from '../render/canvas';
+import { initTools, onObjectPlaced, setToolsViewMode } from './tools';
 
 let openPanelId: string | null = null;
 let sceneDrawerOpen = false;
@@ -113,6 +114,7 @@ export const setViewMode = async (mode: '2d' | '3d') => {
   const venue3dButton = document.querySelector<HTMLButtonElement>('[data-tray="venue3d"]');
   if (venue3dButton) venue3dButton.disabled = !on;
   if (!on && openPanelId === 'venue3d') openPanel(null);
+  setToolsViewMode(on);
   $('view-2d')?.setAttribute('aria-pressed', String(!on));
   $('view-3d')?.setAttribute('aria-pressed', String(on));
   if (!on) window.dispatchEvent(new Event('resize'));
@@ -176,6 +178,9 @@ const initZoom = () => {
 
 export const initShell = () => {
   initTray();
+  initTools();
+  // 놓은 직후 그 대상의 패널을 연다 (임시: 세트 속성은 아직 "무대 위 목록" 안에 있다 — Phase 3에서 정리)
+  onObjectPlaced(kind => openPanel(kind === 'fixture' ? 'props' : 'list'));
   initFilePill();
   initViewSwitch();
   initVenue3DPanel();

@@ -117,9 +117,13 @@ export interface Cue {
 export type LampKey = 'HPL575_230' | 'HPL750_230';
 
 /** 무대 위 세트 덩어리 (단, 벽, 계단 등). 모든 씬에서 공통으로 쓴다 */
+export type SetPieceKind = 'set' | 'wall' | 'deck' | 'apple';
+
 export interface SetPiece {
   id: string;
   label: string;
+  /** 만든 도구 (세트 그리기 / 벽 / 덧마루 / 애플박스 바로가기). 모양과 동작은 모두 같은 세트다 */
+  kind?: SetPieceKind;
   /** 중심 위치 m */
   x: number;
   y: number;

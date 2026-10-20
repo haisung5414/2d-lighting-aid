@@ -46,7 +46,7 @@ Done notes
 - Deferred on purpose: chrome dark theme (Phase 7); save-state dirty tracking and file rename (Phase 6).
 - Follow-ups before Phase 2 (user requests): 2D light drawn as a photometric gradient; 보기 renamed 빛 범위 표시 with an (i) beam/field tip; defaults floor + face + field on, beam off; new tray panel 3D 극장 구조 (3D only) replaces the checkboxes in the 3D overlay, defaults catwalk off and structure/seating/work light on.
 
-## Phase 2 — Tools `[ ]`
+## Phase 2 — Tools `[x]`
 
 Spec §3, §4 (placement parts).
 - Tool state (UI-only), rail with 9 tools, separators, key shortcuts, disabled in 3D except Select.
@@ -54,6 +54,12 @@ Spec §3, §4 (placement parts).
 - Placement on stage click: fixtures snap to the nearest catwalk pipe; sets from presets (wall/deck/apple) or rectangle drag (set); per-kind naming; return to Select; select the new object and open its panel.
 - Remove the TEMP add controls (fixture type select + 추가, + 세트 추가).
 - Cursor shows crosshair for placing tools; status-bar hint follows the tool.
+
+Done notes
+- `src/ui/tools.ts` owns the tool state, rail rendering (incl. lens flyout), shortcuts (Space/E/F/P/R/W/D/B, Esc → Select) and placement; `canvas.ts` forwards mouse input to `toolPointerDown/Move/Up` when a non-Select tool is active and draws the set-drag preview.
+- Fixture aim on placement: 4 m toward the acting-area centre (`seating.y0 / 2` when the venue has seating, else stage centre).
+- After placing: fixture → 선택한 객체 속성 opens; set → 무대 위 목록 opens (TEMP until Phase 3/4 moves set properties).
+- `window.addFixture` / `window.addSetPiece` remain as unused globals (remove in Phase 7).
 
 ## Phase 3 — Selection and panels `[ ]`
 

@@ -31,7 +31,7 @@ Positions are from the mockup CSS (px, relative to the editor area).
 | File pill | top-left, `top:10 left:10` | menu ☰, file name, undo, redo, save state |
 | View switch | top-center, `top:10` | segmented `2D 평면` / `3D 보기` |
 | Account | top-right, `top:10 right:10` | `로그인`, `공유` — disabled placeholders (future cloud features) |
-| Tool rail | left, `top:58 left:10 width:46` | 9 tools (§3) |
+| Tool rail | left, `top:58 left:10 width:46` | 8 tools (§3) |
 | Panel tray | right, `top:58 right:10` | icon + label buttons in two groups (§5) |
 | Panel column | `top:58 right:196 width:300 bottom:64` | open floating panels, stacked vertically |
 | Scene drawer | bottom, `left:70 right:510 bottom:10` | collapsed bar; expands upward (§6) |

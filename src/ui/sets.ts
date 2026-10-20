@@ -62,7 +62,7 @@ export const renderSetPanel = () => {
     <details class="collapsible-section set-panel-body" ${isPanelOpen ? 'open' : ''}>
       <summary class="panel-header collapsible-summary">세트 (무대 위 덩어리) ${pieces.length > 0 ? `<small>${pieces.length}개</small>` : ''}</summary>
       <div class="collapsible-body">
-        <p class="set-hint">단, 벽, 계단처럼 빛을 받거나 가리는 물체를 상자로 놓습니다. 2D 화면에서 끌어서 옮길 수 있고, 모든 씬에 공통으로 적용됩니다.</p>
+        <p class="set-hint">세트는 왼쪽 도구(세트 그리기, 벽, 덧마루, 애플박스)로 놓습니다. 2D 화면에서 끌어서 옮길 수 있고, 모든 씬에 공통으로 적용됩니다.</p>
         ${pieces.map(piece => `
           <div class="list-item ${piece.id === state.selected_set_id ? 'active' : ''}" onclick="selectSetPiece('${piece.id}')">
             <span style="flex:1"><span class="gel-swatch" style="background:${piece.color}"></span>${piece.label}
@@ -70,7 +70,6 @@ export const renderSetPanel = () => {
             <button class="btn-danger" onclick="deleteSetPiece('${piece.id}', event)">X</button>
           </div>
         `).join('')}
-        <button class="btn btn-secondary full-width-action" onclick="addSetPiece()">+ 세트 추가</button>
         ${selected ? renderSelectedSet(selected) : ''}
       </div>
     </details>
@@ -113,7 +112,7 @@ export const renderSetPanel = () => {
       piece[prop] = value;
       return;
     }
-    if (prop === 'id') return;
+    if (prop === 'id' || prop === 'kind') return;
     const num = parseFloat(value);
     if (!Number.isFinite(num)) return;
     if (prop === 'width' || prop === 'depth' || prop === 'height') {

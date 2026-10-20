@@ -126,12 +126,7 @@
     </div>
 
     <!-- 왼쪽: 도구 -->
-    <nav class="float toolrail" aria-label="도구">
-      <button type="button" class="tool" data-tool="select" aria-pressed="true" aria-label="선택" title="선택 (Space)">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M5 3l14 8-6 2-2 6z"/></svg>
-        <span class="key">␣</span>
-      </button>
-    </nav>
+    <nav class="float toolrail" aria-label="도구"></nav>
 
     <!-- 오른쪽: 패널 트레이 -->
     <div class="tray" id="tray">
@@ -208,15 +203,6 @@
       <section class="float panel" data-panel="list" hidden>
         <header><h2>무대 위 목록</h2><button type="button" class="ibtn" data-close-panel aria-label="닫기">✕</button></header>
         <div class="panel-body">
-          <div class="fixture-add-controls">
-            <select id="fixture-add-type" title="조명 종류">
-              <option value="ellipsoidal">Fixed</option>
-              <option value="zoom">Zoom</option>
-              <option value="fresnel">Fresnel</option>
-              <option value="par">PAR</option>
-            </select>
-            <button type="button" class="btn" onclick="addFixture()">+ 조명 추가</button>
-          </div>
           <div id="fixture-list"></div>
           <div id="set-panel"></div>
         </div>

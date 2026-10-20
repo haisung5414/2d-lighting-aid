@@ -4,6 +4,7 @@ import { getState, setState, getCurrentCue, subscribe, commitHistory } from '../
 import { GeometryEngine } from '../engine/geometry';
 import { gelDisplayHex } from '../engine/gels';
 import { dimmerOutput, getPhotometry } from '../engine/photometrics';
+import { getSetDraft, onToolRedraw, toolPointerDown, toolPointerMove, toolPointerUp } from '../ui/tools';
 import type { Position2D, Cue, Fixture, UIToggles, StageConfig, ProbeState, SetPiece } from '../types';
 
 let canvas: HTMLCanvasElement | null = null;
@@ -447,6 +448,27 @@ export const renderCanvas = () => {
 
   drawSetPieces(ctx, state.stage_config.set_pieces ?? [], state.selected_set_id);
 
+  // 세트 그리기 중인 사각형 미리보기
+  const draft = getSetDraft();
+  if (draft) {
+    const x = offsetX + toPx(Math.min(draft.start.x, draft.end.x));
+    const y = offsetY + toPx(Math.min(draft.start.y, draft.end.y));
+    const w = toPx(Math.abs(draft.end.x - draft.start.x));
+    const h = toPx(Math.abs(draft.end.y - draft.start.y));
+    ctx.save();
+    ctx.fillStyle = 'rgba(107, 90, 74, 0.45)';
+    ctx.fillRect(x, y, w, h);
+    ctx.strokeStyle = '#ffd166';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([6, 4]);
+    ctx.strokeRect(x, y, w, h);
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#fff';
+    ctx.font = '12px "IBM Plex Sans KR", sans-serif';
+    ctx.fillText(`${Math.abs(draft.end.x - draft.start.x).toFixed(2)} × ${Math.abs(draft.end.y - draft.start.y).toFixed(2)} m`, x + 4, y - 6);
+    ctx.restore();
+  }
+
   const currentCue = getCurrentCue();
   if (!currentCue) return;
 
@@ -469,6 +491,7 @@ export const initCanvas = (canvasEl: HTMLCanvasElement, wrapperEl: HTMLElement) 
   });
 
   subscribe(renderCanvas);
+  onToolRedraw(renderCanvas);
 
   canvas.addEventListener('mousedown', (e: MouseEvent) => {
     if (e.button !== 0) return;
@@ -479,6 +502,9 @@ export const initCanvas = (canvasEl: HTMLCanvasElement, wrapperEl: HTMLElement) 
     const cue = getCurrentCue();
     
     if (!cue) return;
+
+    // 선택 도구가 아니면 놓기·그리기 도구가 이 누름을 처리한다
+    if (toolPointerDown(worldPos)) return;
 
     const selectedFix = cue.fixtures.find(f => f.id === state.selected_fixture_id);
 
@@ -565,6 +591,10 @@ export const initCanvas = (canvasEl: HTMLCanvasElement, wrapperEl: HTMLElement) 
   });
 
   canvas.addEventListener('mousemove', (e: MouseEvent) => {
+    {
+      const rect = canvas!.getBoundingClientRect();
+      if (toolPointerMove(toWorld(e.clientX - rect.left, e.clientY - rect.top))) return;
+    }
     if (isViewPanning) {
       if ((e.buttons & 1) === 0) {
         isViewPanning = false;
@@ -632,7 +662,11 @@ export const initCanvas = (canvasEl: HTMLCanvasElement, wrapperEl: HTMLElement) 
     zoomCanvasAt(screenX, screenY, e.deltaY < 0 ? 1.15 : 1 / 1.15);
   }, { passive: false });
 
-  window.addEventListener('mouseup', () => {
+  window.addEventListener('mouseup', (e: MouseEvent) => {
+    if (canvas) {
+      const rect = canvas.getBoundingClientRect();
+      if (toolPointerUp(toWorld(e.clientX - rect.left, e.clientY - rect.top))) return;
+    }
     const state = getState();
     if (state.interaction.dragMode !== null) {
       setState(s => { s.interaction.dragMode = null; });
