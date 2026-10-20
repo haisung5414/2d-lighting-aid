@@ -37,6 +37,11 @@ let showCatwalk = true;
 let workLightOn = false;
 let hemisphere: THREE.HemisphereLight | null = null;
 const HEMISPHERE_BASE = 0.6;
+/** 극장 구조를 보여 줄 때의 바깥 배경과 땅 색. 어두운 극장 안과 구분되도록 밝은 회색으로 둔다 */
+const OUTSIDE_BACKGROUND = 0xbcc2c9;
+const OUTSIDE_GROUND = 0xa7aeb6;
+const OUTSIDE_GRID = 0x939ba4;
+const DARK_BACKGROUND = 0x0d0f12;
 const SKIN_COLOR = 0xc9a48a;
 
 const imageCache = new Map<string, HTMLImageElement>();
@@ -335,6 +340,26 @@ const buildActor = (x: number, y: number, height: number, costume: string, data:
   return group;
 };
 
+/** 극장 바깥의 땅: 넓은 회색 판과 1m 격자. 조명과 상관없이 같은 색으로 보인다 */
+const buildOutsideGround = (stage: StageConfig): THREE.Object3D => {
+  const group = new THREE.Group();
+  const size = 120;
+  const ground = new THREE.Mesh(
+    new THREE.PlaneGeometry(size, size),
+    new THREE.MeshBasicMaterial({ color: OUTSIDE_GROUND, toneMapped: false })
+  );
+  ground.rotation.x = -Math.PI / 2;
+  // 무대 바닥 도면 판과 겹쳐 깜빡이지 않도록 살짝 아래에 둔다
+  ground.position.set(stage.width / 2, -0.02, stage.depth / 2);
+  group.add(ground);
+
+  const grid = new THREE.GridHelper(size, size, OUTSIDE_GRID, OUTSIDE_GRID);
+  (grid.material as THREE.Material).toneMapped = false;
+  grid.position.set(stage.width / 2, -0.01, stage.depth / 2);
+  group.add(grid);
+  return group;
+};
+
 /** 세트 상자. 조명 셰이더로 비추고, 그림자를 만드는 물체로 표시한다 */
 const buildSetPiece = (piece: SetPiece, data: FixtureDataTexture): THREE.Mesh => {
   const mesh = new THREE.Mesh(
@@ -390,6 +415,11 @@ const rebuild = () => {
   dynamicGroup.add(floor);
 
   const venueModel = venueModelFor(stage);
+  // 극장 구조를 보여 줄 때는 바깥을 밝게 해서 어두운 극장 안과 구분한다
+  const showOutside = Boolean(venueModel && showVenue);
+  renderer?.setClearColor(showOutside ? OUTSIDE_BACKGROUND : DARK_BACKGROUND);
+  if (showOutside) dynamicGroup.add(buildOutsideGround(stage));
+
   if (venueModel) {
     // 극장 골격(벽, 천장, 갤러리, 객석)과 캣워크는 따로 켜고 끈다
     if (showVenue) dynamicGroup.add(buildVenueModel(venueModel, fixtureData));
@@ -580,7 +610,7 @@ const init = (host: HTMLElement) => {
 
   renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  renderer.setClearColor(0x0d0f12);
+  renderer.setClearColor(DARK_BACKGROUND);
   // 빛이 겹친 곳이 하얗게 잘리지 않고 부드럽게 포화되도록 한다
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   container.appendChild(renderer.domElement);
