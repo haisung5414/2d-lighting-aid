@@ -29,13 +29,13 @@
 ## A. Supabase 프로젝트 만들기
 
 ### A-1. 만들 자리 비우기 (끝남)
-무료 요금제는 켜 둘 수 있는 프로젝트 수가 정해져 있습니다. FindMeATime은 일시 정지할 권한이 없어서, 대신 `caltalk-mvp` 조직에 있던 안 쓰는 프로젝트(haisung5414's Project)를 지웠습니다(2026-10-21). 이제 `caltalk-mvp` 조직은 비어 있습니다.
+무료 요금제는 켜 둘 수 있는 프로젝트 수가 정해져 있습니다. FindMeATime은 일시 정지할 권한이 없어서, 대신 `caltalk-mvp` 조직에 있던 안 쓰는 프로젝트(haisung5414's Project)를 지웠습니다(2026-10-21). 결국 `lighting-aid` 조직을 새로 만들어 그 안에 프로젝트를 만들었습니다.
 
 ### A-2. 새 프로젝트 만들기
 1. 대시보드 첫 화면에서 **New project**를 누릅니다.
 2. 다음처럼 채웁니다.
-   - Organization: `caltalk-mvp`
-   - Project name: `lighting-aid`
+   - Organization: `lighting-aid` (새로 만든 조직)
+   - Project name: `lighting-aid-pipe`
    - Database password: **Generate a password**를 누르고, 나온 비밀번호를 비밀번호 관리자에 보관합니다. 이 비밀번호는 Claude에게 알려 주지 않아도 됩니다.
    - Region: **Northeast Asia (Seoul)**
    - 그 밖의 항목은 기본값 그대로 둡니다.
@@ -49,10 +49,18 @@
 Claude가 다음을 합니다. 사용자는 결과만 확인하면 됩니다.
 
 1. `supabase link`로 저장소와 새 프로젝트를 연결합니다. 데이터베이스 비밀번호를 물으면, 그 칸은 사용자가 직접 입력합니다.
-2. `docs/cloud/schema.sql` 내용을 마이그레이션으로 올려서 `projects` 표와 RLS(자기 행만 읽고 쓰는 규칙)를 만듭니다.
+2. `supabase/migrations/20261021000000_projects.sql` 내용을 마이그레이션으로 올려서 `projects` 표와 RLS(자기 행만 읽고 쓰는 규칙)를 만듭니다.
 3. `supabase projects api-keys`에서 **공개용 키(publishable 또는 anon)만** 골라 워크트리의 `.env.local`에 넣습니다. `service_role`/secret 키는 화면에 띄우지도, 파일에 넣지도 않습니다.
 
-이 단계가 끝나면 Claude가 **프로젝트 주소**(`https://<프로젝트 ref>.supabase.co`)와 **콜백 주소**(`https://<프로젝트 ref>.supabase.co/auth/v1/callback`)를 알려 드립니다. C 단계에서 콜백 주소가 필요합니다.
+**끝남 (2026-10-21).** 프로젝트는 `lighting-aid` 조직의 `lighting-aid-pipe`(지역: Sydney, ap-southeast-2)입니다. 표와 RLS를 만들었고, 로그인하지 않은 방문자는 행을 읽지도 넣지도 못하는 것을 확인했습니다. `.env.local`에는 publishable 키를 넣었습니다.
+
+C·D·E 단계에서 쓸 값은 다음과 같습니다. 모두 공개해도 되는 값입니다.
+
+| 이름 | 값 |
+|---|---|
+| 프로젝트 주소 (E 단계 `VITE_SUPABASE_URL`) | `https://ijyzinbpxtoujwwotfrh.supabase.co` |
+| 콜백 주소 (C-5 단계 리디렉션 URI) | `https://ijyzinbpxtoujwwotfrh.supabase.co/auth/v1/callback` |
+| 공개 키 (E 단계 `VITE_SUPABASE_ANON_KEY`) | `sb_publishable_OHfSmbRSq5UwO7ggC1o6Cw_Idmlnx5x` |
 
 ---
 
@@ -111,7 +119,7 @@ Google Cloud 콘솔의 메뉴 이름은 가끔 바뀝니다. 아래 이름이 �
    - **승인된 자바스크립트 원본(Authorized JavaScript origins)**: 비워 둡니다. (이 앱은 Google 버튼을 직접 띄우지 않고 Supabase를 거치므로 필요 없습니다.)
    - **승인된 리디렉션 URI(Authorized redirect URIs)** → **+ URI 추가** → B 단계에서 받은 **콜백 주소**를 정확히 붙여 넣습니다.
      ```
-     https://<프로젝트 ref>.supabase.co/auth/v1/callback
+     https://ijyzinbpxtoujwwotfrh.supabase.co/auth/v1/callback
      ```
      앞뒤 공백, 끝의 `/` 하나 차이도 오류(`redirect_uri_mismatch`)가 납니다. 조명 앱 주소(github.io)나 localhost는 **여기에 넣지 않습니다.** 그 주소들은 D 단계에서 Supabase에 넣습니다.
 3. **만들기**를 누르면 **클라이언트 ID**와 **클라이언트 보안 비밀번호(Client secret)**가 담긴 창이 뜹니다.
@@ -155,8 +163,8 @@ Google Cloud 콘솔의 메뉴 이름은 가끔 바뀝니다. 아래 이름이 �
 
 1. https://github.com/haisung5414/2d-lighting-aid → **Settings** → 왼쪽 **Secrets and variables → Actions**.
 2. **Variables** 탭(Secrets 탭이 아닙니다) → **New repository variable**로 두 개를 만듭니다.
-   - `VITE_SUPABASE_URL` = `https://<프로젝트 ref>.supabase.co`
-   - `VITE_SUPABASE_ANON_KEY` = B 단계에서 `.env.local`에 넣은 공개 키 (Claude가 값을 알려 드립니다)
+   - `VITE_SUPABASE_URL` = `https://ijyzinbpxtoujwwotfrh.supabase.co`
+   - `VITE_SUPABASE_ANON_KEY` = `sb_publishable_OHfSmbRSq5UwO7ggC1o6Cw_Idmlnx5x`
 3. 이 값들은 브라우저에 그대로 내려가는 공개용 값이라 Variables에 두어도 됩니다. 보호는 RLS가 맡습니다.
 
 ---

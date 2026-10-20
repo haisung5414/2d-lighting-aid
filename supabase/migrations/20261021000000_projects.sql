@@ -1,5 +1,5 @@
 -- 2d-lighting-aid: online projects (docs/cloud/CLOUD_SPEC.md §3)
--- Run once in Supabase → SQL Editor.
+-- Applied with `supabase db push` (project lighting-aid-pipe). Can also be pasted into the SQL Editor.
 
 create table if not exists public.projects (
   id          uuid primary key default gen_random_uuid(),

@@ -39,7 +39,7 @@ Supabase dashboard settings (done by the user, §Phase 0 of the plan):
 
 ## 3. Database
 
-One table. SQL lives in `docs/cloud/schema.sql`; the user runs it in the Supabase SQL editor.
+One table. SQL lives in `supabase/migrations/20261021000000_projects.sql`, applied with `supabase db push`.
 
 ```sql
 create table public.projects (

@@ -16,10 +16,10 @@ Status: `[ ]` todo · `[~]` in progress · `[x]` done
 ## Phase 0 — Supabase and Google setup (user) `[ ]`
 
 Step-by-step Korean guide: [SETUP_GUIDE.md](SETUP_GUIDE.md). The user creates the project and the Google client and pastes the client secret into Supabase; Claude links the repo with the Supabase CLI, applies the schema and writes only the public key to `.env.local`.
-Project: new `lighting-aid` project in the `caltalk-mvp` organization (an unused project there was deleted to stay within the free-plan project limit).
+Project: `lighting-aid-pipe` (ref `ijyzinbpxtoujwwotfrh`, ap-southeast-2) in a new `lighting-aid` organization. Steps 1–2 and the local `.env.local` are done (2026-10-21; RLS checked with anonymous REST calls: select returns `[]`, insert is rejected).
 
 1. https://supabase.com → New project (free plan, any region near Korea, e.g. Northeast Asia (Seoul)). Keep the database password to yourself.
-2. SQL Editor → paste `docs/cloud/schema.sql` → Run.
+2. Schema: `supabase link --project-ref <ref>` + `supabase db push` applies `supabase/migrations/20261021000000_projects.sql` (or paste it into the SQL Editor).
 3. Google Cloud Console → APIs & Services → Credentials → *Create OAuth client ID* (Web application).
    - Authorized JavaScript origins: leave empty (Supabase does the redirect).
    - Authorized redirect URI: the callback shown in Supabase → Auth → Providers → Google (`https://<project-ref>.supabase.co/auth/v1/callback`).
