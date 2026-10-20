@@ -91,16 +91,18 @@ The actor always shows a small label on the 2D plan: `얼굴 642 lux` (live face
 
 ### 5.1 Tray (top to bottom)
 
+Order changed 2026-10-21 (user review of Phase 3): 선택한 것 comes first, and the object list moved to 작업 전체 as 객체 전체 목록.
+
 | Group | Panel id | Label | Contents |
 |---|---|---|---|
+| 선택한 것 | `props` | 선택한 객체 속성 | depends on selection (§5.3). Bottom of the panel: checkbox `객체를 누를 때 자동으로 열지 않기` (§5.4). |
+| | `help` | 도우미 | current tool's name, key, hint and what happens next. |
 | 작업 전체 | `display` | 빛 범위 표시 | 2D light drawing only: 바닥에 닿는 빛 (gradient, default **on**), 배우 얼굴 높이에 닿는 빛 (default **on**), 각도선 with an (i) hover tip explaining beam (50 %) and field (10 %), 빔 각도선 (solid, default off), 필드 각도선 (dashed, default **on**). |
 | | `venue3d` | 3D 극장 구조 | 3D only: 극장 구조 (default on), 캣워크 (default **off**), 객석 (on), 작업등 (on). The tray button is **disabled in 2D** and the panel closes when switching back to 2D. Separate from 빛 범위 표시 on purpose (user decision 2026-10-20). |
 | | `layers` | 레이어 | 극장 평면도, 캣워크 오버레이 (visibility + opacity), 이 씬의 배경 이미지 (upload / position / size / opacity / delete). |
 | | `patch` | 채널 검사 | channel usage grid with over-capacity warning (current patch panel, always expanded). |
 | | `venue` | 공연장 정보 | 공연장 name, 무대 폭·깊이, 배우 얼굴 높이, 기본 조명 높이, 램프 규격 (HPL 575/750). |
-| 선택한 것 | `props` | 선택한 객체 속성 | depends on selection (§5.3). |
-| | `list` | 무대 위 목록 | tree: 조명 (n), 세트 (n), 사람 모형. Click a row → select on stage. Per-row hide and delete. |
-| | `help` | 도우미 | current tool's name, key, hint and what happens next. |
+| | `list` | 객체 전체 목록 | tree: 조명 (n), 세트 (n), 사람 모형. Click a row → select on stage. Per-row hide and delete. |
 
 Removed panels (do not build): 젤 견본, 조명 기종, 밝기 측정.
 
@@ -129,7 +131,9 @@ Title is always `선택한 객체 속성`.
 - When 조명 설정 opens, close any tray panel.
 - When a tray panel opens, collapse 조명 설정.
 - Only one tray panel is open at a time; clicking its tray button again closes it.
-- Selecting a set or the actor opens `props`.
+- Selecting a set or the actor opens `props`, unless the user checked `객체를 누를 때 자동으로 열지 않기` in that panel (stored in `localStorage` key `lightingAid.propsNoAutoOpen`). The checkbox does not affect 조명 설정.
+- Whenever something is selected and `props` is closed, the 선택한 객체 속성 tray icon is tinted (accent-soft fill, accent icon) so the user can see there is something to open.
+- Nothing is selected on start-up or after switching scenes.
 
 ### 5.6 Tray as an accordion (decided 2026-10-21, implement in Phase 3)
 
@@ -138,7 +142,7 @@ SketchUp Web reference: `reference/sketchUp/cad_right_button_click.png` (the 태
 - Clicking a tray item expands its panel **inline, right under that item, inside the tray column**. The items below it are pushed down; nothing floats beside the tray any more. The separate "panel column" (§2) goes away.
 - The expanded panel is as wide as the panel cards (~300 px); the tray column widens while a panel is open and scrolls vertically if it does not fit.
 - Still one panel open at a time (§5.4 rules unchanged). Clicking the item header again collapses it.
-- 조명 설정 (§5.2) becomes an expanded section at the **top of the tray**, above the 작업 전체 group, pushing all items down; it still appears on every fixture selection and closes any other open panel.
+- 조명 설정 (§5.2) becomes an expanded section at the **top of the tray**, above the 선택한 것 group, pushing all items down; it still appears on every fixture selection and closes any other open panel.
 - **3D 극장 구조 auto-opens when entering 3D view.** The panel shows a checkbox `3D로 들어갈 때 자동으로 열지 않기`; when checked, entering 3D no longer opens it. Store this preference in `localStorage` (per browser, not in project files; wrap access in try/catch).
 - The 2D plan fit insets must account for the wider tray while a panel is open (or the plan simply stays under it — choose whichever keeps the stage readable).
 
@@ -184,9 +188,9 @@ Left to right: help icon (opens 도우미), **hint sentence for the current tool
 | Header | 3D 보기 | 2D/3D switch |
 | Left | 씬 list | scene drawer |
 | Left | 배경 이미지 | 레이어 |
-| Left | 세트 panel | tools (create) + 무대 위 목록 + 선택한 객체 속성 |
+| Left | 세트 panel | tools (create) + 객체 전체 목록 + 선택한 객체 속성 |
 | Left | 전체 보기 옵션 (2D toggles, reference layers) | 빛 범위 표시 (toggles) + 레이어 (reference layers) |
-| Right | 조명 기구 list + add controls | tools (add) + 무대 위 목록 |
+| Right | 조명 기구 list + add controls | tools (add) + 객체 전체 목록 |
 | Right | 위치 / 채널·타입·광학 / 젤 / 디머 / 셔터 / 그림자 | split: 선택한 객체 속성 (이름, 채널, 위치, 조준점) and 조명 설정 (the five) |
 | Right | 밝기 Probe | actor selection in 선택한 객체 속성 + canvas lux label; lamp choice → 공연장 정보 |
 | Right | 채널 사용 현황 | 채널 검사 |

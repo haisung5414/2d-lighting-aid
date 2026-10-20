@@ -104,6 +104,7 @@
 .trayitem .ico svg { width: 19px; height: 19px; }
 .trayitem[aria-expanded="true"] .ico { background: var(--chrome-accent); border-color: var(--chrome-accent); color: #fff; }
 .trayitem[aria-expanded="true"] .lbl { color: var(--chrome-accent); }
+.trayitem.has-selection:not([aria-expanded="true"]) .ico { background: var(--chrome-accent-soft); border-color: var(--chrome-accent); color: var(--chrome-accent); }
 .trayitem:disabled { cursor: not-allowed; opacity: .45; }
 
 /* 펼쳐진 패널 (트레이 안) */

@@ -1,6 +1,6 @@
 // src/ui/fixture.ts
 // 조명기 데이터 조작: 만들기, 지우기, 숨기기, 속성 바꾸기.
-// 화면은 lightSettings.ts(조명 설정), properties.ts(선택한 객체 속성), stageList.ts(무대 위 목록)가 그린다.
+// 화면은 lightSettings.ts(조명 설정), properties.ts(선택한 객체 속성), stageList.ts(객체 전체 목록)가 그린다.
 
 import { setState, commitHistory } from '../state/store';
 import { GeometryEngine, ZoomAngleRanges } from '../engine/geometry';

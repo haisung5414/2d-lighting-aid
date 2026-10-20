@@ -8,12 +8,13 @@ import './shell.css';
 import { getState, subscribe, undo, redo } from '../state/store';
 import { getViewZoom, onViewChange, resetCanvasZoom, zoomCanvas } from '../render/canvas';
 import { initTools, setToolsViewMode } from './tools';
-import { onSelect } from './selection';
+import { getSelectionKind, onSelect } from './selection';
 
 let openPanelId: string | null = null;
 /** 조명 설정 패널: 조명을 고를 때마다 트레이 맨 위에서 펼쳐진다 */
 let lightSettingsOpen = false;
 const AUTO_OPEN_3D_KEY = 'lightingAid.venue3dNoAutoOpen';
+const AUTO_OPEN_PROPS_KEY = 'lightingAid.propsNoAutoOpen';
 let sceneDrawerOpen = false;
 let view3DOn = false;
 
@@ -30,6 +31,8 @@ const renderPanels = () => {
   document.querySelectorAll<HTMLElement>('[data-tray]').forEach(button => {
     button.setAttribute('aria-expanded', String(button.dataset.tray === openPanelId));
   });
+  // 무언가 골라 두었으면 패널이 닫혀 있어도 "선택한 객체 속성" 아이콘에 색을 입힌다
+  document.querySelector('[data-tray="props"]')?.classList.toggle('has-selection', getSelectionKind() !== null);
 };
 
 /** 트레이 패널을 연다. 패널이 겹치지 않도록 조명 설정은 접는다 */
@@ -69,16 +72,28 @@ const initTray = () => {
   // 고르는 동작에 따라 알맞은 패널을 연다: 조명 → 조명 설정, 세트·사람 모형 → 선택한 객체 속성
   onSelect(kind => {
     if (kind === 'fixture') openLightSettings();
-    else if (kind === 'set' || kind === 'actor') openPanel('props');
-    else { lightSettingsOpen = false; renderPanels(); }
+    else if ((kind === 'set' || kind === 'actor') && !readNoAutoOpen(AUTO_OPEN_PROPS_KEY)) openPanel('props');
+    else { if (!kind) lightSettingsOpen = false; renderPanels(); }
   });
+  bindNoAutoOpen('props-no-auto', AUTO_OPEN_PROPS_KEY);
   // 선택한 조명이 지워지거나 씬이 바뀌면 조명 설정을 숨긴다
   subscribe(renderPanels);
   renderPanels();
 };
 
-const readNoAutoOpen3D = () => {
-  try { return localStorage.getItem(AUTO_OPEN_3D_KEY) === '1'; } catch { return false; }
+const readNoAutoOpen = (key: string) => {
+  try { return localStorage.getItem(key) === '1'; } catch { return false; }
+};
+const readNoAutoOpen3D = () => readNoAutoOpen(AUTO_OPEN_3D_KEY);
+
+/** "자동으로 열지 않기" 체크박스를 localStorage 값과 묶는다 */
+const bindNoAutoOpen = (inputId: string, key: string) => {
+  const input = $<HTMLInputElement>(inputId);
+  if (!input) return;
+  input.checked = readNoAutoOpen(key);
+  input.addEventListener('change', () => {
+    try { localStorage.setItem(key, input.checked ? '1' : '0'); } catch { /* 저장소를 못 쓰면 이번 세션만 */ }
+  });
 };
 
 /* ---------- 파일 알약 ---------- */
@@ -161,13 +176,7 @@ export const setViewMode = async (mode: '2d' | '3d') => {
 };
 
 const initVenue3DPanel = () => {
-  const noAuto = $<HTMLInputElement>('venue3d-no-auto');
-  if (noAuto) {
-    noAuto.checked = readNoAutoOpen3D();
-    noAuto.addEventListener('change', () => {
-      try { localStorage.setItem(AUTO_OPEN_3D_KEY, noAuto.checked ? '1' : '0'); } catch { /* 저장소를 못 쓰면 이번 세션만 */ }
-    });
-  }
+  bindNoAutoOpen('venue3d-no-auto', AUTO_OPEN_3D_KEY);
   document.querySelectorAll<HTMLInputElement>('[data-venue3d]').forEach(input => {
     input.addEventListener('change', async () => {
       const { setVenueLayer3D } = await import('../render/view3d');

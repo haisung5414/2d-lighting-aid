@@ -111,9 +111,8 @@ export const renderSceneList = () => {
 (window as any).selectCue = (idx: number) => {
   setState(state => {
     state.active_cue_index = idx;
-    const currentCue = state.cues[idx];
-    state.selected_fixture_id = (currentCue && currentCue.fixtures.length > 0) ? currentCue.fixtures[0].id : null;
-    state.selected_fixture_ids = state.selected_fixture_id ? [state.selected_fixture_id] : [];
+    state.selected_fixture_id = null; // 씬을 바꾸면 선택을 비운다
+    state.selected_fixture_ids = [];
   });
 };
 
@@ -146,8 +145,8 @@ export const renderSceneList = () => {
     
     state.cues.splice(idx + 1, 0, newCue);
     state.active_cue_index = idx + 1;
-    state.selected_fixture_id = newCue.fixtures[0]?.id ?? null;
-    state.selected_fixture_ids = state.selected_fixture_id ? [state.selected_fixture_id] : [];
+    state.selected_fixture_id = null;
+    state.selected_fixture_ids = [];
   });
 };
 

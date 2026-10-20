@@ -1,6 +1,6 @@
 // src/ui/sets.ts
 // 세트(무대 위 덩어리) 데이터 조작. 만들기는 왼쪽 도구(tools.ts)가 하고,
-// 화면은 properties.ts(선택한 객체 속성)와 stageList.ts(무대 위 목록)가 그린다.
+// 화면은 properties.ts(선택한 객체 속성)와 stageList.ts(객체 전체 목록)가 그린다.
 
 import { commitHistory, setState } from '../state/store';
 import type { SetPiece } from '../types';

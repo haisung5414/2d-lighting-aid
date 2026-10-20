@@ -136,6 +136,16 @@
         <div class="panel-body" id="light-settings-body"></div>
       </section>
 
+      <div class="grp">선택한 것</div>
+      <div class="tray-entry">
+        <button type="button" class="trayitem" data-tray="props" aria-expanded="false"><span class="lbl">선택한 객체 속성</span><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5h.01"/></svg></span></button>
+        <section class="float panel" data-panel="props" hidden>
+          <div class="panel-body"><div id="props-body"></div>
+            <label class="toggle-row toggle-quiet"><input type="checkbox" id="props-no-auto"> 객체를 누를 때 자동으로 열지 않기</label></div>
+        </section>
+      </div>
+
+
       <div class="grp">작업 전체</div>
       <div class="tray-entry">
         <button type="button" class="trayitem" data-tray="display" aria-expanded="false"><span class="lbl">빛 범위 표시</span><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></span></button>
@@ -204,16 +214,8 @@
           </div>
         </section>
       </div>
-
-      <div class="grp">선택한 것</div>
       <div class="tray-entry">
-        <button type="button" class="trayitem" data-tray="props" aria-expanded="false"><span class="lbl">선택한 객체 속성</span><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5h.01"/></svg></span></button>
-        <section class="float panel" data-panel="props" hidden>
-          <div class="panel-body" id="props-body"></div>
-        </section>
-      </div>
-      <div class="tray-entry">
-        <button type="button" class="trayitem" data-tray="list" aria-expanded="false"><span class="lbl">무대 위 목록</span><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h12M8 12h12M8 18h12"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/></svg></span></button>
+        <button type="button" class="trayitem" data-tray="list" aria-expanded="false"><span class="lbl">객체 전체 목록</span><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h12M8 12h12M8 18h12"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/></svg></span></button>
         <section class="float panel" data-panel="list" hidden>
           <div class="panel-body" id="list-body"></div>
         </section>

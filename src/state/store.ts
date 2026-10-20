@@ -61,8 +61,8 @@ const createInitialState = (venue: VenuePreset): AppState => {
       }
     ],
     active_cue_index: 0,
-    selected_fixture_id: "fixture_1",
-    selected_fixture_ids: ["fixture_1"],
+    selected_fixture_id: null, // 단일 선택: 처음에는 아무것도 고르지 않는다
+    selected_fixture_ids: [],
     interaction: { dragMode: null, draggedIndex: -1 },
     probe: {
       x: fixtureX,
