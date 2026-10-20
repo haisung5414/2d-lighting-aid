@@ -162,9 +162,24 @@ export interface InteractionState {
   draggedIndex: number;
 }
 
+/** 예전 파일의 사람 모형 하나 (불러올 때 actors로 바꾼다) */
 export interface ProbeState {
   x: number;
   y: number;
+  is_visible: boolean;
+  /** 3D 사람 모형의 의상 색 (#rrggbb) */
+  costume_color?: string;
+}
+
+/** 무대 위 사람 모형. 여러 개 둘 수 있고, 얼굴 높이(밝기 계산 지점)는 키에서 정한다 */
+export interface Actor {
+  id: string;
+  label: string;
+  /** 무대 위치 m */
+  x: number;
+  y: number;
+  /** 키 m (얼굴 높이 = 키 - ACTOR_FACE_OFFSET) */
+  height: number;
   is_visible: boolean;
   /** 3D 사람 모형의 의상 색 (#rrggbb) */
   costume_color?: string;
@@ -178,6 +193,9 @@ export interface AppState {
   selected_fixture_id: string | null;
   selected_fixture_ids: string[];
   selected_set_id?: string | null;
+  selected_actor_id?: string | null;
   interaction: InteractionState;
-  probe: ProbeState;
+  actors: Actor[];
+  /** 예전 파일 형식. 불러오면 actors로 옮기고 지운다 */
+  probe?: ProbeState;
 }

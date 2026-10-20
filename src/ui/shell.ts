@@ -9,13 +9,15 @@ import { getState, onEdit, subscribe, undo, redo } from '../state/store';
 import { saveProject } from './manager';
 import { getViewZoom, onViewChange, resetCanvasZoom, zoomCanvas } from '../render/canvas';
 import { initTools, setToolsViewMode } from './tools';
-import { getSelectionKind, onSelect } from './selection';
+import { getSelectionKind, onOpenRequest, onSelect } from './selection';
+import { deleteFixture } from './fixture';
 
 let openPanelId: string | null = null;
 /** 조명 설정 패널: 조명을 고를 때마다 트레이 맨 위에서 펼쳐진다 */
 let lightSettingsOpen = false;
 const AUTO_OPEN_3D_KEY = 'lightingAid.venue3dNoAutoOpen';
 const AUTO_OPEN_PROPS_KEY = 'lightingAid.propsNoAutoOpen';
+const AUTO_OPEN_LIGHT_KEY = 'lightingAid.lightSettingsNoAutoOpen';
 let sceneDrawerOpen = false;
 let view3DOn = false;
 
@@ -71,12 +73,23 @@ const initTray = () => {
     renderPanels();
   });
   // 고르는 동작에 따라 알맞은 패널을 연다: 조명 → 조명 설정, 세트·사람 모형 → 선택한 객체 속성
+  // 각 패널의 "자동으로 열지 않기"를 켜면 고르기만 하고, 오른쪽 아이콘 색으로만 알린다
   onSelect(kind => {
-    if (kind === 'fixture') openLightSettings();
+    if (kind === 'fixture' && !readNoAutoOpen(AUTO_OPEN_LIGHT_KEY)) openLightSettings();
     else if ((kind === 'set' || kind === 'actor') && !readNoAutoOpen(AUTO_OPEN_PROPS_KEY)) openPanel('props');
-    else { if (!kind) lightSettingsOpen = false; renderPanels(); }
+    else { if (kind !== 'fixture') lightSettingsOpen = false; renderPanels(); }
+  });
+  // 두 번 누르면 설정과 상관없이 연다
+  onOpenRequest(kind => {
+    if (kind === 'fixture') openLightSettings();
+    else openPanel('props');
+  });
+  $('light-settings-delete')?.addEventListener('click', () => {
+    const id = getState().selected_fixture_id;
+    if (id) deleteFixture(id);
   });
   bindNoAutoOpen('props-no-auto', AUTO_OPEN_PROPS_KEY);
+  bindNoAutoOpen('light-settings-no-auto', AUTO_OPEN_LIGHT_KEY);
   // 선택한 조명이 지워지거나 씬이 바뀌면 조명 설정을 숨긴다
   subscribe(renderPanels);
   renderPanels();

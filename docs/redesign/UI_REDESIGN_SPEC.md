@@ -31,7 +31,7 @@ Positions are from the mockup CSS (px, relative to the editor area).
 | File pill | top-left, `top:10 left:10` | menu ☰, file name, undo, redo, save state |
 | View switch | top-center, `top:10` | segmented `2D 평면` / `3D 보기` |
 | Account | top-right, `top:10 right:10` | `로그인`, `공유` — disabled placeholders (future cloud features) |
-| Tool rail | left, `top:58 left:10 width:46` | 8 tools (§3) |
+| Tool rail | left, `top:58 left:10 width:46` | 9 tools (§3; 사람 모형 놓기 added 2026-10-21) |
 | Panel tray | right, `top:58 right:10` | icon + label buttons in two groups (§5) |
 | Panel column | `top:58 right:196 width:300 bottom:64` | open floating panels, stacked vertically |
 | Scene drawer | bottom, `left:70 right:510 bottom:10` | collapsed bar; expands upward (§6) |
@@ -42,6 +42,8 @@ The old three-column layout (left sidebar, header, right sidebar) is removed ent
 The 2D plan must fit inside the area not covered by chrome: use insets of about `left 70, right 200, top 56, bottom 64` when computing the fit scale.
 
 ## 3. Tools (left rail)
+
+Added after Phase 6 review: a 9th tool `사람 모형 놓기` (key `A`, after a separator) places an actor where you click; any number of actors may stand on stage.
 
 Exactly one tool is active. Order and grouping (separators between groups):
 
@@ -85,6 +87,8 @@ Select-tool interactions in 2D:
 
 In 3D: click fixture → select + 조명 설정; drag actor → move; drag empty → orbit; wheel → zoom.
 
+Double-click (2D, 3D, or a row in 객체 전체 목록) opens the selected object's panel — 조명 설정 for a fixture, 선택한 객체 속성 otherwise — even when that panel's auto-open is turned off.
+
 The actor always shows a small label on the 2D plan: `얼굴 642 lux` (live face illuminance from the probe calculation).
 
 ## 5. Right panels
@@ -107,6 +111,8 @@ Order changed 2026-10-21 (user review of Phase 3): 선택한 것 comes first, an
 Removed panels (do not build): 젤 견본, 조명 기종, 밝기 측정.
 
 ### 5.2 조명 설정 (auto drop-down panel)
+
+Header: title, a red `조명 삭제` button (undoable), close. Bottom: checkbox `조명을 누를 때 자동으로 열지 않기` (`localStorage` key `lightingAid.lightSettingsNoAutoOpen`); when checked, selecting a fixture only tints the 선택한 객체 속성 tray icon, and 조명 설정 opens by double-click or the `조명 설정 열기` button in 선택한 객체 속성. 선택한 객체 속성 for sets and actors also ends with a red delete button.
 
 Not in the tray. It slides down at the top of the panel column **every time a fixture is selected** (click on stage, click in the list, or right after placing). It has a close button; it reappears on the next fixture selection. Animate the slide only when it newly appears, not on every re-render.
 
@@ -174,6 +180,9 @@ VCB details (implemented in Phase 6): the field label reads `거리` after a mov
 - 2D/3D switch replaces the old `3D 보기` header button.
 
 ## 9. Data model changes
+
+- `AppState.actors: Actor[]` replaces the single `probe` (old files: `probe` becomes one actor named 배우1 whose 키 keeps the old face height; `probe` is then removed). `Actor = { id, label, x, y, height (키, m), is_visible, costume_color? }`; face height for brightness = 키 − 0.12 m. New actors default to 키 1.75 m. `selected_actor_id` joins the single selection.
+- `stage_config.actor_height` is now only the face height used by the 2D "배우 얼굴 높이에 닿는 빛" drawing; its input moved from 공연장 정보 to 빛 범위 표시. It is independent of every actor's 키.
 
 - `selected_fixture_ids` is no longer used (keep reading old files; ignore the field).
 - `SetPiece` gains `kind?: 'set' | 'wall' | 'deck' | 'apple'` (default `'set'`) — informational only.

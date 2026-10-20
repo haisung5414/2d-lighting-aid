@@ -133,8 +133,10 @@
     <div class="tray" id="tray">
       <!-- 조명 설정: 조명을 고를 때마다 맨 위에서 펼쳐진다 -->
       <section class="float panel light-settings" id="light-settings" aria-label="조명 설정" hidden>
-        <header><h2 id="light-settings-title">조명 설정</h2><button type="button" class="ibtn" id="light-settings-close" aria-label="닫기">✕</button></header>
-        <div class="panel-body" id="light-settings-body"></div>
+        <header><h2 id="light-settings-title">조명 설정</h2>
+          <div class="hdr-actions"><button type="button" class="del-btn small" id="light-settings-delete" title="이 조명을 지웁니다 (실행 취소로 되돌릴 수 있음)">조명 삭제</button><button type="button" class="ibtn" id="light-settings-close" aria-label="닫기">✕</button></div></header>
+        <div class="panel-body"><div id="light-settings-body"></div>
+          <label class="toggle-row toggle-quiet"><input type="checkbox" id="light-settings-no-auto"> 조명을 누를 때 자동으로 열지 않기</label></div>
       </section>
 
       <div class="grp">선택한 것</div>
@@ -161,6 +163,7 @@
           <div class="panel-body">
             <label class="toggle-row"><input type="checkbox" id="tg-floor"> 바닥에 닿는 빛 (가운데일수록 진하게)</label>
             <label class="toggle-row"><input type="checkbox" id="tg-face"> 배우 얼굴 높이에 닿는 빛</label>
+            <label class="inline-num">표시할 얼굴 높이 <input type="number" id="actor-h" value="1.67" step="0.05" min="0.3" max="3"> m</label>
             <div class="sub-row">
               <span class="sub">각도선</span>
               <span class="info" tabindex="0" aria-describedby="beam-field-tip">
@@ -211,7 +214,6 @@
           <div class="panel-body venue-fields">
             <label>무대 폭 (m) <input type="number" id="stage-w" class="top-input" value="12" step="0.1"></label>
             <label>무대 깊이 (m) <input type="number" id="stage-d" class="top-input" value="22.7" step="0.1"></label>
-            <label>배우 얼굴 높이 (m) <input type="number" id="actor-h" class="top-input" value="1.67" step="0.1"></label>
             <label>기본 조명 높이 (m) <input type="number" id="default-z" class="top-input" value="5.74" step="0.1"></label>
             <label>램프 규격
               <select id="venue-lamp">

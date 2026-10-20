@@ -1,6 +1,6 @@
 // src/engine/geometry.ts
 
-import type { Cue, Fixture, LensDataMap, LensSpec, ParDataMap, Position2D, ProbeState, StageConfig, ZoomRangeType } from '../types';
+import type { Cue, Fixture, LensDataMap, LensSpec, ParDataMap, Position2D, StageConfig, ZoomRangeType } from '../types';
 import { DEFAULT_LAMP, FACE_NORMAL, HORIZONTAL_NORMAL, PAR_LAMPS, getPhotometry, illuminanceAt } from './photometrics';
 
 // 2D 화면용 반각 값. 실제 값은 photometrics.ts의 사양서 데이터에서 온다.
@@ -120,9 +120,10 @@ export class GeometryEngine {
     return inside;
   }
 
-  static calculateProbeBrightness(cue: Cue, stageConfig: StageConfig, probe: ProbeState): ProbeResult {
+  /** 사람 모형 자리(probe)의 얼굴 높이 faceHeight(m)에서 객석 쪽 얼굴 밝기와 수평면 밝기 */
+  static calculateProbeBrightness(cue: Cue, stageConfig: StageConfig, probe: Position2D, faceHeight: number): ProbeResult {
     const lamp = stageConfig.lamp ?? DEFAULT_LAMP;
-    const point = { x: probe.x, y: probe.y, z: stageConfig.actor_height };
+    const point = { x: probe.x, y: probe.y, z: faceHeight };
 
     const contributions = cue.fixtures
       .filter(fixture => fixture.is_visible !== false)

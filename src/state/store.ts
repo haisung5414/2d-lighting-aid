@@ -21,6 +21,21 @@ const mapReferenceLayers = (venue: VenuePreset): ReferenceLayer[] => (
 
 /** 3D 사람 모형의 기본 의상 색: 젤 색이 잘 보이는 중간 회색 */
 export const DEFAULT_COSTUME_COLOR = '#8f8f8f';
+/** 얼굴(밝기를 재는 지점)은 정수리보다 이만큼 아래에 있다 (m) */
+export const ACTOR_FACE_OFFSET = 0.12;
+/** 새 사람 모형의 기본 키 (m) */
+export const DEFAULT_ACTOR_HEIGHT = 1.75;
+export const actorFaceHeight = (actor: { height: number }) => Math.max(0.1, actor.height - ACTOR_FACE_OFFSET);
+
+const newActorId = () => `actor_${Math.random().toString(36).substring(2, 11)}`;
+
+/** 새 사람 모형. 이름은 배우1, 배우2 …에서 비어 있는 다음 번호 */
+export const createActor = (x: number, y: number, existing: { label: string }[]) => {
+  let n = 1;
+  const names = new Set(existing.map(a => a.label));
+  while (names.has(`배우${n}`)) n++;
+  return { id: newActorId(), label: `배우${n}`, x, y, height: DEFAULT_ACTOR_HEIGHT, is_visible: true, costume_color: DEFAULT_COSTUME_COLOR };
+};
 
 const createInitialState = (venue: VenuePreset): AppState => {
   const fixtureX = venue.stage.width / 2;
@@ -64,11 +79,8 @@ const createInitialState = (venue: VenuePreset): AppState => {
     selected_fixture_id: null, // 단일 선택: 처음에는 아무것도 고르지 않는다
     selected_fixture_ids: [],
     interaction: { dragMode: null, draggedIndex: -1 },
-    probe: {
-      x: fixtureX,
-      y: venue.stage.depth / 2,
-      is_visible: true
-    }
+    selected_actor_id: null,
+    actors: [createActor(fixtureX, venue.stage.depth / 2, [])]
   };
 };
 
@@ -145,13 +157,21 @@ const normalizeFixtureSelection = () => {
     }
   });
 
-  if (!state.probe) {
-    state.probe = {
-      x: state.stage_config.width / 2,
-      y: state.stage_config.depth / 2,
-      is_visible: true
-    };
+  // 예전 파일: 사람 모형 하나(probe)를 actors로 옮긴다. 얼굴 높이가 그대로 되도록 키를 정한다
+  if (!Array.isArray(state.actors)) {
+    const old = state.probe;
+    state.actors = old ? [{
+      id: newActorId(),
+      label: '배우1',
+      x: old.x,
+      y: old.y,
+      height: Number(((state.stage_config.actor_height ?? DEFAULT_ACTOR_HEIGHT - ACTOR_FACE_OFFSET) + ACTOR_FACE_OFFSET).toFixed(2)),
+      is_visible: old.is_visible !== false,
+      costume_color: old.costume_color ?? DEFAULT_COSTUME_COLOR
+    }] : [];
   }
+  delete state.probe;
+  if (state.selected_actor_id && !state.actors.some(a => a.id === state.selected_actor_id)) state.selected_actor_id = null;
 
   state.cues.forEach(item => {
     item.fixtures.forEach((fixture: any) => {

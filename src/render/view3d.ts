@@ -11,7 +11,7 @@ import { FixtureDataTexture, WORK_LIGHT_LUX, createStageLightMaterial } from './
 import { lightColorOf } from '../engine/gels';
 import { OCCLUDER_LAYER, buildCatwalk, buildSeating, buildVenueModel, venueModelFor } from './venueModel';
 import { pickShadowFixtures, renderFixtureShadows } from './fixtureShadows';
-import { selectActor, selectFixture } from '../ui/selection';
+import { openSelected, selectActor, selectFixture } from '../ui/selection';
 import type { Fixture, LampKey, Position2D, SetPiece, StageConfig } from '../types';
 
 type Vec3 = { x: number; y: number; z: number };
@@ -29,7 +29,9 @@ let dynamicGroup: THREE.Group | null = null;
 let fixtureData: FixtureDataTexture | null = null;
 let isActive = false;
 let lastStageKey = '';
-let actorObject: THREE.Object3D | null = null;
+/** 사람 모형 3D 물체 (userData.actorId로 어느 사람인지 안다) */
+let actorObjects: THREE.Object3D[] = [];
+let draggingActorId: string | null = null;
 let isDraggingActor = false;
 let pendingDrag: { x: number; y: number } | null = null;
 let floorAlbedo: { key: string; texture: THREE.CanvasTexture } | null = null;
@@ -454,12 +456,14 @@ const rebuild = () => {
     if (beam) dynamicGroup!.add(beam);
   });
 
-  // 밝기 측정 지점에 배우 모형을 세운다
-  actorObject = null;
-  if (state.probe?.is_visible) {
-    actorObject = buildActor(state.probe.x, state.probe.y, stage.actor_height, state.probe.costume_color ?? DEFAULT_COSTUME_COLOR, fixtureData);
-    dynamicGroup.add(actorObject);
-  }
+  // 사람 모형마다 자기 키로 세운다
+  actorObjects = [];
+  state.actors.filter(actor => actor.is_visible).forEach(actor => {
+    const object = buildActor(actor.x, actor.y, actor.height, actor.costume_color ?? DEFAULT_COSTUME_COLOR, fixtureData!);
+    object.userData.actorId = actor.id;
+    actorObjects.push(object);
+    dynamicGroup!.add(object);
+  });
 
   // 그림자를 켠 조명의 깊이 맵을 만든다 (씬이 바뀔 때만 다시 그린다)
   dynamicGroup.updateMatrixWorld(true);
@@ -564,17 +568,25 @@ const pointerRay = (event: PointerEvent, element: HTMLElement) => {
   return raycaster;
 };
 
-const hitsActor = (event: PointerEvent, element: HTMLElement) =>
-  Boolean(actorObject && camera && pointerRay(event, element).intersectObject(actorObject, true).length > 0);
+/** 커서 아래 사람 모형의 id (없으면 null) */
+const hitActorId = (event: PointerEvent, element: HTMLElement): string | null => {
+  if (!camera || actorObjects.length === 0) return null;
+  const hit = pointerRay(event, element).intersectObjects(actorObjects, true)[0];
+  let node: THREE.Object3D | null = hit?.object ?? null;
+  while (node && node.userData.actorId === undefined) node = node.parent;
+  return node ? node.userData.actorId as string : null;
+};
 
 const setupActorDrag = (element: HTMLElement) => {
   // OrbitControls보다 먼저 받아야 회전이 시작되지 않는다
   element.addEventListener('pointerdown', event => {
     if (event.button !== 0) return;
     downAt = { x: event.clientX, y: event.clientY };
-    if (!hitsActor(event, element)) return;
+    const actorId = hitActorId(event, element);
+    if (!actorId) return;
     event.stopImmediatePropagation();
-    selectActor();
+    selectActor(actorId);
+    draggingActorId = actorId;
     isDraggingActor = true;
     controls!.enabled = false;
     element.setPointerCapture(event.pointerId);
@@ -584,7 +596,7 @@ const setupActorDrag = (element: HTMLElement) => {
 
   element.addEventListener('pointermove', event => {
     if (!isDraggingActor) {
-      element.style.cursor = hitsActor(event, element) ? 'move' : 'grab';
+      element.style.cursor = hitActorId(event, element) ? 'move' : 'grab';
       return;
     }
     const hit = pointerRay(event, element).ray.intersectPlane(FLOOR_PLANE, new THREE.Vector3());
@@ -600,7 +612,11 @@ const setupActorDrag = (element: HTMLElement) => {
       requestAnimationFrame(() => {
         const next = pendingDrag;
         pendingDrag = null;
-        if (next) setState(s => { s.probe.x = next.x; s.probe.y = next.y; });
+        const actor = next && getState().actors.find(a => a.id === draggingActorId);
+        if (next && actor) setState(s => {
+          const target = s.actors.find(a => a.id === actor.id);
+          if (target) { target.x = next.x; target.y = next.y; }
+        });
       });
     }
   });
@@ -627,6 +643,9 @@ const setupActorDrag = (element: HTMLElement) => {
       if (node) { selectFixture(node.userData.fixtureId as string); return; }
     }
   });
+
+  // 더블클릭: 고른 조명이나 사람 모형의 패널을 연다
+  element.addEventListener('dblclick', () => openSelected());
 };
 
 let downAt: { x: number; y: number } | null = null;

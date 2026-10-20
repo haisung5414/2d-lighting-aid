@@ -120,6 +120,13 @@
 @keyframes drop-in { from { transform: translateY(-12px); opacity: 0; } to { transform: none; opacity: 1; } }
 .toggle-quiet { margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--line); color: var(--ink-3); font-size: 12px; }
 .venue-fields { display: grid; gap: 10px; }
+.hdr-actions { display: flex; align-items: center; gap: 6px; }
+/* 지우기 버튼: 눈에 잘 띄게 빨간색 */
+.del-btn { border: 1px solid #c0392b; background: #c0392b; color: #fff; border-radius: 5px; padding: 6px 12px; font-size: 12px; font-weight: 600; cursor: pointer; width: 100%; margin-top: 12px; }
+.del-btn:hover { background: #a93226; border-color: #a93226; }
+.del-btn.small { width: auto; margin: 0; padding: 4px 10px; }
+.inline-num { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink-2); margin: 2px 0 4px 24px; }
+.inline-num input { width: 64px; }
 .venue-fields label { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 13px; color: var(--ink-2); }
 .venue-fields input { width: 96px; }
 .fixture-add-controls { display: flex; gap: 6px; margin-bottom: 10px; }

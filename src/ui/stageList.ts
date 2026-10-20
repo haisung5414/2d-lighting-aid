@@ -8,7 +8,8 @@ import { gelDisplayHex } from '../engine/gels';
 import { dimmerLevel } from '../engine/photometrics';
 import { FIXTURE_TYPE_LABELS, deleteFixture, toggleFixtureVisible } from './fixture';
 import { deleteSetPiece } from './sets';
-import { getSelectionKind, selectActor, selectFixture, selectSet } from './selection';
+import { getSelectionKind, openSelected, selectActor, selectFixture, selectSet } from './selection';
+import { deleteActor } from './properties';
 
 const esc = (text: string) => text.replace(/&/g, '&amp;').replace(/</g, '&lt;');
 
@@ -51,27 +52,39 @@ export const renderStageList = () => {
     </div>`;
   }).join('');
 
+  const actorRows = state.actors.map(a => {
+    const selected = kind === 'actor' && state.selected_actor_id === a.id;
+    return `<div class="sl-row ${selected ? 'sel' : ''} ${a.is_visible ? '' : 'hidden-item'}">
+      <button type="button" class="sl-main" data-actor="${a.id}"><span class="gel-dot actor"></span><span class="sl-name">${esc(a.label)}</span><small>키 ${Math.round(a.height * 1000)} mm</small></button>
+      <button type="button" class="sl-act" data-actor-vis="${a.id}" title="${a.is_visible ? '숨기기' : '보이기'}" aria-label="${a.is_visible ? '숨기기' : '보이기'}">${a.is_visible ? EYE : EYE_OFF}</button>
+      <button type="button" class="sl-act danger" data-actor-del="${a.id}" title="지우기" aria-label="지우기">${TRASH}</button>
+    </div>`;
+  }).join('');
+
   body.innerHTML = `
     <div class="sl-group"><span>조명</span><small>${fixtures.length}</small></div>
     ${fixtureRows || '<p class="sl-empty">왼쪽 도구로 조명을 놓으세요.</p>'}
     <div class="sl-group"><span>세트</span><small>${sets.length}</small></div>
     ${setRows || '<p class="sl-empty">왼쪽 도구로 세트·벽·덧마루를 놓으세요.</p>'}
-    <div class="sl-group"><span>사람 모형</span></div>
-    <div class="sl-row ${kind === 'actor' ? 'sel' : ''} ${state.probe.is_visible ? '' : 'hidden-item'}">
-      <button type="button" class="sl-main" data-actor><span class="gel-dot actor"></span><span class="sl-name">배우 자리</span><small>X ${state.probe.x.toFixed(1)} · Y ${state.probe.y.toFixed(1)}</small></button>
-      <button type="button" class="sl-act" data-actor-vis title="${state.probe.is_visible ? '숨기기' : '보이기'}" aria-label="${state.probe.is_visible ? '숨기기' : '보이기'}">${state.probe.is_visible ? EYE : EYE_OFF}</button>
-    </div>`;
+    <div class="sl-group"><span>사람 모형</span><small>${state.actors.length}</small></div>
+    ${actorRows || '<p class="sl-empty">왼쪽 "사람 모형 놓기" 도구로 배우를 세우세요.</p>'}`;
 
   body.querySelectorAll<HTMLElement>('[data-fixture]').forEach(el => el.addEventListener('click', () => selectFixture(el.dataset.fixture!)));
   body.querySelectorAll<HTMLElement>('[data-fixture-vis]').forEach(el => el.addEventListener('click', () => toggleFixtureVisible(el.dataset.fixtureVis!)));
   body.querySelectorAll<HTMLElement>('[data-fixture-del]').forEach(el => el.addEventListener('click', () => deleteFixture(el.dataset.fixtureDel!)));
   body.querySelectorAll<HTMLElement>('[data-set]').forEach(el => el.addEventListener('click', () => selectSet(el.dataset.set!)));
   body.querySelectorAll<HTMLElement>('[data-set-del]').forEach(el => el.addEventListener('click', () => deleteSetPiece(el.dataset.setDel!)));
-  body.querySelector('[data-actor]')?.addEventListener('click', () => selectActor());
-  body.querySelector('[data-actor-vis]')?.addEventListener('click', () => {
+  body.querySelectorAll<HTMLElement>('[data-actor]').forEach(el => el.addEventListener('click', () => selectActor(el.dataset.actor!)));
+  body.querySelectorAll<HTMLElement>('[data-actor-vis]').forEach(el => el.addEventListener('click', () => {
     commitHistory();
-    setState(s => { s.probe.is_visible = !s.probe.is_visible; });
-  });
+    setState(s => {
+      const actor = s.actors.find(a => a.id === el.dataset.actorVis);
+      if (actor) actor.is_visible = !actor.is_visible;
+    });
+  }));
+  body.querySelectorAll<HTMLElement>('[data-actor-del]').forEach(el => el.addEventListener('click', () => deleteActor(el.dataset.actorDel!)));
+  // 줄을 두 번 누르면 그 대상의 패널을 연다
+  body.querySelectorAll<HTMLElement>('.sl-main').forEach(el => el.addEventListener('dblclick', () => openSelected()));
 };
 
 export const initStageList = () => {

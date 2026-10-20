@@ -31,7 +31,10 @@ export const parseLength = (text: string): number | null => {
 
 const objectPosition = (kind: MovableKind, id: string): Position2D | null => {
   const state = getState();
-  if (kind === 'actor') return { x: state.probe.x, y: state.probe.y };
+  if (kind === 'actor') {
+    const actor = state.actors.find(a => a.id === id);
+    return actor ? { x: actor.x, y: actor.y } : null;
+  }
   if (kind === 'set') {
     const piece = (state.stage_config.set_pieces ?? []).find(p => p.id === id);
     return piece ? { x: piece.x, y: piece.y } : null;
@@ -118,8 +121,11 @@ const applyVcb = (text: string): boolean => {
   setState(s => {
     s.interaction.dragMode = null; // 끄는 중이었다면 여기서 끝낸다
     if (kind === 'actor') {
-      s.probe.x = Math.min(s.stage_config.width, Math.max(0, target.x));
-      s.probe.y = Math.min(s.stage_config.depth, Math.max(0, target.y));
+      const actor = s.actors.find(a => a.id === id);
+      if (actor) {
+        actor.x = Math.min(s.stage_config.width, Math.max(0, target.x));
+        actor.y = Math.min(s.stage_config.depth, Math.max(0, target.y));
+      }
     } else if (kind === 'set') {
       const piece = (s.stage_config.set_pieces ?? []).find(p => p.id === id);
       if (piece) { piece.x = Number(target.x.toFixed(3)); piece.y = Number(target.y.toFixed(3)); }

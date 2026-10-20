@@ -1,13 +1,13 @@
 // src/render/canvas.ts
 
-import { getState, setState, getCurrentCue, subscribe, commitHistory } from '../state/store';
+import { getState, setState, getCurrentCue, subscribe, commitHistory, actorFaceHeight } from '../state/store';
 import { GeometryEngine } from '../engine/geometry';
 import { gelDisplayHex } from '../engine/gels';
 import { dimmerOutput, getPhotometry } from '../engine/photometrics';
 import { reportMove, reportPointer, type MovableKind } from '../ui/statusbar';
 import { getSetDraft, getTool, onToolRedraw, toolPointerDown, toolPointerMove, toolPointerUp } from '../ui/tools';
-import { clearSelection, isActorSelected, selectActor, selectFixture, selectSet } from '../ui/selection';
-import type { Position2D, Cue, Fixture, UIToggles, StageConfig, ProbeState, SetPiece } from '../types';
+import { clearSelection, openSelected, selectActor, selectFixture, selectSet } from '../ui/selection';
+import type { Actor, Position2D, Cue, Fixture, UIToggles, StageConfig, SetPiece } from '../types';
 
 let canvas: HTMLCanvasElement | null = null;
 let ctx: CanvasRenderingContext2D | null = null;
@@ -298,7 +298,8 @@ export const drawCueToContext = (
   stageConfig: StageConfig,
   selectedFixtureIds: string[] = [],
   activeFixtureId: string | null = null,
-  probe: ProbeState | null = null
+  actors: Actor[] | null = null,
+  selectedActorId: string | null = null
 ) => {
   const actorH = stageConfig.actor_height;
 
@@ -438,11 +439,12 @@ export const drawCueToContext = (
     targetCtx.restore();
   });
 
-  if (probe?.is_visible) {
+  (actors ?? []).forEach(actor => {
+    if (!actor.is_visible) return;
     targetCtx.save();
     targetCtx.translate(currentOffsetX, currentOffsetY);
-    const px = toPx(probe.x, currentScale);
-    const py = toPx(probe.y, currentScale);
+    const px = toPx(actor.x, currentScale);
+    const py = toPx(actor.y, currentScale);
 
     targetCtx.fillStyle = "rgba(45, 122, 82, 0.18)";
     targetCtx.strokeStyle = "#2d7a52";
@@ -459,8 +461,8 @@ export const drawCueToContext = (
     targetCtx.lineTo(px, py + 13);
     targetCtx.stroke();
 
-    // 고른 상태면 바깥 고리를 더 그린다
-    if (isActorSelected()) {
+    // 고른 사람 모형은 바깥 고리를 더 그린다
+    if (actor.id === selectedActorId) {
       targetCtx.strokeStyle = "#ffd166";
       targetCtx.lineWidth = 2;
       targetCtx.beginPath();
@@ -468,9 +470,9 @@ export const drawCueToContext = (
       targetCtx.stroke();
     }
 
-    // 배우 얼굴에 닿는 밝기를 늘 옆에 보여 준다 (사양 §4)
-    const brightness = GeometryEngine.calculateProbeBrightness(cue, stageConfig, probe);
-    const text = `얼굴 ${Math.round(brightness.faceLux).toLocaleString('ko-KR')} lux`;
+    // 배우 얼굴에 닿는 밝기를 늘 옆에 보여 준다 (사양 §4). 얼굴 높이는 이 사람의 키에서 정한다
+    const brightness = GeometryEngine.calculateProbeBrightness(cue, stageConfig, actor, actorFaceHeight(actor));
+    const text = `${actor.label} · 얼굴 ${Math.round(brightness.faceLux).toLocaleString('ko-KR')} lux`;
     targetCtx.font = '600 12px "IBM Plex Sans KR", "Segoe UI", sans-serif';
     const w = targetCtx.measureText(text).width + 14;
     targetCtx.fillStyle = "rgba(255, 255, 255, 0.95)";
@@ -483,7 +485,7 @@ export const drawCueToContext = (
     targetCtx.fillStyle = "#1f5c3d";
     targetCtx.fillText(text, px + 23, py + 4);
     targetCtx.restore();
-  }
+  });
 };
 
 // [추가됨] 썸네일 생성 함수
@@ -622,7 +624,7 @@ export const renderCanvas = () => {
   if (!currentCue) return;
 
   // 분리된 그리기 함수 호출
-  drawCueToContext(ctx, currentCue, scale, offsetX, offsetY, state.ui_toggles, state.stage_config, state.selected_fixture_ids, state.selected_fixture_id, state.probe);
+  drawCueToContext(ctx, currentCue, scale, offsetX, offsetY, state.ui_toggles, state.stage_config, state.selected_fixture_ids, state.selected_fixture_id, state.actors, state.selected_actor_id ?? null);
 };
 
 export const initCanvas = (canvasEl: HTMLCanvasElement, wrapperEl: HTMLElement) => {
@@ -705,10 +707,12 @@ export const initCanvas = (canvasEl: HTMLCanvasElement, wrapperEl: HTMLElement) 
       }
     }
 
-    // 3) 사람 모형
-    if (state.probe?.is_visible && Math.hypot(worldPos.x - state.probe.x, worldPos.y - state.probe.y) < 0.6) {
-      selectActor();
-      moveStart = { kind: 'actor', id: 'actor', from: { x: state.probe.x, y: state.probe.y } };
+    // 3) 사람 모형 (위에 그려진 것부터)
+    for (let a = state.actors.length - 1; a >= 0; a--) {
+      const actor = state.actors[a];
+      if (!actor.is_visible || Math.hypot(worldPos.x - actor.x, worldPos.y - actor.y) >= 0.6) continue;
+      selectActor(actor.id);
+      moveStart = { kind: 'actor', id: actor.id, from: { x: actor.x, y: actor.y } };
       startDrag('probe');
       return;
     }
@@ -734,6 +738,10 @@ export const initCanvas = (canvasEl: HTMLCanvasElement, wrapperEl: HTMLElement) 
   });
 
   canvas.addEventListener('mouseleave', () => reportPointer(null));
+  // 더블클릭: 첫 번째 누름으로 고른 것의 패널을 연다 (자동으로 열지 않기 설정과 상관없이)
+  canvas.addEventListener('dblclick', () => {
+    if (getTool() === 'select') openSelected();
+  });
 
   canvas.addEventListener('mousemove', (e: MouseEvent) => {
     {
@@ -776,8 +784,11 @@ export const initCanvas = (canvasEl: HTMLCanvasElement, wrapperEl: HTMLElement) 
 
     setState(s => {
       if (dragMode === 'probe') {
-        s.probe.x = Math.min(s.stage_config.width, Math.max(0, worldPos.x));
-        s.probe.y = Math.min(s.stage_config.depth, Math.max(0, worldPos.y));
+        const actor = s.actors.find(a => a.id === s.selected_actor_id);
+        if (actor) {
+          actor.x = Math.min(s.stage_config.width, Math.max(0, worldPos.x));
+          actor.y = Math.min(s.stage_config.depth, Math.max(0, worldPos.y));
+        }
         return;
       }
 
@@ -836,7 +847,7 @@ export const initCanvas = (canvasEl: HTMLCanvasElement, wrapperEl: HTMLElement) 
 
     if (moveStart && (dragMode === 'position' || dragMode === 'probe' || dragMode === 'set')) {
       const now = getState();
-      const to = moveStart.kind === 'actor' ? { x: now.probe.x, y: now.probe.y }
+      const to = moveStart.kind === 'actor' ? now.actors.find(a => a.id === moveStart!.id)
         : moveStart.kind === 'set' ? (now.stage_config.set_pieces ?? []).find(p => p.id === moveStart!.id)
           : now.cues[now.active_cue_index]?.fixtures.find(f => f.id === moveStart!.id)?.position;
       if (to) reportMove(moveStart.kind, moveStart.id, moveStart.from, { x: to.x, y: to.y });

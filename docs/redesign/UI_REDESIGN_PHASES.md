@@ -125,6 +125,12 @@ Done notes:
 - Save state: store `onEdit` fires on `commitHistory` / undo / redo → `저장 안 됨 · 내 컴퓨터`; saving or loading → `저장됨 · 내 컴퓨터`; new work → `내 컴퓨터`. 작업 공간 바꾸기 only asks for confirmation when there are unsaved changes.
 - Stage size inputs in 공연장 정보 now commit history (they were not undoable before).
 
+Review fixes (user, after Phase 6):
+- 조명 설정: red `조명 삭제` in the header; `조명을 누를 때 자동으로 열지 않기` checkbox (localStorage). 선택한 객체 속성 for a fixture gets `조명 설정 열기`; sets and actors get a red delete button.
+- Double-click opens the selected object's panel (2D canvas, 3D view, 객체 전체 목록 rows) via `selection.openSelected()` / `onOpenRequest`, ignoring the auto-open opt-outs. Selecting anything other than a fixture now collapses 조명 설정.
+- Multiple actors: `AppState.actors` + `selected_actor_id` replace `probe` and the UI-only actor flag; new tool 사람 모형 놓기 (A); each actor has its own 키 (face height = 키 − 120 mm) used for its lux label, properties brightness and 3D figure. Canvas labels read `배우1 · 얼굴 N lux`. Legacy files convert on load.
+- The 2D face-height drawing value (`stage_config.actor_height`) moved to 빛 범위 표시 as `표시할 얼굴 높이` and no longer follows any actor.
+
 ## Phase 7 — Visual polish and cleanup `[ ]`
 
 - Match mockup visuals (icons, spacing, light canvas look for the 2D plan if it reads better), dark theme check.

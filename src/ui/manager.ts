@@ -145,6 +145,9 @@ export const saveProject = (name: string) => {
       const parsed = JSON.parse(e.target?.result as string);
       // 드래그 상태 등 불필요한/오염된 상호작용 상태 초기화
       parsed.interaction = { dragMode: null, draggedIndex: -1 };
+      // 예전 파일(사람 모형 하나 = probe)은 actors가 없다. 지금 작업의 actors가 남지 않게 비워 두면 store가 probe를 옮긴다
+      if (!Array.isArray(parsed.actors)) parsed.actors = undefined;
+      parsed.selected_actor_id = null;
       
       setState(state => {
         const currentReferenceLayers = state.stage_config.reference_layers;

@@ -4,14 +4,14 @@
 // 사양: docs/redesign/UI_REDESIGN_SPEC.md §3
 // 도구 상태는 화면용이라 저장 파일과 실행 취소 기록에 들어가지 않는다.
 
-import { commitHistory, getState, setState } from '../state/store';
+import { commitHistory, createActor, getState, setState } from '../state/store';
 import { VENUES } from '../config/venues';
 import { createFixture, nextFixtureNumber } from './fixture';
-import { selectFixture, selectSet } from './selection';
+import { selectActor, selectFixture, selectSet } from './selection';
 import { reportSetPlaced, resetVcb } from './statusbar';
 import type { Fixture, LensType, Position2D, SetPiece, SetPieceKind } from '../types';
 
-export type ToolId = 'select' | 'ellip' | 'fresnel' | 'par' | SetPieceKind;
+export type ToolId = 'select' | 'ellip' | 'fresnel' | 'par' | SetPieceKind | 'actor';
 
 interface ToolDef {
   id: ToolId;
@@ -41,7 +41,10 @@ const TOOLS: (ToolDef | 'sep')[] = [
   { id: 'deck', name: '덧마루 놓기', key: 'd', keyLabel: 'D', icon: '<path d="M3 11l9-4 9 4-9 4z"/><path d="M3 11v2l9 4 9-4v-2"/>',
     hint: '덧마루 놓기: 무대를 누르면 1800 × 900 × 150 mm 덧마루가 놓입니다.' },
   { id: 'apple', name: '애플박스 놓기', key: 'b', keyLabel: 'B', icon: '<rect x="6" y="8" width="12" height="9" rx="1"/><path d="M9 12h6"/>',
-    hint: '애플박스 놓기: 무대를 누르면 450 × 300 × 150 mm 애플박스가 놓입니다.' }
+    hint: '애플박스 놓기: 무대를 누르면 450 × 300 × 150 mm 애플박스가 놓입니다.' },
+  'sep',
+  { id: 'actor', name: '사람 모형 놓기', key: 'a', keyLabel: 'A', icon: '<circle cx="12" cy="5.5" r="2.5"/><path d="M12 8v7M8 11h8M9.5 21l2.5-6 2.5 6"/>',
+    hint: '사람 모형 놓기: 무대를 누르면 그 자리에 배우가 섭니다. 키는 선택한 객체 속성에서 사람마다 따로 정합니다.' }
 ];
 
 const toolDefs = TOOLS.filter((t): t is ToolDef => t !== 'sep');
@@ -85,7 +88,8 @@ const TOOL_NEXT: Record<ToolId, string> = {
   set: '그린 직후 숫자를 치고 Enter를 누르면 그 값이 세트 높이가 됩니다 (예: 0.9, 900mm). 크기와 각도는 손잡이로 고칩니다.',
   wall: '놓은 뒤에는 선택 도구로 돌아옵니다. 꼭짓점 손잡이로 크기를, 노란 손잡이로 각도를 바꾸고, 바로 숫자를 치면 높이가 바뀝니다.',
   deck: '놓은 뒤에는 선택 도구로 돌아옵니다. 꼭짓점 손잡이로 크기를, 노란 손잡이로 각도를 바꾸고, 바로 숫자를 치면 높이가 바뀝니다.',
-  apple: '놓은 뒤에는 선택 도구로 돌아옵니다. 꼭짓점 손잡이로 크기를, 노란 손잡이로 각도를 바꾸고, 바로 숫자를 치면 높이가 바뀝니다.'
+  apple: '놓은 뒤에는 선택 도구로 돌아옵니다. 꼭짓점 손잡이로 크기를, 노란 손잡이로 각도를 바꾸고, 바로 숫자를 치면 높이가 바뀝니다.',
+  actor: '놓은 뒤에는 선택 도구로 돌아오고, 그 사람의 선택한 객체 속성(키·의상 색·얼굴 밝기)을 볼 수 있습니다. 사람 모형은 여러 명 세울 수 있습니다.'
 };
 
 export interface ToolHelp { name: string; keyLabel: string; hint: string; next: string; view3D: boolean; }
@@ -232,12 +236,27 @@ const placeSet = (kind: SetPieceKind, center: Position2D, size?: { width: number
 };
 
 /** 놓은 뒤에는 선택 도구로 돌아오고, 새 대상을 골라 그 패널을 연다 */
-const finishPlacement = (kind: 'fixture' | 'set', id: string | null) => {
+const finishPlacement = (kind: 'fixture' | 'set' | 'actor', id: string | null) => {
   // 세트를 놓은 직후에는 아래 "수치" 칸에 높이를 칠 수 있다
   if (kind === 'set' && id) reportSetPlaced(id); else resetVcb();
   setTool('select');
   if (!id) return;
-  if (kind === 'fixture') selectFixture(id); else selectSet(id);
+  if (kind === 'fixture') selectFixture(id);
+  else if (kind === 'set') selectSet(id);
+  else selectActor(id);
+};
+
+/** 누른 자리에 사람 모형을 세운다 */
+const placeActor = (point: Position2D): string => {
+  const stage = getState().stage_config;
+  const actor = createActor(
+    Math.min(stage.width, Math.max(0, Number(point.x.toFixed(2)))),
+    Math.min(stage.depth, Math.max(0, Number(point.y.toFixed(2)))),
+    getState().actors
+  );
+  commitHistory();
+  setState(s => { s.actors.push(actor); });
+  return actor.id;
 };
 
 /* ---------- 캔버스에서 부르는 함수 (선택 도구가 아니면 캔버스 마우스 입력을 여기서 처리) ---------- */
@@ -250,6 +269,10 @@ export const toolPointerDown = (world: Position2D): boolean => {
   }
   if (tool === 'wall' || tool === 'deck' || tool === 'apple') {
     finishPlacement('set', placeSet(tool, world));
+    return true;
+  }
+  if (tool === 'actor') {
+    finishPlacement('actor', placeActor(world));
     return true;
   }
   finishPlacement('fixture', placeFixture(world));
