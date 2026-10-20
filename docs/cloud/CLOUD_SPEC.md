@@ -35,7 +35,7 @@ Supabase free plan (check https://supabase.com/pricing before relying on it): 50
 
 Supabase dashboard settings (done by the user, §Phase 0 of the plan):
 - Auth → Providers → Google: enabled with the Google OAuth client ID/secret (the secret lives only in Supabase).
-- Auth → URL configuration: Site URL `https://haisung5414.github.io/2d-lighting-aid/`; Redirect URLs also include `http://localhost:5173/**`.
+- Auth → URL configuration: Site URL `https://haisung5414.github.io/2d-lighting-aid/`; Redirect URLs also include `http://localhost:5173/**` and `http://localhost:5180/**`.
 
 ## 3. Database
 

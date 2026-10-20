@@ -10,6 +10,7 @@ import { initStageList } from './ui/stageList';
 import { initShell } from './ui/shell';
 import { initStatusBar } from './ui/statusbar';
 import { initHelp } from './ui/help';
+import { initCloud } from './cloud';
 import { undo, redo } from './state/store';
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -32,6 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initStatusBar();
     initHelp();
     initShell();
+    initCloud();
     
     console.log("애플리케이션 초기화 완료");
   } else {

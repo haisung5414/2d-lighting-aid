@@ -117,6 +117,9 @@ let fileName: string | null = null;
 /** 마지막으로 저장하거나 불러온 뒤 작업 내용이 바뀌었는가 */
 let dirty = false;
 
+/** 지금 작업의 파일 이름과 저장 안 된 변경 여부 (src/cloud가 로그인으로 페이지를 떠나기 전에 쓴다) */
+export const getFileState = () => ({ name: fileName, dirty });
+
 const renderFileState = () => {
   const label = $('file-name');
   if (label) label.textContent = fileName ?? '이름 없는 작업';
@@ -219,9 +222,11 @@ const initFilePill = () => {
 
   // manager.ts가 저장·불러오기 때, store가 새 작업을 시작할 때 알려 준다 (name이 null이면 새 작업)
   window.addEventListener('lighting:file', (e) => {
-    const name = (e as CustomEvent<{ name: string | null }>).detail?.name ?? null;
+    // dirty: 로그인하러 떠났다 돌아와 작업을 되살릴 때 "저장 안 됨"을 그대로 둔다 (src/cloud/auth.ts)
+    const detail = (e as CustomEvent<{ name: string | null; dirty?: boolean }>).detail;
+    const name = detail?.name ?? null;
     fileName = name ? name.replace(/\.json$/i, '') : null;
-    dirty = false;
+    dirty = detail?.dirty ?? false;
     renderFileState();
   });
   onEdit(() => {

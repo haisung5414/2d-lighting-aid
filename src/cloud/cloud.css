@@ -1,0 +1,37 @@
+/* src/cloud/cloud.css
+ * 계정 칩·메뉴, 로그인 창, 시작 화면의 로그인 줄. 색은 shell.css의 크롬 토큰을 쓴다 (다크 테마도 따라간다) */
+
+.cloud-login-btn { background: var(--chrome-accent); color: #fff; cursor: pointer; font-weight: 600; }
+.cloud-login-btn:hover { filter: brightness(1.08); }
+.cloud-login-btn[hidden] { display: none; }
+
+/* 계정 메뉴가 아래로 펼쳐질 때 오른쪽 트레이(z-index 20, DOM에서 뒤)보다 위에 오게 한다 */
+#account { z-index: 21; }
+
+.cloud-account-wrap { position: relative; display: flex; }
+.cloud-chip { display: flex; align-items: center; gap: 6px; padding: 0 10px 0 3px; color: var(--ink); cursor: pointer; max-width: 180px; }
+.cloud-chip[hidden] { display: none; }
+.cloud-chip:hover { background: var(--line); }
+.cloud-chip-name { overflow: hidden; text-overflow: ellipsis; }
+
+.cloud-avatar { width: 22px; height: 22px; border-radius: 50%; flex: 0 0 auto; object-fit: cover; }
+.cloud-avatar-letter { display: inline-grid; place-items: center; background: var(--chrome-accent); color: #fff; font-size: 12px; font-weight: 600; }
+
+.cloud-menu { top: 36px; right: 0; min-width: 200px; padding: 4px; display: grid; }
+.cloud-menu[hidden] { display: none; }
+.cloud-menu-email { padding: 8px 10px 6px; margin-bottom: 4px; border-bottom: 1px solid var(--line); font-size: 12px; color: var(--ink-2); overflow-wrap: anywhere; }
+.cloud-menu button { border: 0; background: none; text-align: left; padding: 8px 10px; border-radius: 5px; cursor: pointer; font-size: 13px; color: var(--ink); }
+.cloud-menu button:hover { background: var(--surface-2); }
+
+.cloud-dialog { width: min(380px, calc(100vw - 32px)); padding: 20px 22px 16px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--ink); box-shadow: var(--shadow); }
+.cloud-dialog::backdrop { background: rgba(15, 22, 30, .35); }
+.cloud-dialog h2 { margin: 0 0 10px; font-size: 17px; }
+.cloud-dialog p { margin: 0 0 18px; font-size: 13px; line-height: 1.6; color: var(--ink-2); }
+.cloud-dialog-actions { display: flex; justify-content: flex-end; gap: 8px; }
+.cloud-google-btn { height: 34px; padding: 0 16px; border: 0; border-radius: 6px; background: var(--chrome-accent); color: #fff; font-size: 13px; font-weight: 600; cursor: pointer; }
+.cloud-google-btn:disabled { opacity: .6; cursor: progress; }
+.cloud-text-btn { height: 34px; padding: 0 12px; border: 0; border-radius: 6px; background: none; color: var(--ink-2); font-size: 13px; cursor: pointer; }
+.cloud-text-btn:hover { background: var(--surface-2); }
+
+.cloud-landing { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border-color, #d3d9e0); }
+.cloud-landing-text { display: flex; align-items: center; gap: 8px; font-size: 0.88rem; color: var(--text-muted, #5b6878); }

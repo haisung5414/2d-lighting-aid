@@ -135,6 +135,32 @@ export const saveProject = (name: string) => {
   window.dispatchEvent(new CustomEvent('lighting:file', { detail: { name: fileName } }));
 };
 
+/** 파싱한 작업 JSON을 불러와 편집 화면을 연다. 로컬 파일과 온라인 작업(src/cloud)이 함께 쓴다.
+ *  name은 위쪽 바에 보일 파일 이름 (.json은 떼고 보인다). 형식이 틀리면 예외를 던진다 */
+export const loadProjectData = (parsed: any, name: string | null) => {
+  // 드래그 상태 등 불필요한/오염된 상호작용 상태 초기화
+  parsed.interaction = { dragMode: null, draggedIndex: -1 };
+  // 예전 파일(사람 모형 하나 = probe)은 actors가 없다. 지금 작업의 actors가 남지 않게 비워 두면 store가 probe를 옮긴다
+  if (!Array.isArray(parsed.actors)) parsed.actors = undefined;
+  parsed.selected_actor_id = null;
+
+  setState(state => {
+    const currentReferenceLayers = state.stage_config.reference_layers;
+    Object.assign(state, parsed);
+    if (!state.stage_config.reference_layers) {
+      state.stage_config.reference_layers = currentReferenceLayers;
+    }
+  });
+
+  // UI 입력창 동기화
+  (document.getElementById('stage-w') as HTMLInputElement).value = parsed.stage_config.width.toString();
+  (document.getElementById('stage-d') as HTMLInputElement).value = parsed.stage_config.depth.toString();
+  (document.getElementById('actor-h') as HTMLInputElement).value = parsed.stage_config.actor_height.toString();
+  (document.getElementById('default-z') as HTMLInputElement).value = parsed.stage_config.default_z.toString();
+  showEditorScreen();
+  window.dispatchEvent(new CustomEvent('lighting:file', { detail: { name } }));
+};
+
 const loadFile = (event: Event) => {
   const target = event.target as HTMLInputElement;
   const file = target.files?.[0];
@@ -143,28 +169,7 @@ const loadFile = (event: Event) => {
   const reader = new FileReader();
   reader.onload = (e) => {
     try {
-      const parsed = JSON.parse(e.target?.result as string);
-      // 드래그 상태 등 불필요한/오염된 상호작용 상태 초기화
-      parsed.interaction = { dragMode: null, draggedIndex: -1 };
-      // 예전 파일(사람 모형 하나 = probe)은 actors가 없다. 지금 작업의 actors가 남지 않게 비워 두면 store가 probe를 옮긴다
-      if (!Array.isArray(parsed.actors)) parsed.actors = undefined;
-      parsed.selected_actor_id = null;
-      
-      setState(state => {
-        const currentReferenceLayers = state.stage_config.reference_layers;
-        Object.assign(state, parsed);
-        if (!state.stage_config.reference_layers) {
-          state.stage_config.reference_layers = currentReferenceLayers;
-        }
-      });
-
-      // UI 입력창 동기화
-      (document.getElementById('stage-w') as HTMLInputElement).value = parsed.stage_config.width.toString();
-      (document.getElementById('stage-d') as HTMLInputElement).value = parsed.stage_config.depth.toString();
-      (document.getElementById('actor-h') as HTMLInputElement).value = parsed.stage_config.actor_height.toString();
-      (document.getElementById('default-z') as HTMLInputElement).value = parsed.stage_config.default_z.toString();
-      showEditorScreen();
-      window.dispatchEvent(new CustomEvent('lighting:file', { detail: { name: file.name } }));
+      loadProjectData(JSON.parse(e.target?.result as string), file.name);
     } catch (err) {
       alert("파일 파싱 오류. 올바른 JSON 파일인지 확인해주세요.");
     }

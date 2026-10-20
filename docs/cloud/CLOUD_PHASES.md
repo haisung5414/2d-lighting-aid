@@ -20,18 +20,18 @@ Done by the user; Claude does not touch accounts or keys.
 1. https://supabase.com → New project (free plan, any region near Korea, e.g. Northeast Asia (Seoul)). Keep the database password to yourself.
 2. SQL Editor → paste `docs/cloud/schema.sql` → Run.
 3. Google Cloud Console → APIs & Services → Credentials → *Create OAuth client ID* (Web application).
-   - Authorized JavaScript origins: `https://haisung5414.github.io`, `http://localhost:5173`.
+   - Authorized JavaScript origins: `https://haisung5414.github.io`, `http://localhost:5173`, `http://localhost:5180`.
    - Authorized redirect URI: the callback shown in Supabase → Auth → Providers → Google (`https://<project-ref>.supabase.co/auth/v1/callback`).
    - OAuth consent screen: External, app name `조명 시뮬레이터`; while in *Testing* mode add club members as test users, or publish it.
 4. Supabase → Auth → Providers → Google: enable, paste the client ID and client secret.
-5. Supabase → Auth → URL Configuration: Site URL `https://haisung5414.github.io/2d-lighting-aid/`; Redirect URLs add `http://localhost:5173/**` and `https://haisung5414.github.io/2d-lighting-aid/**`.
+5. Supabase → Auth → URL Configuration: Site URL `https://haisung5414.github.io/2d-lighting-aid/`; Redirect URLs add `http://localhost:5173/**`, `http://localhost:5180/**` (the cloud worktree dev server) and `https://haisung5414.github.io/2d-lighting-aid/**`.
 6. Supabase → Project Settings → API: copy the Project URL and the anon (or publishable) key.
    - Local: create `.env.local` in the repo root with `VITE_SUPABASE_URL=…` and `VITE_SUPABASE_ANON_KEY=…`.
    - GitHub: repo → Settings → Secrets and variables → Actions → **Variables** → add the same two names.
 
 Acceptance: the user can share the Project URL (not secret) and confirm `.env.local` exists.
 
-## Phase 1 — Config, client and sign-in `[ ]`
+## Phase 1 — Config, client and sign-in `[~]`
 
 Spec §1, §2, §4, §6, §8.
 - `@supabase/supabase-js` dependency; `src/cloud/config.ts` reads the env vars; `client.ts` creates the client lazily with dynamic `import()` (PKCE, persisted session).
@@ -45,6 +45,12 @@ Acceptance
 - Without `.env.local`: app behaves exactly as before; no Supabase request in the network tab; `로그인` disabled.
 - With `.env.local`: Google sign-in round trip works on `localhost:5173`; work open in the editor before sign-in is back afterwards; reload keeps the session; 로그아웃 returns to `로그인`.
 - Local 불러오기 / 저장 unchanged. Typecheck and build pass; no console errors.
+
+Done notes (awaiting real sign-in test after Phase 0)
+- Checked in the browser: not configured (button disabled, no Supabase chunk requested); configured with a dummy project (login button, sign-in dialog, landing line); simulated return from sign-in (fake stored session + stashed dirty work → work restored with `저장 안 됨`, account chip and menu); sign-out keeps the work on screen. The real Google round trip is not tested yet.
+- Supabase is a separate ~55 kB gzip chunk loaded only when configured.
+- Dev server for this worktree: `cloud-dev` on port 5180 (5173/5174 are used by other sessions); `#account` gets `z-index: 21` so the account menu opens above the tray.
+- `shell.ts`: `getFileState()` export; the `lighting:file` event accepts `dirty`. `manager.ts`: `loadProjectData(parsed, name)`.
 
 ## Phase 2 — Save online `[ ]`
 
