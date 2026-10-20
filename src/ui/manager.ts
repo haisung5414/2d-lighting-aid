@@ -2,7 +2,7 @@
 import { getState, initVenue, setState, subscribe, commitHistory } from '../state/store';
 import { DEFAULT_LAMP } from '../engine/photometrics';
 import type { AppState } from '../types';
-import type { VenueKey } from '../config/venues';
+import { VENUES, type VenueKey } from '../config/venues';
 
 export const initManagerUI = () => {
   initLandingUI();
@@ -46,6 +46,15 @@ export const initManagerUI = () => {
       });
     });
   });
+
+  // 공연장 이름 (공연장 정보 패널 맨 위)
+  const venueName = document.getElementById('venue-name');
+  const syncVenueName = () => {
+    const key = getState().stage_config.venue_key as VenueKey | undefined;
+    if (venueName) venueName.textContent = (key && VENUES[key]?.label) || '직접 정한 무대';
+  };
+  subscribe(syncVenueName);
+  syncVenueName();
 
   // 램프 규격 (공연장 정보 패널)
   const lampSelect = document.getElementById('venue-lamp') as HTMLSelectElement | null;

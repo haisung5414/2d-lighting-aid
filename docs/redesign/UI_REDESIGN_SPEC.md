@@ -99,7 +99,8 @@ Order changed 2026-10-21 (user review of Phase 3): 선택한 것 comes first, an
 
 | Group | Panel id | Label | Contents |
 |---|---|---|---|
-| 선택한 것 | `props` | 선택한 객체 속성 | depends on selection (§5.3). Bottom of the panel: checkbox `객체를 누를 때 자동으로 열지 않기` (§5.4). |
+| 선택한 것 | (button `#light-settings-btn`) | 조명 설정 | §5.2; enabled only while a fixture is selected, expands under its icon. Added 2026-10-21. |
+| | `props` | 선택한 객체 속성 | depends on selection (§5.3). Bottom of the panel: checkbox `객체를 누를 때 자동으로 열지 않기` (§5.4). |
 | | `help` | 도우미 | current tool's name, key, hint and what happens next. |
 | 작업 전체 | `display` | 빛 범위 표시 | 2D light drawing only: 바닥에 닿는 빛 (gradient, default **on**), 배우 얼굴 높이에 닿는 빛 (default **on**), 각도선 with an (i) hover tip explaining beam (50 %) and field (10 %), 빔 각도선 (solid, default off), 필드 각도선 (dashed, default **on**). |
 | | `venue3d` | 3D 극장 구조 | 3D only: 극장 구조 (default on), 캣워크 (default **off**), 객석 (on), 작업등 (on). The tray button is **disabled in 2D** and the panel closes when switching back to 2D. Separate from 빛 범위 표시 on purpose (user decision 2026-10-20). |

@@ -143,3 +143,14 @@ Done notes:
 - Removed: ~300 lines of unused CSS (old sidebars, probe panel, gel swatch, collapsibles, 3D overlay checkboxes), the inline `<style>` block and `#error-screen` in `index.html`, `src/counter.ts` (Vite template), `selected_fixture_ids` everywhere (old files: the field is deleted on load), globals `window.addFixture` / `zoomCanvas` / `resetCanvasZoom` / `toggleView3D` / `loadFile` (file input now uses a listener), unused exports `LAMP_OPTIONS`, `LENS_LABELS`, `getVenueLayers3D`.
 - Docs: new `README.md`; `PROJECT_BRIEF.md` file tree and feature list rewritten for the new UI; `CODEX_HANDOFF.md` tree updated.
 - Regression (browser, 2D and 3D): every placing tool, set height via VCB, undo/redo, scene copy/switch, 2D↔3D round trip, dark and light themes; no console errors.
+
+## After merge — small fixes on the design screen
+
+2026-10-21 (user review after pushing main):
+- White-ish light colours: open tungsten and Color Correction gels render with their warm/cool tint scaled by `WHITE_LIGHT_TINT = 0.8` around white (Full CTB stays white, colour gels untouched). Open tungsten ≈ #ffd1a0.
+- Catwalk overlay layer is off by default (`defaultVisible: false` in `config/venues.ts`).
+- 2D fixture icons are per-type plan symbols (ellipsoidal: body + lens barrel, zoom: longer barrel with two rings, fresnel: short body + convex lens, PAR: flared can), rotated to face the aim point, lens painted with the light colour; fixed pixel size; yellow ring when selected.
+- 공연장 정보 starts with the venue name (`#venue-name`, from `VENUES[venue_key].label`).
+- 채널 검사: every row uses the same 12-column grid (no wrapping), theme-token colours (readable in dark mode), legend (비어 있음 / 사용 중 / 콘센트보다 많음), and an (i) tooltip explaining the purpose: which channel each fixture is patched to and whether a channel is already occupied. Clicking a cell again clears the detail.
+- 조명 설정 is now a tray item (first in 선택한 것) and expands right under its icon like the other panels; the icon is disabled with nothing selected, tinted when a fixture is selected but the panel is closed, and toggles the panel.
+

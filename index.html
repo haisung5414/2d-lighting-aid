@@ -79,15 +79,17 @@
 
     <!-- 오른쪽: 패널 트레이. 누른 항목 바로 아래에서 패널이 펼쳐지고 아래 항목은 밀려난다 (SketchUp 방식) -->
     <div class="tray" id="tray">
-      <!-- 조명 설정: 조명을 고를 때마다 맨 위에서 펼쳐진다 -->
-      <section class="float panel light-settings" id="light-settings" aria-label="조명 설정" hidden>
-        <header><h2 id="light-settings-title">조명 설정</h2>
-          <div class="hdr-actions"><button type="button" class="del-btn small" id="light-settings-delete" title="이 조명을 지웁니다 (실행 취소로 되돌릴 수 있음)">조명 삭제</button><button type="button" class="ibtn" id="light-settings-close" aria-label="닫기">✕</button></div></header>
-        <div class="panel-body"><div id="light-settings-body"></div>
-          <label class="toggle-row toggle-quiet"><input type="checkbox" id="light-settings-no-auto"> 조명을 누를 때 자동으로 열지 않기</label></div>
-      </section>
-
       <div class="grp">선택한 것</div>
+      <!-- 조명 설정: 조명을 고르면 이 아이콘 바로 아래에서 펼쳐진다 -->
+      <div class="tray-entry">
+        <button type="button" class="trayitem" id="light-settings-btn" aria-expanded="false" disabled title="조명을 고르면 쓸 수 있습니다"><span class="lbl">조명 설정</span><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9h9l5-3v12l-5-3H3z"/><path d="M17 12h4M19 8.5l2-1.5M19 15.5l2 1.5"/></svg></span></button>
+        <section class="float panel light-settings" id="light-settings" aria-label="조명 설정" hidden>
+          <header><h2 id="light-settings-title">조명 설정</h2>
+            <div class="hdr-actions"><button type="button" class="del-btn small" id="light-settings-delete" title="이 조명을 지웁니다 (실행 취소로 되돌릴 수 있음)">조명 삭제</button><button type="button" class="ibtn" id="light-settings-close" aria-label="닫기">✕</button></div></header>
+          <div class="panel-body"><div id="light-settings-body"></div>
+            <label class="toggle-row toggle-quiet"><input type="checkbox" id="light-settings-no-auto"> 조명을 누를 때 자동으로 열지 않기</label></div>
+        </section>
+      </div>
       <div class="tray-entry">
         <button type="button" class="trayitem" data-tray="props" aria-expanded="false"><span class="lbl">선택한 객체 속성</span><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5h.01"/></svg></span></button>
         <section class="float panel" data-panel="props" hidden>
@@ -160,6 +162,7 @@
         <button type="button" class="trayitem" data-tray="venue" aria-expanded="false"><span class="lbl">공연장 정보</span><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20V9l9-5 9 5v11"/><path d="M8 20v-6h8v6"/></svg></span></button>
         <section class="float panel" data-panel="venue" hidden>
           <div class="panel-body venue-fields">
+            <div class="venue-name"><span>공연장</span><b id="venue-name">—</b></div>
             <label>무대 폭 (m) <input type="number" id="stage-w" value="12" step="0.1"></label>
             <label>무대 깊이 (m) <input type="number" id="stage-d" value="22.7" step="0.1"></label>
             <label>기본 조명 높이 (m) <input type="number" id="default-z" value="5.74" step="0.1"></label>
