@@ -19,6 +19,9 @@ export interface ProjectSummary {
 }
 
 const MAX_BYTES = 5_000_000;
+/** 한 사람이 온라인에 둘 수 있는 작업 수. DB 트리거(supabase/migrations/20261021020000_project_limit.sql)와 같은 값 */
+export const MAX_PROJECTS = 20;
+const LIMIT_MESSAGE = `온라인 작업은 한 사람당 ${MAX_PROJECTS}개까지 저장할 수 있습니다. 홈에서 쓰지 않는 작업을 지운 뒤 다시 저장해 주세요. (내 컴퓨터에 저장하는 것은 언제든 됩니다)`;
 const NETWORK_MESSAGE = '온라인 작업을 처리하지 못했습니다. 인터넷 연결을 확인하거나 잠시 뒤에 다시 시도해 주세요.';
 
 /** 지금 열려 있는 온라인 작업의 행. 새 온라인 작업(아직 저장 전)이거나 내 컴퓨터 작업이면 null */
@@ -40,6 +43,8 @@ const announce = (name: string | null, location: 'local' | 'cloud', dirty = fals
 
 export const reportError = (err: unknown) => {
   console.error('온라인 작업 오류', err);
+  // DB 트리거가 작업 수 제한으로 막았다
+  if ((err as { message?: string })?.message?.includes('project limit reached')) { alert(LIMIT_MESSAGE); return; }
   alert(NETWORK_MESSAGE);
 };
 
@@ -124,6 +129,13 @@ export const saveOnline = async (name: string, asNew: boolean) => {
       if (!remote) targetId = null; // 다른 곳에서 지워졌다: 새로 넣는다
       else if (remote.updated_at !== openRow.updatedAt
         && !window.confirm('다른 곳에서 이 작업을 더 최근에 저장했습니다. 덮어쓸까요?')) return;
+    }
+
+    // 새로 넣는 경우에만 작업 수를 센다 (덮어쓰기와 고쳐 저장하기는 늘 된다)
+    if (!targetId) {
+      const { count, error: countError } = await projects.select('id', { count: 'exact', head: true });
+      if (countError) throw countError;
+      if ((count ?? 0) >= MAX_PROJECTS) { alert(LIMIT_MESSAGE); return; }
     }
 
     const query = targetId

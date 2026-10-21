@@ -139,6 +139,8 @@
 .lh-new { padding: 0 20px 0 32px; }
 .lh-section { display: flex; flex-direction: column; gap: 12px; }
 .lh-section h2 { margin: 0; font-size: 16px; font-weight: 700; }
+.lh-count { margin-left: 10px; font-size: 13px; font-weight: 500; color: var(--lh-meta); }
+.lh-count.lh-full { color: var(--lh-danger); font-weight: 700; }
 
 .lh-card { background: var(--lh-surface); display: flex; flex-direction: column; border: 0; padding: 0; text-align: left; color: var(--lh-ink); cursor: pointer; position: relative; }
 .lh-card:hover { box-shadow: 0 0 0 2px var(--lh-blue); }
