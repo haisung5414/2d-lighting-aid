@@ -4,6 +4,7 @@
 // 표면은 무대 조명 셰이더로 비추므로 조명이 벽이나 객석에 닿는 모습도 보인다.
 
 import * as THREE from 'three';
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { VENUES, type PlanPoint, type PlanRect, type VenueModel3D } from '../config/venues';
 import { createStageLightMaterial, type FixtureDataTexture } from './stageLightMaterial';
 import type { StageConfig } from '../types';
@@ -17,6 +18,13 @@ const SEAT_COLOR = 0x564c4c;
 const GALLERY_COLOR = 0x45454a;
 /** 갤러리 아래를 가리는 검은 커튼 */
 const CURTAIN_COLOR = 0x333337;
+/** 발코니 금속 난간: 벽보다 조금 밝은 어두운 회색 */
+const RAILING_COLOR = 0x6a6d73;
+/** 난간 높이와 가로대 높이 (발코니 바닥 기준, m) */
+const RAIL_HEIGHT = 1.0;
+const RAIL_BARS = [0.12, 0.42, 0.72];
+/** 난간 기둥 간격 (m) */
+const POST_SPACING = 1.2;
 
 export const venueModelFor = (stage: StageConfig): VenueModel3D | null => {
   const byKey = stage.venue_key ? VENUES[stage.venue_key as keyof typeof VENUES] : undefined;
@@ -60,13 +68,48 @@ const prism = (points: PlanPoint[], z0: number, z1: number, material: THREE.Mate
   return mesh;
 };
 
-/** 앱 좌표의 선분 위에 세운 얇은 판 (난간) */
-const panel = (a: PlanPoint, b: PlanPoint, z0: number, z1: number, thickness: number, material: THREE.Material): THREE.Mesh => {
-  const dx = b[0] - a[0], dy = b[1] - a[1];
-  const mesh = new THREE.Mesh(new THREE.BoxGeometry(Math.hypot(dx, dy), z1 - z0, thickness), material);
-  mesh.position.set((a[0] + b[0]) / 2, (z0 + z1) / 2, (a[1] + b[1]) / 2);
-  mesh.rotation.y = Math.atan2(-dy, dx);
-  return mesh;
+/**
+ * 사진의 금속 난간: 손잡이(윗대), 가로대 세 줄, 일정 간격의 기둥.
+ * 막대가 많아서 하나의 형상으로 합쳐 한 번에 그린다
+ */
+const railingGeometry = (edge: PlanPoint[], z: number): THREE.BufferGeometry | null => {
+  const parts: THREE.BufferGeometry[] = [];
+  /** 두 점 사이에 놓인 가로 막대 (단면 size × size) */
+  const bar = (a: PlanPoint, b: PlanPoint, height: number, size: number) => {
+    const dx = b[0] - a[0], dy = b[1] - a[1];
+    // 이웃 막대와 이음매가 벌어지지 않도록 단면 크기만큼 길게 둔다
+    const geometry = new THREE.BoxGeometry(Math.hypot(dx, dy) + size, size, size);
+    geometry.rotateY(Math.atan2(-dy, dx));
+    geometry.translate((a[0] + b[0]) / 2, height, (a[1] + b[1]) / 2);
+    parts.push(geometry);
+  };
+  const post = ([x, y]: PlanPoint) => {
+    const geometry = new THREE.BoxGeometry(0.04, RAIL_HEIGHT, 0.04);
+    geometry.translate(x, z + RAIL_HEIGHT / 2, y);
+    parts.push(geometry);
+  };
+
+  let sinceLastPost = POST_SPACING;
+  edge.forEach((point, i) => {
+    if (i === 0) { post(point); sinceLastPost = 0; return; }
+    const prev = edge[i - 1];
+    bar(prev, point, z + RAIL_HEIGHT - 0.025, 0.05);
+    RAIL_BARS.forEach(h => bar(prev, point, z + h, 0.025));
+    // 기둥: 선을 따라 POST_SPACING마다
+    const length = Math.hypot(point[0] - prev[0], point[1] - prev[1]);
+    let at = POST_SPACING - sinceLastPost;
+    while (at <= length) {
+      const t = at / length;
+      post([prev[0] + (point[0] - prev[0]) * t, prev[1] + (point[1] - prev[1]) * t]);
+      at += POST_SPACING;
+    }
+    sinceLastPost = length - (at - POST_SPACING);
+  });
+  post(edge[edge.length - 1]);
+  if (parts.length === 0) return null;
+  const merged = mergeGeometries(parts);
+  parts.forEach(part => part.dispose());
+  return merged;
 };
 
 /** 파이프 위치를 모르는 천장 조명 그리드: 높이와 범위만 반투명한 면과 테두리로 보여 준다 */
@@ -213,23 +256,23 @@ export const buildVenueModel = (model: VenueModel3D, data: FixtureDataTexture): 
     group.add(block);
   });
 
-  // 다각형 발코니: 두께 0.2 m 바닥판과 공연장 쪽 가장자리의 높이 1 m 난간. 아래는 비워 둔다
+  // 다각형 발코니: 두께 0.2 m 바닥판과 공연장 쪽 가장자리의 금속 난간. 아래는 비워 둔다
+  const railingMaterial = model.balconies?.length ? createStageLightMaterial(data, { color: RAILING_COLOR }) : null;
   model.balconies?.forEach(b => {
     const slab = prism(b.outline, b.z - 0.2, b.z, galleryMaterial);
     slab.layers.enable(OCCLUDER_LAYER);
     group.add(slab);
-    b.edge.slice(1).forEach((point, i) => {
-      const rail = panel(b.edge[i], point, b.z, b.z + 1.0, 0.06, galleryMaterial);
-      rail.layers.enable(OCCLUDER_LAYER);
-      group.add(rail);
-    });
-    // 같은 색의 벽과 구분되도록 바닥판 가장자리와 난간 윗선을 옅은 선으로 그린다
-    [b.z - 0.2, b.z + 1.0].forEach(z => {
-      group.add(new THREE.Line(
-        new THREE.BufferGeometry().setFromPoints(b.edge.map(([x, y]) => new THREE.Vector3(x, z, y))),
-        new THREE.LineBasicMaterial({ color: 0x55606e, transparent: true, opacity: 0.6 })
-      ));
-    });
+    const railing = railingGeometry(b.edge, b.z);
+    if (railing && railingMaterial) {
+      const mesh = new THREE.Mesh(railing, railingMaterial);
+      mesh.layers.enable(OCCLUDER_LAYER);
+      group.add(mesh);
+    }
+    // 같은 색의 벽과 구분되도록 바닥판 가장자리를 옅은 선으로 그린다
+    group.add(new THREE.Line(
+      new THREE.BufferGeometry().setFromPoints(b.edge.map(([x, y]) => new THREE.Vector3(x, b.z - 0.2, y))),
+      new THREE.LineBasicMaterial({ color: 0x55606e, transparent: true, opacity: 0.6 })
+    ));
   });
 
   // 벽에 붙은 덩어리 (위층보다 두꺼운 아래층 벽 등)
@@ -237,27 +280,6 @@ export const buildVenueModel = (model: VenueModel3D, data: FixtureDataTexture): 
     const block = box(s, s.z0, s.z1, wallMaterial);
     block.layers.enable(OCCLUDER_LAYER);
     group.add(block);
-  });
-
-  // 나선계단: 가운데 기둥과, 30도씩 돌며 0.2 m 정도씩 오르는 디딤판
-  model.spiralStairs?.forEach(stair => {
-    const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, stair.z1 - stair.z0, 8), galleryMaterial);
-    pole.position.set(stair.x, (stair.z0 + stair.z1) / 2, stair.y);
-    group.add(pole);
-    const steps = Math.max(1, Math.round((stair.z1 - stair.z0) / 0.2));
-    const rise = (stair.z1 - stair.z0) / steps;
-    for (let i = 1; i <= steps; i++) {
-      const angle = i * Math.PI / 6;
-      const step = new THREE.Mesh(new THREE.BoxGeometry(stair.radius, 0.04, 0.3), galleryMaterial);
-      step.position.set(
-        stair.x + Math.cos(angle) * stair.radius / 2,
-        stair.z0 + rise * i,
-        stair.y + Math.sin(angle) * stair.radius / 2
-      );
-      step.rotation.y = -angle;
-      step.layers.enable(OCCLUDER_LAYER);
-      group.add(step);
-    }
   });
 
   return group;

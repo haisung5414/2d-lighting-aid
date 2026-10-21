@@ -89,8 +89,6 @@ export interface VenueModel3D {
   balconies?: { z: number; outline: PlanPoint[]; edge: PlanPoint[] }[];
   /** 벽 안쪽에 붙은 덩어리 (예: 아래층 벽이 위층보다 두꺼운 부분) */
   solids?: (PlanRect & { z0: number; z1: number })[];
-  /** 나선계단: 가운데 기둥 위치와 반지름, 오르는 높이 */
-  spiralStairs?: { x: number; y: number; radius: number; z0: number; z1: number }[];
   /** 갤러리와 이어지는 조정실 앞 2층 단. 아래는 막혀 있다 */
   platforms: (PlanRect & { z: number })[];
   /** 계단형 객석. y가 커질수록(객석 쪽으로) 높아진다 */
@@ -477,8 +475,6 @@ export const DURE_VENUE: VenuePreset = {
       { x0: DURE.width, x1: DURE.upperX1, y0: 0, y1: DURE.backWall, z0: 0, z1: DURE.balconyZ - 0.2 }
     ],
     platforms: [],
-    // 무대 쪽 왼쪽 모서리의 나선계단: 발코니에서 조명 그리드로 올라간다
-    spiralStairs: [{ x: 0.5, y: 0.85, radius: 0.7, z0: DURE.balconyZ, z1: 7.2 }],
     // 평면도에서 잰 객석 블록 14.4 m × 8.4 m, 10열. 맨 윗줄 높이는 사진으로 추정
     seating: { x0: 1.0, x1: 15.4, y0: 9.6, y1: DURE.backWall, rows: 10, topHeight: 2.5 },
     // 영사실 창 3개: 객석 쪽 사진에서 비율로 잰 값
@@ -492,7 +488,7 @@ export const DURE_VENUE: VenuePreset = {
       '조명 그리드 높이 7.2 m는 사용자가 알려 준 값이다. 파이프 간격은 알 수 없어 면으로만 보여 준다.',
       '발코니 바닥 2.5 m, 천장 8.0 m, 객석 맨 윗줄 2.5 m, 영사실 창 위치는 사진으로 추정한 값이다.',
       '객석 뒤 통로·출입부(y 18.0~23.1)는 영사실과 로비 아래라서 3D에서는 벽 뒤로 남겨 둔다.',
-      '캣워크는 없다.'
+      '캣워크는 없다. 무대 쪽 왼쪽 모서리의 나선계단(발코니 → 조명 그리드)은 3D에서 생략했다.'
     ]
   },
   notes: [

@@ -18,7 +18,8 @@ Preset key `dure` in `src/config/venues.ts`. There is no vector drawing; everyth
 | Stage-side corners | curved, 2.3 m along the stage wall × 0.95 m along the side | 1F plan |
 | 1F wall face | 0.35 m outside the B1 wall on both sides (x −0.35 / 16.75) | 1F plan vs grid |
 | Balcony floor height | 2.5 m | photo: about the height of a 2440 plywood sheet |
-| Spiral stair | upstage-left corner, centre (0.5, 0.85), r 0.7 m, 2.5 → 7.2 m | 1F plan |
+| Spiral stair | upstage-left corner (balcony → grid); left out of the 3D model to keep rendering light | 1F plan |
+| Railing | 1.0 m metal railing: handrail, three horizontal bars, posts every 1.2 m, dark grey; merged into one mesh | photos |
 | Projection room wall | y 18.0 (end of the seating), three windows z 3.9–4.55 | 1F plan + audience-side photo |
 | Seating top row | 2.5 m | estimate (photo) |
 | Ceiling | 8.0 m | assumption (just above the grid) |
@@ -30,7 +31,7 @@ No balcony on the audience side: the projection room sits over the back aisle. T
 
 ## Model support added
 - `catwalk` is optional; `lightingGrid` shows a grid of unknown pipe layout as a translucent plane (3D toggle "캣워크·조명 그리드").
-- `balconies` (polygon slab + railing along `edge`), `solids` (extra wall mass), `spiralStairs`.
+- `balconies` (polygon slab + metal railing along `edge`), `solids` (extra wall mass).
 - Layer panel toggles are built from the current work's reference layers.
 - New works place the default actor and the first light's aim in the middle of the acting area (in front of the seating) when the venue has seating.
 
