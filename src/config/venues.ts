@@ -184,7 +184,8 @@ export const HUMANITIES_VENUE: VenuePreset = {
       width: 12.0,
       height: 22.7,
       opacity: 1,
-      defaultVisible: true,
+      // 평면도 위에 겹치면 복잡해서 처음에는 끈다 (레이어 패널에서 켤 수 있음)
+      defaultVisible: false,
       note: '상부 조명/캣워크 참고 오버레이. 바텐 설치 제한으로 쓰지 않고 시각 참고용으로만 사용한다.'
     }
   ],

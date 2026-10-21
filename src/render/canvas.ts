@@ -203,6 +203,80 @@ const drawSetPieces = (targetCtx: CanvasRenderingContext2D, pieces: SetPiece[], 
 };
 
 const toPx = (m: number, s = scale): number => m * s;
+
+/**
+ * 조명 평면 기호 (조명도면에서 쓰는 모양을 단순하게). 지역 좌표에서 +x가 비추는 쪽이다.
+ *   엘립소이달: 긴 몸통 + 가는 렌즈 통 (줌은 통이 더 길고 고리가 둘)
+ *   프레넬: 짧은 몸통 + 볼록한 렌즈
+ *   PAR: 뒤가 좁고 앞이 넓어지는 캔
+ * 앞쪽 렌즈는 그 조명의 빛 색(젤)으로 칠한다. 크기는 확대와 상관없이 화면 픽셀로 고정한다.
+ */
+const drawFixtureSymbol = (targetCtx: CanvasRenderingContext2D, fix: Fixture, px: number, py: number, selected: boolean) => {
+  const dx = fix.target.x - fix.position.x;
+  const dy = fix.target.y - fix.position.y;
+  // 바로 아래를 비추면 객석 반대쪽(+y)을 향한 것으로 그린다
+  const angle = Math.hypot(dx, dy) < 1e-3 ? Math.PI / 2 : Math.atan2(dy, dx);
+  const body = selected ? '#0d6efd' : '#6c757d';
+  const edge = selected ? '#dbe8ff' : 'rgba(255, 255, 255, 0.85)';
+  const lens = gelDisplayHex(fix.gel);
+
+  targetCtx.save();
+  targetCtx.translate(px, py);
+  targetCtx.rotate(angle);
+  targetCtx.lineWidth = 1.2;
+  targetCtx.strokeStyle = edge;
+  targetCtx.lineJoin = 'round';
+
+  const shape = (draw: () => void, fill: string) => {
+    targetCtx.beginPath();
+    draw();
+    targetCtx.fillStyle = fill;
+    targetCtx.fill();
+    targetCtx.stroke();
+  };
+
+  if (fix.type === 'ellipsoidal' || fix.type === 'zoom') {
+    const barrelEnd = fix.type === 'zoom' ? 16 : 13;
+    shape(() => targetCtx.roundRect(-14, -6.5, 18, 13, [5, 1.5, 1.5, 5]), body);           // 몸통 (뒤가 둥글다)
+    shape(() => targetCtx.rect(4, -4.5, barrelEnd - 4, 9), body);                             // 렌즈 통
+    if (fix.type === 'zoom') {
+      targetCtx.beginPath();
+      targetCtx.moveTo(8, -4.5); targetCtx.lineTo(8, 4.5);
+      targetCtx.moveTo(12, -4.5); targetCtx.lineTo(12, 4.5);
+      targetCtx.stroke();
+    }
+    shape(() => targetCtx.rect(barrelEnd, -5.5, 3, 11), lens);                                // 렌즈
+  } else if (fix.type === 'fresnel') {
+    shape(() => targetCtx.roundRect(-10, -8, 15, 16, [6, 1, 1, 6]), body);
+    shape(() => {
+      targetCtx.moveTo(5, -8);
+      targetCtx.quadraticCurveTo(12, 0, 5, 8);
+      targetCtx.closePath();
+    }, lens);
+    targetCtx.beginPath();                                                                    // 프레넬 렌즈의 동심 홈
+    targetCtx.moveTo(-2, -8); targetCtx.lineTo(-2, 8);
+    targetCtx.stroke();
+  } else {
+    shape(() => {
+      targetCtx.moveTo(-11, -5);
+      targetCtx.quadraticCurveTo(-14, 0, -11, 5);
+      targetCtx.lineTo(6, 9);
+      targetCtx.lineTo(6, -9);
+      targetCtx.closePath();
+    }, body);
+    shape(() => targetCtx.rect(6, -10, 3, 20), lens);
+  }
+
+  // 선택하면 둘레에 노란 고리
+  if (selected) {
+    targetCtx.beginPath();
+    targetCtx.arc(0, 0, 18, 0, Math.PI * 2);
+    targetCtx.strokeStyle = '#ffd166';
+    targetCtx.lineWidth = 2;
+    targetCtx.stroke();
+  }
+  targetCtx.restore();
+};
 const toWorld = (px: number, py: number): Position2D => ({
   x: (px - offsetX) / scale,
   y: (py - offsetY) / scale
@@ -259,7 +333,8 @@ const drawLightPool = (
   fix: Fixture,
   field: { cx: number; cy: number; radiusX: number; radiusY: number; rotation: number },
   currentScale: number,
-  isSelected: boolean
+  isSelected: boolean,
+  style: 'gradient' | 'solid' = 'gradient'
 ) => {
   const rx = toPx(field.radiusX, currentScale);
   const ry = toPx(field.radiusY, currentScale);
@@ -273,6 +348,16 @@ const drawLightPool = (
   targetCtx.translate(toPx(field.cx, currentScale), toPx(field.cy, currentScale));
   targetCtx.rotate(field.rotation);
   targetCtx.scale(rx, ry);
+  targetCtx.globalCompositeOperation = 'screen';
+  if (style === 'solid') {
+    // 꽉 채우기: 필드(밝기 10%) 경계 안을 한 가지 진하기로 칠한다
+    targetCtx.fillStyle = `rgba(${r}, ${g}, ${b}, ${(strength * 0.6).toFixed(3)})`;
+    targetCtx.beginPath();
+    targetCtx.arc(0, 0, 1, 0, Math.PI * 2);
+    targetCtx.fill();
+    targetCtx.restore();
+    return;
+  }
   const gradient = targetCtx.createRadialGradient(0, 0, 0, 0, 0, reach);
   for (let i = 0; i <= 12; i++) {
     const t = (i / 12) * reach;
@@ -351,7 +436,7 @@ export const drawCueToContext = (
     if (toggles.show_floor && floorField) {
       targetCtx.save();
       clipShutter(floorPolygons);
-      drawLightPool(targetCtx, fix, floorField, currentScale, isSelected);
+      drawLightPool(targetCtx, fix, floorField, currentScale, isSelected, toggles.floor_style ?? 'gradient');
       targetCtx.restore();
     }
 
@@ -407,15 +492,8 @@ export const drawCueToContext = (
       targetCtx.restore();
     }
 
-    /* Markers */
-    targetCtx.fillStyle = isSelected ? "#0d6efd" : "#6c757d";
-    targetCtx.fillRect(toPx(fix.position.x, currentScale) - 8, toPx(fix.position.y, currentScale) - 8, 16, 16);
-    if (fix.gel) {
-      targetCtx.fillStyle = gelDisplayHex(fix.gel);
-      targetCtx.beginPath();
-      targetCtx.arc(toPx(fix.position.x, currentScale), toPx(fix.position.y, currentScale), 5, 0, Math.PI * 2);
-      targetCtx.fill();
-    }
+    /* Markers: 기종별 평면 기호, 조준점을 향해 돌린다 */
+    drawFixtureSymbol(targetCtx, fix, toPx(fix.position.x, currentScale), toPx(fix.position.y, currentScale), isSelected);
 
     targetCtx.fillStyle = isSelected ? "yellow" : "#aaa";
     targetCtx.beginPath();
@@ -519,7 +597,8 @@ const fitFrame = (scaleForOffset?: number) => {
   const w = canvas!.width;
   const h = canvas!.height;
   const wide = w >= 700;
-  const inset = wide ? { l: 70, r: 200, t: 56, b: 64 } : { l: 8, r: 8, t: 56, b: 48 };
+  // 왼쪽은 도구 레일(56px)과 그 옆 이름표까지 비운다
+  const inset = wide ? { l: 170, r: 200, t: 56, b: 64 } : { l: 8, r: 8, t: 56, b: 48 };
   const availW = Math.max(50, w - inset.l - inset.r);
   const availH = Math.max(50, h - inset.t - inset.b);
   const { width: sw, depth: sd } = getState().stage_config;

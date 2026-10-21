@@ -125,11 +125,11 @@ const renderRail = () => {
     const disabled = view3D && t.id !== 'select';
     const title = disabled ? `${t.name} (2D 평면에서 쓸 수 있습니다)` : `${t.name} (${t.keyLabel === '␣' ? 'Space' : t.keyLabel})`;
     const button = `<button type="button" class="tool" data-tool="${t.id}" aria-pressed="${t.id === tool}" aria-label="${t.name}" title="${title}" ${disabled ? 'disabled' : ''} ${t.flyout ? `aria-expanded="${flyoutOpen}"` : ''}>
-      ${svg(t.icon)}<span class="key">${t.keyLabel}</span>${t.flyout ? '<span class="more"></span>' : ''}</button>`;
+      ${svg(t.icon)}<span class="key">${t.keyLabel}</span>${t.flyout ? '<span class="more"></span>' : ''}<span class="lbl">${t.name}</span></button>`;
     if (!t.flyout) return button;
     const flyout = flyoutOpen ? `<div class="float flyout" role="group" aria-label="엘립소이달 렌즈">${LENSES.map((l, i) =>
       `<button type="button" data-lens="${i}" aria-pressed="${i === lensIndex}">${l.label}${l.sub ? `<small>${l.sub}</small>` : ''}</button>`).join('')}</div>` : '';
-    return `<div class="toolwrap">${button}${flyout}</div>`;
+    return `<div class="toolwrap ${flyoutOpen ? 'open' : ''}">${button}${flyout}</div>`;
   }).join('');
 
   const hint = document.getElementById('tool-hint');

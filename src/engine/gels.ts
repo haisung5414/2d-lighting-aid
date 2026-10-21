@@ -104,14 +104,22 @@ const colorFromXY = (x: number, y: number): Vec3 => {
   return linear.map(v => Math.max(0, v)) as Vec3;
 };
 
+/**
+ * 흰빛 계열(젤 없음, 색 보정 젤)의 따뜻함·차가움을 이 비율로 줄여 보여 준다.
+ * 계산 그대로(1)는 텅스텐이 너무 누렇게 보인다는 의견이 있어 하얗게 맞췄다 (0.8 → 0.6, 사용자 확인). 색 젤은 그대로 둔다.
+ */
+const WHITE_LIGHT_TINT = 0.6;
+const softenTint = (rgb: Vec3): Vec3 => rgb.map(v => Math.max(0, 1 + (v - 1) * WHITE_LIGHT_TINT)) as Vec3;
+
 /** 젤 없는 텅스텐 빛: 흰색 기준(Full CTB)보다 노랗다 */
-const OPEN_TUNGSTEN: LightColor = { rgb: colorFromXY(TUNGSTEN_WHITE.x, TUNGSTEN_WHITE.y), transmission: 1 };
+const OPEN_TUNGSTEN: LightColor = { rgb: softenTint(colorFromXY(TUNGSTEN_WHITE.x, TUNGSTEN_WHITE.y)), transmission: 1 };
 
 /** 조명 하나가 내는 빛의 색과 투과율 */
 export const lightColorOf = (gelCode: string | null | undefined): LightColor => {
   const gel = getGel(gelCode);
   if (!gel) return OPEN_TUNGSTEN;
-  return { rgb: colorFromXY(gel.x, gel.y), transmission: gel.transmission / 100 };
+  const rgb = colorFromXY(gel.x, gel.y);
+  return { rgb: gel.category === 'Color Correction' ? softenTint(rgb) : rgb, transmission: gel.transmission / 100 };
 };
 
 /** 선형 RGB -> 화면 표시용 CSS 색. 가장 큰 성분을 1로 맞춰 밝기와 상관없이 색만 보여 준다 */

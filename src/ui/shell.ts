@@ -30,7 +30,17 @@ const renderPanels = () => {
     panel.hidden = panel.dataset.panel !== openPanelId;
   });
   const settings = $('light-settings');
-  if (settings) settings.hidden = !lightSettingsOpen || !getState().selected_fixture_id;
+  const fixtureSelected = Boolean(getState().selected_fixture_id);
+  const settingsShown = lightSettingsOpen && fixtureSelected;
+  if (settings) settings.hidden = !settingsShown;
+  // 조명 설정 아이콘: 조명을 골랐을 때만 누를 수 있고, 닫혀 있으면 색으로 알린다
+  const settingsButton = $<HTMLButtonElement>('light-settings-btn');
+  if (settingsButton) {
+    settingsButton.disabled = !fixtureSelected;
+    settingsButton.title = fixtureSelected ? '조명 설정 (조명을 두 번 눌러도 열립니다)' : '조명을 고르면 쓸 수 있습니다';
+    settingsButton.setAttribute('aria-expanded', String(settingsShown));
+    settingsButton.classList.toggle('has-selection', fixtureSelected && !settingsShown);
+  }
   document.querySelectorAll<HTMLElement>('[data-tray]').forEach(button => {
     button.setAttribute('aria-expanded', String(button.dataset.tray === openPanelId));
   });
@@ -67,6 +77,10 @@ const initTray = () => {
       const id = button.dataset.tray ?? null;
       openPanel(openPanelId === id ? null : id);
     });
+  });
+  $('light-settings-btn')?.addEventListener('click', () => {
+    if (lightSettingsOpen && getState().selected_fixture_id) { lightSettingsOpen = false; renderPanels(); }
+    else openLightSettings();
   });
   $('light-settings-close')?.addEventListener('click', () => {
     lightSettingsOpen = false;

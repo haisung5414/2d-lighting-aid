@@ -86,7 +86,8 @@
 .ibtn svg { width: 18px; height: 18px; }
 
 /* 왼쪽 위: 파일 */
-.filepill { top: 10px; left: 10px; display: flex; align-items: center; gap: 2px; padding: 4px 6px; }
+/* 파일 메뉴가 펼쳐지면 아래 도구 레일을 덮어야 하므로 다른 떠 있는 요소(20)보다 위에 둔다 */
+.filepill { z-index: 30; top: 10px; left: 10px; display: flex; align-items: center; gap: 2px; padding: 4px 6px; }
 .filename { font-family: inherit; font-weight: 700; font-size: 14px; color: var(--ink); background: none; border: 0; border-radius: 5px; padding: 3px 8px; white-space: nowrap; max-width: 260px; overflow: hidden; text-overflow: ellipsis; cursor: text; }
 .filename:hover { background: var(--surface-2); }
 .filename-input { font-weight: 700; font-size: 14px; width: 200px; padding: 2px 6px; margin: 0 2px; border: 1px solid var(--chrome-accent); border-radius: 5px; color: var(--ink); background: var(--surface); }
@@ -108,19 +109,24 @@
 .pillbtn:disabled { cursor: not-allowed; }
 
 /* 왼쪽: 도구 레일 */
-.toolrail { top: 58px; left: 10px; width: 46px; padding: 5px 4px; display: flex; flex-direction: column; align-items: center; gap: 2px; }
-.tool { position: relative; width: 36px; height: 36px; display: grid; place-items: center; border: 0; background: none; border-radius: 6px; cursor: pointer; color: var(--ink-2); }
+/* 버튼 45px (처음 시안의 1.25배, 사용자 확인), 오른쪽에 트레이와 같은 이름표 */
+.toolrail { top: 58px; left: 10px; width: 56px; padding: 5px 5px; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.tool { position: relative; width: 45px; height: 45px; display: grid; place-items: center; border: 0; background: none; border-radius: 8px; cursor: pointer; color: var(--ink-2); }
 .tool:hover { background: var(--surface-2); color: var(--ink); }
 .tool[aria-pressed="true"] { background: var(--chrome-accent-soft); color: var(--chrome-accent); box-shadow: inset 3px 0 0 var(--chrome-accent); }
-.tool svg { width: 20px; height: 20px; }
-.tool .key { position: absolute; right: 2px; bottom: 1px; font: 500 8.5px var(--font-mono); color: var(--ink-3); }
+.tool svg { width: 25px; height: 25px; }
+.tool .key { position: absolute; right: 3px; bottom: 1px; font: 500 10px var(--font-mono); color: var(--ink-3); }
+.tool .lbl { position: absolute; left: calc(100% + 12px); top: 50%; transform: translateY(-50%); background: var(--surface); border: 1px solid var(--line); border-radius: 5px; padding: 2px 8px; font-size: 12px; font-weight: 600; color: var(--ink); box-shadow: var(--shadow); white-space: nowrap; pointer-events: auto; }
+.tool[aria-pressed="true"] .lbl { color: var(--chrome-accent); }
+/* 엘립소이달 렌즈를 펼치면 그 자리의 이름표는 숨긴다 */
+.toolwrap.open .tool .lbl { display: none; }
 .tool:disabled { opacity: .35; cursor: not-allowed; }
-.toolrail .sep { width: 26px; height: 1px; background: var(--line); margin: 4px 0; flex: none; }
+.toolrail .sep { width: 33px; height: 1px; background: var(--line); margin: 4px 0; flex: none; }
 /* 펼침이 있는 도구 표시 (오른쪽 위 작은 삼각형) */
-.tool .more { position: absolute; right: 3px; top: 3px; width: 0; height: 0; border-left: 4px solid transparent; border-top: 4px solid var(--ink-3); }
+.tool .more { position: absolute; right: 3px; top: 3px; width: 0; height: 0; border-left: 5px solid transparent; border-top: 5px solid var(--ink-3); }
 .toolwrap { position: relative; }
 /* 엘립소이달 렌즈 고르기: 버튼 바로 옆으로 펼쳐진다 */
-.flyout { position: absolute; left: 44px; top: -4px; display: flex; gap: 3px; padding: 4px; z-index: 25; }
+.flyout { position: absolute; left: 54px; top: 2px; display: flex; gap: 3px; padding: 4px; z-index: 25; }
 .flyout button { border: 1px solid var(--line); background: var(--surface-2); border-radius: 5px; padding: 5px 9px; cursor: pointer; font-size: 12px; font-weight: 600; white-space: nowrap; color: var(--ink); line-height: 1.2; }
 .flyout button[aria-pressed="true"] { background: var(--chrome-accent); border-color: var(--chrome-accent); color: #fff; }
 .flyout button small { display: block; font-weight: 400; font-size: 10px; color: var(--ink-3); }
@@ -158,10 +164,18 @@
 .del-btn { border: 1px solid #c0392b; background: #c0392b; color: #fff; border-radius: 5px; padding: 6px 12px; font-size: 12px; font-weight: 600; cursor: pointer; width: 100%; margin-top: 12px; }
 .del-btn:hover { background: #a93226; border-color: #a93226; }
 .del-btn.small { width: auto; margin: 0; padding: 4px 10px; }
+/* 둘 중 하나 고르기 (빛 범위 표시의 바닥 빛 칠하는 방식) */
+.seg { display: grid; gap: 2px; margin: 0 0 6px 24px; }
+.seg label { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink); cursor: pointer; }
+.seg small { color: var(--ink-3); }
+.seg input { margin: 0; }
 .inline-num { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink-2); margin: 2px 0 4px 24px; }
 .inline-num input { width: 64px; }
 .venue-fields label { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 13px; color: var(--ink-2); }
 .venue-fields input { width: 96px; }
+.venue-name { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
+.venue-name span { font-size: 13px; color: var(--ink-2); }
+.venue-name b { font-size: 15px; color: var(--ink); }
 /* 보기 패널: 소제목과 (i) 설명 말풍선 */
 .sub-row { display: flex; align-items: center; gap: 6px; margin: 12px 0 6px; }
 .sub { font-size: 11px; font-weight: 600; letter-spacing: .04em; color: var(--ink-3); }
@@ -240,11 +254,9 @@
 .sl-act.danger:hover { color: #c0392b; }
 .sl-empty { margin: 2px 6px 6px; font-size: 12px; color: var(--ink-3); }
 
-/* 채널 검사 패널 안에서는 늘 펼쳐 두므로 원래 접기 머리줄을 숨긴다 */
-.panel .patch-toggle { display: none; }
 
 /* 아래: 씬 서랍 (도구 레일과 패널 사이) */
-.scenes { left: 70px; right: 520px; bottom: 10px; display: flex; flex-direction: column; max-height: calc(100% - 80px); }
+.scenes { left: 80px; right: 520px; bottom: 10px; display: flex; flex-direction: column; max-height: calc(100% - 80px); }
 .scenes-handle { display: flex; align-items: center; gap: 10px; border: 0; background: none; padding: 7px 12px; cursor: pointer; width: 100%; text-align: left; font-size: 13px; color: var(--ink); }
 .scenes-handle small { color: var(--ink-3); margin-left: auto; }
 .scenes-handle .chev { width: 16px; height: 16px; color: var(--ink-3); transition: transform .2s; flex: none; }

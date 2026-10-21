@@ -155,6 +155,8 @@ export interface UIToggles {
   show_face: boolean;
   show_beam: boolean;
   show_field: boolean;
+  /** 바닥에 닿는 빛을 칠하는 방식. 없으면 그라데이션 */
+  floor_style?: 'gradient' | 'solid';
 }
 
 export interface InteractionState {

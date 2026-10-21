@@ -138,140 +138,39 @@ input:focus, select:focus, button:focus-visible { outline: 2px solid rgba(47, 11
   background: var(--bg-surface);
 }
 
-#patch-bay-panel {
-  flex: 0 0 auto;
-  max-height: 42vh;
-  overflow-y: auto;
-  border-top: 1px solid var(--border-color);
-  background: #eef1f4;
-}
+/* 채널 검사 패널 (트레이 안, ui/patch.ts) */
+.patch-head { position: relative; display: flex; align-items: center; gap: 6px; margin-bottom: 6px; font-size: 13px; color: var(--ink); }
+/* 아이콘이 제목 오른쪽에 있어서, 말풍선은 패널 폭에 맞춰 왼쪽 끝부터 펼친다 (패널 밖으로 잘리지 않게) */
+.patch-head .info { position: static; }
+.patch-head .info-tip { left: 0; right: 0; width: auto; top: 24px; }
+.patch-legend { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-bottom: 10px; font-size: 12px; color: var(--ink-2); }
+.patch-legend span { display: inline-flex; align-items: center; gap: 5px; }
+.patch-legend .sw { width: 12px; height: 12px; border-radius: 3px; border: 1px solid var(--line); }
 
-.patch-header {
-  width: 100%;
-  min-height: 44px;
-  padding: 10px 14px;
-  border: 0;
-  border-bottom: 1px solid var(--border-color);
-  background: var(--bg-surface);
-  color: var(--text-main);
-  cursor: pointer;
-}
-
-.patch-toggle {
-  justify-content: space-between;
-  font: inherit;
-}
-
-.patch-header-title {
-  font-weight: 700;
-}
-
-.patch-note {
-  padding: 10px 12px 2px;
-  color: var(--text-muted);
-  font-size: 0.78rem;
-  line-height: 1.35;
-}
-
-.patch-grid {
-  padding: 8px 12px 12px;
-}
-
-.patch-row {
-  margin-bottom: 10px;
-}
-
-.patch-row-label {
-  margin-bottom: 4px;
-  color: var(--text-muted);
-  font-size: 0.78rem;
-  font-weight: 700;
-}
-
-.patch-row-cells {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(26px, 1fr));
-  gap: 2px;
-}
+.patch-row { margin-bottom: 8px; }
+.patch-row-label { margin-bottom: 3px; font-size: 12px; font-weight: 600; color: var(--ink); }
+/* 모든 줄을 같은 격자(가장 긴 줄의 칸 수)로 맞춰 줄바꿈이 없고 세로로 칸이 맞는다 */
+.patch-row-cells { display: grid; grid-template-columns: repeat(var(--patch-cols, 12), minmax(0, 1fr)); gap: 2px; }
 
 .patch-cell {
-  min-width: 0;
-  min-height: 30px;
-  padding: 4px;
-  border: 1px solid #cdd4dc;
-  border-radius: 4px;
-  background: #fff;
-  color: var(--text-main);
-  cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 2px;
+  min-width: 0; height: 30px; padding: 0;
+  border: 1px solid var(--line); border-radius: 4px;
+  background: var(--surface); color: var(--ink);
+  cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
 }
+.patch-cell:hover { border-color: var(--chrome-accent); }
+.patch-cell.selected { outline: 2px solid var(--chrome-accent); outline-offset: 1px; }
+.patch-cell.used, .patch-legend .sw.used { background: var(--chrome-accent-soft); border-color: var(--chrome-accent); }
+.patch-cell.over, .patch-legend .sw.over { background: rgba(214, 69, 69, 0.18); border-color: #d64545; }
+.patch-legend .sw.empty { background: var(--surface); }
+.patch-channel { font: 700 11px var(--font-mono); line-height: 1; }
+.patch-count { font: 500 10px var(--font-mono); line-height: 1; color: var(--ink-2); }
+.patch-cell.used .patch-count, .patch-cell.over .patch-count { color: var(--ink); font-weight: 700; }
 
-.patch-cell:hover {
-  border-color: var(--accent);
-}
-
-.patch-cell.selected {
-  outline: 2px solid var(--accent);
-  outline-offset: 1px;
-}
-
-.patch-cell.used {
-  background: #e8f0ff;
-  border-color: #9eb9f5;
-}
-
-.patch-cell.over {
-  background: #fff0f0;
-  border-color: #e5a6a6;
-  color: #9d2d2d;
-}
-
-.patch-channel {
-  font-size: 0.78rem;
-  font-weight: 700;
-  line-height: 1;
-}
-
-.patch-count {
-  min-width: 18px;
-  padding: 1px 4px;
-  border-radius: 999px;
-  background: rgba(0, 0, 0, 0.08);
-  font-size: 0.72rem;
-  line-height: 1.2;
-}
-
-.patch-detail {
-  margin: 8px 12px 4px;
-  padding: 10px;
-  border: 1px solid var(--border-color);
-  border-radius: 6px;
-  background: #fff;
-}
-
-.patch-detail-title {
-  margin-bottom: 4px;
-  font-weight: 700;
-}
-
-.patch-detail-meta,
-.patch-detail-empty {
-  color: var(--text-muted);
-  font-size: 0.78rem;
-  line-height: 1.35;
-}
-
-.patch-detail-list {
-  margin: 8px 0 0;
-  padding-left: 18px;
-  font-size: 0.8rem;
-  line-height: 1.45;
-}
-
+.patch-detail { margin-top: 10px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface-2); color: var(--ink); }
+.patch-detail-title { margin-bottom: 3px; font-weight: 700; font-size: 13px; }
+.patch-detail-meta, .patch-detail-empty { color: var(--ink-2); font-size: 12px; line-height: 1.4; }
+.patch-detail-list { margin: 6px 0 0; padding-left: 18px; font-size: 12px; line-height: 1.45; }
 
 ::-webkit-scrollbar {
   width: 10px;
@@ -326,9 +225,9 @@ input:focus, select:focus, button:focus-visible { outline: 2px solid rgba(47, 11
 
 .view3d-overlay {
   position: absolute;
-  /* 왼쪽 도구 레일 옆 */
+  /* 왼쪽 도구 레일과 이름표 옆 */
   top: 58px;
-  left: 70px;
+  left: 190px;
   display: flex;
   flex-direction: column;
   gap: 8px;

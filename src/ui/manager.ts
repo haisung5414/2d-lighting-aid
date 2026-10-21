@@ -1,15 +1,14 @@
 // src/ui/manager.ts
 import { getState, initVenue, setState, subscribe, commitHistory } from '../state/store';
 import { DEFAULT_LAMP } from '../engine/photometrics';
-import type { AppState } from '../types';
-import type { VenueKey } from '../config/venues';
+import { VENUES, type VenueKey } from '../config/venues';
 
 export const initManagerUI = () => {
   initLandingUI();
   syncStageInputs();
 
   // 전역 토글 이벤트 바인딩
-  const toggleMap: Record<string, keyof AppState['ui_toggles']> = {
+  const toggleMap: Record<string, 'show_floor' | 'show_face' | 'show_beam' | 'show_field'> = {
     'tg-floor': 'show_floor',
     'tg-face': 'show_face',
     'tg-beam': 'show_beam',
@@ -31,6 +30,20 @@ export const initManagerUI = () => {
     }
   });
 
+  // 바닥 빛 칠하는 방식 (빛 범위 표시 패널)
+  const floorStyleInputs = document.querySelectorAll<HTMLInputElement>('input[name="floor-style"]');
+  floorStyleInputs.forEach(input => {
+    input.addEventListener('change', () => {
+      if (input.checked) setState(state => { state.ui_toggles.floor_style = input.value as 'gradient' | 'solid'; });
+    });
+  });
+  const syncFloorStyle = () => {
+    const style = getState().ui_toggles.floor_style ?? 'gradient';
+    floorStyleInputs.forEach(input => { input.checked = input.value === style; });
+  };
+  subscribe(syncFloorStyle);
+  syncFloorStyle();
+
   getState().stage_config.reference_layers.forEach(layer => {
     const el = document.getElementById(`tg-ref-${layer.id}`) as HTMLInputElement;
     if (!el) return;
@@ -46,6 +59,15 @@ export const initManagerUI = () => {
       });
     });
   });
+
+  // 공연장 이름 (공연장 정보 패널 맨 위)
+  const venueName = document.getElementById('venue-name');
+  const syncVenueName = () => {
+    const key = getState().stage_config.venue_key as VenueKey | undefined;
+    if (venueName) venueName.textContent = (key && VENUES[key]?.label) || '직접 정한 무대';
+  };
+  subscribe(syncVenueName);
+  syncVenueName();
 
   // 램프 규격 (공연장 정보 패널)
   const lampSelect = document.getElementById('venue-lamp') as HTMLSelectElement | null;
