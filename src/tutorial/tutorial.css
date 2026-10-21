@@ -1,0 +1,76 @@
+/* src/tutorial/tutorial.css
+ * 튜토리얼 덮개와 말풍선. 색은 ui/shell.css의 토큰을 써서 다크 모드에서도 맞는다.
+ * 덮개는 누르는 것을 막지 않는다 (pointer-events: none). */
+
+.tut-spot {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 60;
+  border-radius: 10px;
+  box-shadow: 0 0 0 200vmax rgba(10, 14, 20, 0.55);
+  outline: 2px solid var(--chrome-accent, #1f6fd1);
+  outline-offset: 0;
+  pointer-events: none;
+  transition: transform .18s ease, width .18s ease, height .18s ease;
+}
+/* 강조할 곳이 없을 때: 화면만 옅게 덮는다 */
+.tut-spot.none { width: 0 !important; height: 0 !important; outline: 0; box-shadow: 0 0 0 200vmax rgba(10, 14, 20, 0.35); }
+.tut-spot.pulse::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 12px;
+  border: 2px solid var(--chrome-accent, #1f6fd1);
+  animation: tut-pulse 1.4s ease-out infinite;
+}
+@keyframes tut-pulse {
+  from { opacity: .9; transform: scale(1); }
+  to { opacity: 0; transform: scale(1.12); }
+}
+
+.tut-bubble {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 61;
+  padding: 12px 14px 10px;
+  border-radius: 10px;
+  background: var(--surface, #fff);
+  color: var(--ink, #1d2733);
+  border: 1px solid var(--line, #d3d9e0);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .28);
+  font-size: 13px;
+  line-height: 1.55;
+  transition: transform .18s ease;
+}
+.tut-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 11px; font-weight: 600; letter-spacing: .03em; color: var(--chrome-accent, #1f6fd1); }
+.tut-head small { color: var(--ink-3, #8a96a4); font-weight: 500; }
+.tut-bubble h3 { margin: 4px 0 6px; font-size: 15px; }
+.tut-body p { margin: 0 0 6px; }
+.tut-body kbd { display: inline-block; min-width: 18px; padding: 0 5px; border: 1px solid var(--line, #d3d9e0); border-bottom-width: 2px; border-radius: 4px; background: var(--surface-2, #f3f5f8); font: 500 11px var(--font-mono, monospace); text-align: center; }
+.tut-body b { color: var(--ink, #1d2733); }
+.tut-actions { display: flex; align-items: center; gap: 6px; margin-top: 10px; }
+.tut-grow { flex: 1; }
+.tut-actions button { border-radius: 6px; padding: 5px 12px; font-size: 12px; font-weight: 600; cursor: pointer; }
+.tut-quiet { border: 1px solid var(--line, #d3d9e0); background: var(--surface, #fff); color: var(--ink-2, #5b6878); }
+.tut-quiet:hover { background: var(--surface-2, #f3f5f8); color: var(--ink, #1d2733); }
+.tut-primary { border: 1px solid var(--chrome-accent, #1f6fd1); background: var(--chrome-accent, #1f6fd1); color: #fff; }
+.tut-primary:hover { filter: brightness(1.08); }
+/* 할 일을 기다리는 동안 */
+.tut-bubble.waiting h3::before { content: "▶ "; color: var(--chrome-accent, #1f6fd1); }
+
+/* 도우미 패널 안의 강의 목록 */
+.tut-section { padding-bottom: 0; }
+.tut-section .tut-sub { margin-top: 0; padding-top: 0; border-top: 0; }
+.tut-list { display: grid; gap: 4px; }
+.tut-row { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface-2); }
+.tut-row .tut-name { flex: 1; min-width: 0; font-size: 13px; color: var(--ink); }
+.tut-row .tut-name small { display: block; color: var(--ink-3); font-size: 11px; }
+.tut-row .tut-check { width: 16px; color: #2d7a52; font-weight: 700; text-align: center; }
+.tut-row button { flex: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .tut-spot, .tut-bubble { transition: none; }
+  .tut-spot.pulse::after { animation: none; }
+}
