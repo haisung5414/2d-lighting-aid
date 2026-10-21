@@ -422,6 +422,12 @@ const loadList = async () => {
 
 /* ---------- 어떤 화면을 보일지 ---------- */
 
+/** 홈(로그인 화면이 아닌)이 그려질 때마다 알린다. 튜토리얼 자동 시작이 쓴다 (src/tutorial/autostart.ts) */
+const homeShownListeners = new Set<() => void>();
+export const onHomeShown = (listener: () => void) => { homeShownListeners.add(listener); };
+/** 지금 시작 화면에 홈이 보이는가 */
+export const isHomeShown = () => Boolean(root) && root.dataset.screen === 'home' && landingVisible();
+
 const currentScreen = (): 'pending' | 'login' | 'home' => {
   if (!isAuthResolved() && !gaveUpWaiting) return 'pending';
   if (getUser()) return 'home';
@@ -438,6 +444,7 @@ const render = () => {
   if (screen !== 'home') return;
   renderAccount(getUser());
   renderFiles();
+  if (landingVisible()) homeShownListeners.forEach(listener => listener());
 };
 
 export const initHome = () => {

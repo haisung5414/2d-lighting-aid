@@ -38,6 +38,8 @@ Review fixes (user, after T2):
 - Lesson 5 no longer talks about the wall blocking light (not an intended teaching point); the wall goes behind the actor.
 - VCB is millimetres only (user decision): plain numbers are mm, an optional `mm` suffix is accepted, m and cm are rejected; the move distance is shown in mm. Lesson 5 asks for `1200`.
 
+- Signed-out visitors too (user request): `home.ts` now exposes `onHomeShown` / `isHomeShown`, and auto-start runs whenever Home (not the login screen) is shown, once per page load. Checked on 5173 with the real login screen: no tutorial on the login screen; `로그인 없이 시작하기` → lesson 1 at once; after lesson 1 is recorded, the next page load starts lesson 2. Merged main (47e4c79) into this branch first because `home.ts` changed there.
+
 ## T3 — Lessons 6–8 + first visit `[ ]`
 - 씬 만들기, 3D로 확인하기, 저장과 채널 검사.
 - (First-visit entry point moved to T1 review fixes: auto-start on first sign-in.)
