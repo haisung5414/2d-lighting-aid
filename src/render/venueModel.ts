@@ -4,7 +4,7 @@
 // 표면은 무대 조명 셰이더로 비추므로 조명이 벽이나 객석에 닿는 모습도 보인다.
 
 import * as THREE from 'three';
-import { VENUES, type PlanRect, type VenueModel3D } from '../config/venues';
+import { VENUES, type PlanPoint, type PlanRect, type VenueModel3D } from '../config/venues';
 import { createStageLightMaterial, type FixtureDataTexture } from './stageLightMaterial';
 import type { StageConfig } from '../types';
 
@@ -50,8 +50,51 @@ const box = (rect: PlanRect, z0: number, z1: number, material: THREE.Material): 
   return mesh;
 };
 
+/** 앱 좌표 다각형을 z0~z1 높이의 기둥 모양으로 만든다 */
+const prism = (points: PlanPoint[], z0: number, z1: number, material: THREE.Material): THREE.Mesh => {
+  // Shape 좌표 (x, -y)를 x축 기준 -90도 회전하면 three.js (x, 0, y)가 되고, 돌출 방향은 위쪽이 된다
+  const shape = new THREE.Shape(points.map(([x, y]) => new THREE.Vector2(x, -y)));
+  const mesh = new THREE.Mesh(new THREE.ExtrudeGeometry(shape, { depth: z1 - z0, bevelEnabled: false }), material);
+  mesh.rotation.x = -Math.PI / 2;
+  mesh.position.y = z0;
+  return mesh;
+};
+
+/** 앱 좌표의 선분 위에 세운 얇은 판 (난간) */
+const panel = (a: PlanPoint, b: PlanPoint, z0: number, z1: number, thickness: number, material: THREE.Material): THREE.Mesh => {
+  const dx = b[0] - a[0], dy = b[1] - a[1];
+  const mesh = new THREE.Mesh(new THREE.BoxGeometry(Math.hypot(dx, dy), z1 - z0, thickness), material);
+  mesh.position.set((a[0] + b[0]) / 2, (z0 + z1) / 2, (a[1] + b[1]) / 2);
+  mesh.rotation.y = Math.atan2(-dy, dx);
+  return mesh;
+};
+
+/** 파이프 위치를 모르는 천장 조명 그리드: 높이와 범위만 반투명한 면과 테두리로 보여 준다 */
+const buildLightingGrid = (grid: NonNullable<VenueModel3D['lightingGrid']>): THREE.Object3D => {
+  const group = new THREE.Group();
+  const plane = horizontalPlane(grid.area, grid.z, false, new THREE.MeshBasicMaterial({
+    color: 0x5a6068, transparent: true, opacity: 0.25, side: THREE.DoubleSide, depthWrite: false
+  }));
+  plane.renderOrder = 1;
+  group.add(plane);
+  const { x0, x1, y0, y1 } = grid.area;
+  const corners = [[x0, y0], [x1, y0], [x1, y1], [x0, y1]];
+  const edge = corners.flatMap(([x, y], i) => {
+    const [nx, ny] = corners[(i + 1) % 4];
+    return [new THREE.Vector3(x, grid.z, y), new THREE.Vector3(nx, grid.z, ny)];
+  });
+  group.add(new THREE.LineSegments(
+    new THREE.BufferGeometry().setFromPoints(edge),
+    new THREE.LineBasicMaterial({ color: 0x8a96a3, transparent: true, opacity: 0.7 })
+  ));
+  return group;
+};
+
+/** 캣워크와 조명 파이프. 캣워크가 없는 극장은 천장 조명 그리드만 보여 준다 */
 export const buildCatwalk = (model: VenueModel3D): THREE.Object3D => {
   const group = new THREE.Group();
+  if (model.lightingGrid) group.add(buildLightingGrid(model.lightingGrid));
+  if (!model.catwalk) return group;
   const { area, openings, z, pipes } = model.catwalk;
 
   // 그레이팅 바닥: 개구부를 구멍으로 뚫은 판. 아래가 비쳐 보이도록 반투명하게 둔다.
@@ -168,6 +211,53 @@ export const buildVenueModel = (model: VenueModel3D, data: FixtureDataTexture): 
     const block = box(p, 0, p.z, galleryMaterial);
     block.layers.enable(OCCLUDER_LAYER);
     group.add(block);
+  });
+
+  // 다각형 발코니: 두께 0.2 m 바닥판과 공연장 쪽 가장자리의 높이 1 m 난간. 아래는 비워 둔다
+  model.balconies?.forEach(b => {
+    const slab = prism(b.outline, b.z - 0.2, b.z, galleryMaterial);
+    slab.layers.enable(OCCLUDER_LAYER);
+    group.add(slab);
+    b.edge.slice(1).forEach((point, i) => {
+      const rail = panel(b.edge[i], point, b.z, b.z + 1.0, 0.06, galleryMaterial);
+      rail.layers.enable(OCCLUDER_LAYER);
+      group.add(rail);
+    });
+    // 같은 색의 벽과 구분되도록 바닥판 가장자리와 난간 윗선을 옅은 선으로 그린다
+    [b.z - 0.2, b.z + 1.0].forEach(z => {
+      group.add(new THREE.Line(
+        new THREE.BufferGeometry().setFromPoints(b.edge.map(([x, y]) => new THREE.Vector3(x, z, y))),
+        new THREE.LineBasicMaterial({ color: 0x55606e, transparent: true, opacity: 0.6 })
+      ));
+    });
+  });
+
+  // 벽에 붙은 덩어리 (위층보다 두꺼운 아래층 벽 등)
+  model.solids?.forEach(s => {
+    const block = box(s, s.z0, s.z1, wallMaterial);
+    block.layers.enable(OCCLUDER_LAYER);
+    group.add(block);
+  });
+
+  // 나선계단: 가운데 기둥과, 30도씩 돌며 0.2 m 정도씩 오르는 디딤판
+  model.spiralStairs?.forEach(stair => {
+    const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, stair.z1 - stair.z0, 8), galleryMaterial);
+    pole.position.set(stair.x, (stair.z0 + stair.z1) / 2, stair.y);
+    group.add(pole);
+    const steps = Math.max(1, Math.round((stair.z1 - stair.z0) / 0.2));
+    const rise = (stair.z1 - stair.z0) / steps;
+    for (let i = 1; i <= steps; i++) {
+      const angle = i * Math.PI / 6;
+      const step = new THREE.Mesh(new THREE.BoxGeometry(stair.radius, 0.04, 0.3), galleryMaterial);
+      step.position.set(
+        stair.x + Math.cos(angle) * stair.radius / 2,
+        stair.z0 + rise * i,
+        stair.y + Math.sin(angle) * stair.radius / 2
+      );
+      step.rotation.y = -angle;
+      step.layers.enable(OCCLUDER_LAYER);
+      group.add(step);
+    }
   });
 
   return group;

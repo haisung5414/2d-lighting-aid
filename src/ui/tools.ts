@@ -167,7 +167,7 @@ const stageAimCenter = (): Position2D => {
 /** 가장 가까운 캣워크 파이프에 붙인다. 극장 모형이 없으면 누른 자리 그대로 */
 const snapToPipe = (point: Position2D): Position2D => {
   const stage = getState().stage_config;
-  const pipes = stage.venue_key ? VENUES[stage.venue_key as keyof typeof VENUES]?.model3d?.catwalk.pipes : undefined;
+  const pipes = stage.venue_key ? VENUES[stage.venue_key as keyof typeof VENUES]?.model3d?.catwalk?.pipes : undefined;
   if (!pipes || pipes.length === 0) return point;
   const pipe = pipes.reduce((best, p) => Math.abs(p.y - point.y) < Math.abs(best.y - point.y) ? p : best);
   return { x: Math.min(pipe.x1, Math.max(pipe.x0, point.x)), y: pipe.y };

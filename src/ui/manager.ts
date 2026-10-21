@@ -3,6 +3,11 @@ import { getState, initVenue, setState, subscribe, commitHistory } from '../stat
 import { DEFAULT_LAMP } from '../engine/photometrics';
 import { VENUES, type VenueKey } from '../config/venues';
 
+/** 레이어 패널의 보기 칸 이름. 평면도와 캣워크는 극장마다 같은 이름으로 보여 준다 */
+const referenceLayerLabel = (id: string, label: string) => (
+  id.endsWith('floor-plan') ? '극장 평면도 보기' : id.endsWith('catwalk') ? '캣워크 오버레이 보기' : `${label} 보기`
+);
+
 export const initManagerUI = () => {
   initLandingUI();
   syncStageInputs();
@@ -44,21 +49,34 @@ export const initManagerUI = () => {
   subscribe(syncFloorStyle);
   syncFloorStyle();
 
-  getState().stage_config.reference_layers.forEach(layer => {
-    const el = document.getElementById(`tg-ref-${layer.id}`) as HTMLInputElement;
-    if (!el) return;
-
-    el.checked = layer.is_visible;
-    el.addEventListener('change', (e) => {
-      const target = e.target as HTMLInputElement;
-      setState(state => {
-        const targetLayer = state.stage_config.reference_layers.find(item => item.id === layer.id);
-        if (targetLayer) {
-          targetLayer.is_visible = target.checked;
-        }
-      });
+  // 극장 도면 레이어 보기 (레이어 패널): 공연장마다 레이어가 달라서 지금 작업의 레이어로 칸을 만든다
+  const refToggles = document.getElementById('ref-layer-toggles');
+  let refLayerKey = '';
+  const syncRefToggles = () => {
+    if (!refToggles) return;
+    const layers = getState().stage_config.reference_layers;
+    const key = layers.map(layer => `${layer.id}:${layer.label}`).join('|');
+    if (key !== refLayerKey) {
+      refLayerKey = key;
+      refToggles.innerHTML = layers.map(layer => `
+        <label class="toggle-row"><input type="checkbox" id="tg-ref-${layer.id}" data-ref-layer="${layer.id}"> ${referenceLayerLabel(layer.id, layer.label)}</label>`).join('');
+    }
+    layers.forEach(layer => {
+      const el = document.getElementById(`tg-ref-${layer.id}`) as HTMLInputElement | null;
+      if (el) el.checked = layer.is_visible;
+    });
+  };
+  refToggles?.addEventListener('change', e => {
+    const target = e.target as HTMLInputElement;
+    const id = target.dataset.refLayer;
+    if (!id) return;
+    setState(state => {
+      const targetLayer = state.stage_config.reference_layers.find(item => item.id === id);
+      if (targetLayer) targetLayer.is_visible = target.checked;
     });
   });
+  subscribe(syncRefToggles);
+  syncRefToggles();
 
   // 공연장 이름 (공연장 정보 패널 맨 위)
   const venueName = document.getElementById('venue-name');

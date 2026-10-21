@@ -44,7 +44,7 @@ const HUMANITIES = VENUES.humanities;
 const ACTOR_SPOT: Position2D = { x: HUMANITIES.stage.width / 2, y: (HUMANITIES.model3d?.seating?.y0 ?? HUMANITIES.stage.depth) / 2 };
 /** 앞에서 비추는 조명을 달 자리: 배우보다 객석 쪽으로 약 45° 각도가 되는 파이프 */
 const FRONT_PIPE: Position2D = (() => {
-  const pipes = HUMANITIES.model3d?.catwalk.pipes ?? [];
+  const pipes = HUMANITIES.model3d?.catwalk?.pipes ?? [];
   const want = ACTOR_SPOT.y + HUMANITIES.stage.defaultFixtureZ;
   const pipe = pipes.reduce((best, p) => Math.abs(p.y - want) < Math.abs(best.y - want) ? p : best, pipes[0] ?? { y: want });
   return { x: ACTOR_SPOT.x, y: pipe.y };

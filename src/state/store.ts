@@ -39,6 +39,8 @@ export const createActor = (x: number, y: number, existing: { label: string }[])
 
 const createInitialState = (venue: VenuePreset): AppState => {
   const fixtureX = venue.stage.width / 2;
+  // 객석이 있는 극장은 객석 앞 연기 공간의 가운데에, 없으면 무대 가운데에 사람 모형을 두고 조명을 겨눈다
+  const actingY = venue.model3d?.seating ? venue.model3d.seating.y0 / 2 : venue.stage.depth / 2;
 
   return {
     stage_config: {
@@ -63,7 +65,7 @@ const createInitialState = (venue: VenuePreset): AppState => {
             type: "ellipsoidal",
             lens_type: "36deg",
             position: { x: fixtureX, y: 1, z: venue.stage.defaultFixtureZ },
-            target: { x: fixtureX, y: venue.stage.depth / 2 },
+            target: { x: fixtureX, y: actingY },
             shutter_active: false,
             is_visible: true,
             shutter_polygon: [
@@ -79,7 +81,7 @@ const createInitialState = (venue: VenuePreset): AppState => {
     selected_fixture_id: null, // 단일 선택: 처음에는 아무것도 고르지 않는다
     interaction: { dragMode: null, draggedIndex: -1 },
     selected_actor_id: null,
-    actors: [createActor(fixtureX, venue.stage.depth / 2, [])]
+    actors: [createActor(fixtureX, actingY, [])]
   };
 };
 
