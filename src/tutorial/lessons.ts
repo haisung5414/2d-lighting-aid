@@ -437,8 +437,8 @@ const lessonActors: TutorialLesson = {
 
 /* ---------- 5강: 세트와 그림자 ---------- */
 
-/** 앞 조명과 배우 사이: 2.44m 벽은 얼굴로 가는 빛을 가리고, 1.2m로 낮추면 가리지 않는 자리 */
-const WALL_SPOT: Position2D = { x: ACTOR_SPOT.x, y: ACTOR_SPOT.y + 0.8 };
+/** 배우 뒤(무대 안쪽)에 세우는 벽 자리 */
+const WALL_SPOT: Position2D = { x: ACTOR_SPOT.x, y: ACTOR_SPOT.y - 1.5 };
 let setSizeAtStart = '';
 const setSizeKey = () => { const piece = firstSet(); return piece ? `${piece.width}x${piece.depth}` : ''; };
 const keepSetSelected = () => { const piece = firstSet(); if (piece && getState().selected_set_id !== piece.id) selectSet(piece.id); };
@@ -447,7 +447,7 @@ const lessonSets: TutorialLesson = {
   id: 'sets',
   title: '5강 · 세트와 그림자',
   minutes: 5,
-  summary: '벽을 세워 빛을 가리고, 높이·크기·각도를 바꾸고, 3D 그림자를 봅니다.',
+  summary: '벽을 세우고, 높이·크기·각도를 바꾸고, 3D 그림자를 봅니다.',
   setup: () => setupPractice(true),
   steps: [
     {
@@ -457,13 +457,10 @@ const lessonSets: TutorialLesson = {
       body: '<p>왼쪽의 <b>벽 놓기</b>를 누르거나 <kbd>W</kbd>를 누르세요. 가로 1220 · 두께 30 · 높이 2440 mm 벽(평)이 놓입니다.</p>'
     },
     {
-      title: '배우 바로 앞에 벽을 놓으세요',
+      title: '배우 뒤에 벽을 놓으세요',
       target: stagePoint(() => WALL_SPOT, 26),
       done: () => Boolean(firstSet()),
-      manual: true,
-      body: '<p><b>파란 테두리로 표시한 곳</b>(배우와 조명 사이)을 누르세요.</p>',
-      afterBody: `<p>배우 옆의 <b>얼굴 lux</b>가 0이 되었죠? 벽이 조명과 배우 얼굴 사이를 막아서 빛이 닿지 않습니다.</p>
-        <p>세트는 높이까지 계산해서 빛을 가립니다. 다 봤으면 <b>다음</b>을 누르세요.</p>`
+      body: '<p><b>파란 테두리로 표시한 곳</b>(배우 뒤, 무대 안쪽)을 누르세요. 그 자리에 벽이 섭니다.</p>'
     },
     {
       title: '숫자로 벽 높이를 바꾸세요',
@@ -471,9 +468,9 @@ const lessonSets: TutorialLesson = {
       onEnter: keepSetSelected,
       done: () => Boolean(firstSet() && Math.abs(firstSet().height - 2.44) > 0.001),
       manual: true,
-      body: '<p>세트를 놓은 직후에는 숫자를 바로 치면 높이가 됩니다. 키보드로 <kbd>1200mm</kbd>를 치고 <kbd>Enter</kbd>를 누르세요. (아래 <b>높이</b> 칸에 들어갑니다)</p>',
-      afterBody: `<p>벽이 1.2 m로 낮아져 빛이 벽 위로 넘어가고, 배우 얼굴 밝기가 다시 생겼습니다.</p>
-        <p>단위 없이 치면 m입니다 (예: 1.2). 다 봤으면 <b>다음</b>을 누르세요.</p>`
+      body: '<p>세트를 놓은 직후에는 숫자를 바로 치면 높이가 됩니다. 키보드로 <kbd>1200</kbd>을 치고 <kbd>Enter</kbd>를 누르세요. (아래 <b>높이</b> 칸에 들어가고, 단위는 mm입니다)</p>',
+      afterBody: `<p>벽 높이가 <b>1200 mm</b>가 되었습니다. 덧마루나 단을 놓은 뒤 높이를 맞출 때도 이렇게 합니다.</p>
+        <p>높이는 <b>선택한 객체 속성</b>에서도 mm로 바꿀 수 있습니다. 다 봤으면 <b>다음</b>을 누르세요.</p>`
     },
     {
       title: '흰 꼭짓점을 끌어 크기를 바꾸세요',
@@ -510,13 +507,13 @@ const lessonSets: TutorialLesson = {
       done: () => Boolean(firstFixture()?.cast_shadow),
       manual: true,
       body: '<p>조명 설정의 <b>3D 그림자</b>에서 <b>3D에서 이 조명의 그림자 계산</b>을 체크하세요.</p>',
-      afterBody: `<p>벽과 배우 뒤로 그림자가 생겼습니다. 그림자는 계산이 무거워서 한 번에 <b>4개 조명</b>까지만 켤 수 있습니다.</p>
+      afterBody: `<p>배우와 벽 뒤로 그림자가 생겼습니다. 그림자는 계산이 무거워서 한 번에 <b>4개 조명</b>까지만 켤 수 있습니다.</p>
         <p>다 봤으면 <b>다음</b>을 누르세요.</p>`
     },
     {
       title: '세트와 그림자를 봤습니다',
       onEnter: () => { void setViewMode('2d'); },
-      body: `<p>세트가 빛을 가리는 모습, 숫자로 높이를 정하는 법, 손잡이로 크기와 각도를 바꾸는 법, 3D 그림자를 봤습니다.</p>
+      body: `<p>벽을 세우고, 숫자로 높이를 정하고, 손잡이로 크기와 각도를 바꾸고, 3D 그림자를 봤습니다.</p>
         <p>남은 강의(씬 만들기, 3D 확인, 저장과 채널 검사)는 곧 추가됩니다.</p>`
     }
   ]

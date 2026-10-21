@@ -37,15 +37,28 @@ const GAP = 14;
 const BUBBLE_W = 320;
 const ADVANCE_DELAY = 650;
 
-/* ---------- 진행 기록 ---------- */
+const changeListeners = new Set<() => void>();
+const emitChange = () => changeListeners.forEach(listener => listener());
+
+/* ---------- 진행 기록 (로그인한 회원은 계정마다 따로) ---------- */
+
+let progressScope: string | null = null;
+const doneKey = () => (progressScope ? `${DONE_KEY}:${progressScope}` : DONE_KEY);
+
+/** 진행 기록을 누구 것으로 볼지 정한다 (로그인한 계정 id, 로그인하지 않았으면 null) */
+export const setProgressScope = (scope: string | null) => {
+  if (scope === progressScope) return;
+  progressScope = scope;
+  emitChange();
+};
 
 export const finishedLessons = (): Set<string> => {
-  try { return new Set(JSON.parse(localStorage.getItem(DONE_KEY) ?? '[]') as string[]); } catch { return new Set(); }
+  try { return new Set(JSON.parse(localStorage.getItem(doneKey()) ?? '[]') as string[]); } catch { return new Set(); }
 };
 const markFinished = (id: string) => {
   const done = finishedLessons();
   done.add(id);
-  try { localStorage.setItem(DONE_KEY, JSON.stringify([...done])); } catch { /* 기록 없이도 동작한다 */ }
+  try { localStorage.setItem(doneKey(), JSON.stringify([...done])); } catch { /* 기록 없이도 동작한다 */ }
 };
 
 /* ---------- 상태 ---------- */
@@ -59,12 +72,10 @@ let frame = 0;
 let timer = 0;
 let spot: HTMLDivElement | null = null;
 let bubble: HTMLDivElement | null = null;
-const changeListeners = new Set<() => void>();
 
 export const isTutorialRunning = () => lesson !== null;
 /** 튜토리얼이 시작·종료되거나 강의를 마쳤을 때 (목록 다시 그리기용) */
 export const onTutorialChange = (listener: () => void) => { changeListeners.add(listener); };
-const emitChange = () => changeListeners.forEach(listener => listener());
 
 export const registerLessons = (list: TutorialLesson[]) => { lessons = list; };
 export const getLessons = () => lessons;

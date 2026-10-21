@@ -17,7 +17,7 @@ const KEYS: [string, string][] = [
   ['Esc', '선택 도구로 돌아가기'],
   ['Ctrl+Z · Ctrl+Y', '실행 취소 · 다시 실행'],
   ['휠', '확대 · 축소'],
-  ['숫자 + Enter', '끈 직후 거리, 세트를 놓은 직후 높이']
+  ['숫자 + Enter', '끈 직후 거리, 세트를 놓은 직후 높이 (mm)']
 ];
 
 const renderHelp = () => {

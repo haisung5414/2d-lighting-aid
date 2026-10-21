@@ -32,6 +32,12 @@ Done notes:
 - Practice work is remembered (`practiceOpen`, cleared by any `lighting:file` event), so chaining lessons or restarting one never asks to save the practice work.
 - Verified in the browser with the real inputs (select change, gel click, slider change, shutter corner drag, actor tool + click, height input, actor drag, wall tool + click, VCB typing, corner drag, rotate handle drag, 3D, shadow checkbox).
 
+Review fixes (user, after T2):
+- Auto-start now continues with the next unfinished lesson on every signed-in visit, progress per account, with an opt-out checkbox in the 도우미 panel. The earlier version only started lesson 1 once per account, and the user could not have seen it anyway: the tutorial was not deployed and the 5174 dev server had no `.env.local` (5174 is also not an allowed Supabase redirect URL). For local sign-in tests this worktree now has `.env.local` (git-ignored, copied from the cloud worktree) and runs on port 5173.
+- Checked with a fake member through `maybeAutoStart`: first visit starts lesson 1; after lesson 1 is recorded, the next page load starts lesson 2; a second call in the same visit does nothing.
+- Lesson 5 no longer talks about the wall blocking light (not an intended teaching point); the wall goes behind the actor.
+- VCB is millimetres only (user decision): plain numbers are mm, an optional `mm` suffix is accepted, m and cm are rejected; the move distance is shown in mm. Lesson 5 asks for `1200`.
+
 ## T3 — Lessons 6–8 + first visit `[ ]`
 - 씬 만들기, 3D로 확인하기, 저장과 채널 검사.
 - (First-visit entry point moved to T1 review fixes: auto-start on first sign-in.)

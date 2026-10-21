@@ -47,7 +47,7 @@ interface TutorialStep {
 ## 3. Entry points
 
 - **도우미 panel** (T1): a `튜토리얼` section listing lessons — title, minutes, a ✓ when finished, and a `시작` button (or `다시 하기`).
-- **First sign-in** (user decision 2026-10-21, replaces the Home card idea): the first time an account signs in on this browser and Home is showing, lesson 1 starts **immediately, without asking**. Remembered per account id in `localStorage` key `lightingAid.tutorial.autoStartedUsers`. Not triggered when sign-in restored an open work into the editor. (`src/tutorial/autostart.ts`)
+- **Signed-in visits** (user decisions 2026-10-21, replace the Home card idea): whenever a signed-in member comes in (once per page load, when the sign-in check resolves and Home is showing), the **first lesson they have not finished starts immediately, without asking** — lesson 1 on the first sign-in, lesson 2 on the next visit after finishing lesson 1, and so on until all are done. Progress is kept per account (`lightingAid.tutorial.done:<user id>`; signed-out progress uses the plain key). Not triggered when sign-in restored an open work into the editor. The 도우미 panel has `로그인해 들어올 때 남은 강의 이어서 하기` (on by default; off = `lightingAid.tutorial.autoContinueOff`). (`src/tutorial/autostart.ts`, `maybeAutoStart`)
 
 ## 4. Lessons
 
@@ -57,7 +57,7 @@ interface TutorialStep {
 | 2 | 첫 조명 달기 | E (ellipsoidal) + lens, click the stage, drag the aim point to the actor, read `얼굴 N lux`, close and reopen 조명 설정 by double-click |
 | 3 | 조명 다듬기 | lens, gel, dimmer, shutter corners |
 | 4 | 배우 얼굴 밝기 읽기 | place a second actor, set 키, read contributions in 선택한 객체 속성 |
-| 5 | 세트와 그림자 | place a wall / deck, resize with handles, type a height in 수치 |
+| 5 | 세트와 그림자 | place a wall behind the actor, type its height in 수치 (mm), resize and rotate with handles, 3D shadow (no set-blocks-light explanation, user decision) |
 | 6 | 씬 만들기 | copy a scene, rename, reorder |
 | 7 | 3D로 확인하기 | 3D view, 3D 극장 구조 toggles, 3D shadow |
 | 8 | 저장과 채널 검사 | save (local / online), channel check panel |

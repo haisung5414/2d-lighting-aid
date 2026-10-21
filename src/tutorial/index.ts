@@ -4,7 +4,7 @@
 
 import { finishedLessons, getLessons, isTutorialRunning, onTutorialChange, registerLessons, startLesson } from './engine';
 import { LESSONS } from './lessons';
-import { initTutorialAutostart } from './autostart';
+import { initTutorialAutostart, isAutoContinueOn, setAutoContinue } from './autostart';
 
 const renderList = () => {
   const host = document.getElementById('tutorial-list');
@@ -19,10 +19,13 @@ const renderList = () => {
   host.querySelectorAll<HTMLButtonElement>('[data-lesson]').forEach(button => {
     button.addEventListener('click', () => startLesson(button.dataset.lesson!));
   });
+  const auto = document.getElementById('tutorial-auto') as HTMLInputElement | null;
+  if (auto) auto.checked = isAutoContinueOn();
 };
 
 export const initTutorial = () => {
   registerLessons(LESSONS);
+  document.getElementById('tutorial-auto')?.addEventListener('change', e => setAutoContinue((e.target as HTMLInputElement).checked));
   onTutorialChange(renderList);
   renderList();
   initTutorialAutostart();

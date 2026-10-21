@@ -2,7 +2,7 @@
 // 아래 상태 바의 커서 좌표와 "수치" 칸 (SketchUp의 측정 칸, VCB).
 //   - 조명·세트·사람 모형을 끄는 중이나 끈 직후: 숫자를 치고 Enter → 끈 방향으로 그 거리만큼 정확히 옮긴다
 //   - 세트를 그리거나 놓은 직후: 숫자를 치고 Enter → 그 세트의 높이가 된다
-// 숫자는 m 단위이고, "900mm", "90cm"처럼 단위를 붙여도 된다.
+// 숫자는 mm 단위다 (사용자 결정 2026-10-21: m·cm는 받지 않는다). 끝에 "mm"를 붙여도 된다.
 // 사양: docs/redesign/UI_REDESIGN_SPEC.md §7
 
 import { commitHistory, getState, setState } from '../state/store';
@@ -19,13 +19,12 @@ let context: VcbContext = null;
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T | null;
 
-/** "2.5", "2,5", "900mm", "90 cm" → m. 읽을 수 없으면 null */
+/** "1200", "1200mm", "1,200" → m (입력은 mm). 읽을 수 없으면 null */
 export const parseLength = (text: string): number | null => {
-  const m = text.trim().replace(',', '.').match(/^(-?\d*\.?\d+)\s*(mm|cm|m)?$/i);
+  const m = text.trim().replace(/,/g, '').match(/^(-?\d*\.?\d+)\s*(mm)?$/i);
   if (!m) return null;
   const value = parseFloat(m[1]);
-  const unit = (m[2] ?? 'm').toLowerCase();
-  const meters = unit === 'mm' ? value / 1000 : unit === 'cm' ? value / 100 : value;
+  const meters = value / 1000;
   return Number.isFinite(meters) ? meters : null;
 };
 
@@ -51,14 +50,14 @@ const renderVcb = () => {
   if (context?.type === 'move') {
     label.textContent = '거리';
     const d = Math.hypot(context.to.x - context.from.x, context.to.y - context.from.y);
-    if (!focused) input.value = `${d.toFixed(2)} m`;
-    input.title = '숫자를 치고 Enter를 누르면 방금 끈 방향으로 그 거리만큼 정확히 옮깁니다 (예: 2.5, 900mm)';
+    if (!focused) input.value = `${Math.round(d * 1000)} mm`;
+    input.title = '숫자(mm)를 치고 Enter를 누르면 방금 끈 방향으로 그 거리만큼 정확히 옮깁니다 (예: 2500)';
   } else if (context?.type === 'height') {
     label.textContent = '높이';
     const setId = context.setId;
     const piece = (getState().stage_config.set_pieces ?? []).find(p => p.id === setId);
     if (!focused) input.value = piece ? `${Math.round(piece.height * 1000)} mm` : '';
-    input.title = '숫자를 치고 Enter를 누르면 방금 놓은 세트의 높이가 됩니다 (예: 0.9, 900mm)';
+    input.title = '숫자(mm)를 치고 Enter를 누르면 방금 놓은 세트의 높이가 됩니다 (예: 900)';
   } else {
     label.textContent = '수치';
     if (!focused) input.value = '';

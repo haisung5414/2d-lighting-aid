@@ -168,7 +168,7 @@ By default each fixture's floor light is a soft pool: a radial gradient over the
 
 Left to right: help icon (opens 도우미), **hint sentence for the current tool** (mockup copy), cursor position `X 6.20 m  Y 7.45 m`, numeric input `수치` (SketchUp VCB: while dragging, typing a number and Enter applies an exact distance; right after drawing a set it sets the height), zoom `100%` (click → fit). Zoom in/out also via wheel.
 
-VCB details (implemented in Phase 6): the field label reads `거리` after a move and `높이` after placing a set, `수치` otherwise. Values are metres unless suffixed `mm` or `cm`. Typing digits anywhere outside an input jumps into the field while it has a target. A move is re-applied from the drag start along the drag direction.
+VCB details (implemented in Phase 6; units changed 2026-10-21): the field label reads `거리` after a move and `높이` after placing a set, `수치` otherwise. Values are **millimetres only** (plain number, optional `mm` suffix; m and cm are not accepted) and the move distance is shown in mm. Typing digits anywhere outside an input jumps into the field while it has a target. A move is re-applied from the drag start along the drag direction.
 
 ## 8. Top bar details
 
