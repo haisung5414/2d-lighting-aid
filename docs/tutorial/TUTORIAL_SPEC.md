@@ -37,7 +37,7 @@ interface TutorialStep {
 
 ### 2.2 Overlay
 - Spotlight: a fixed, rounded box at the target rect (+6 px padding) with `box-shadow: 0 0 0 200vmax rgba(10,14,20,.55)`; a soft pulse ring on action steps. `pointer-events: none`.
-- Bubble: fixed card beside the target (right, left, below or above — whichever fits, else centred), max width 320 px; shows lesson title, step `n / N`, step title, body, and buttons: `그만하기` (left), `건너뛰기` or `이전`/`다음` (right). Esc = 그만하기.
+- Bubble: fixed card beside the target (right, left, below or above — whichever fits, else centred), max width 320 px; shows lesson title, step `n / N`, step title, body, and buttons: `그만하기` (left), `건너뛰기` or `이전`/`다음` (right). Enter presses the primary button (다음 / 끝내기 / 다음 강의) when focus is not in a text field. Esc is **not** used (it already cancels placing tools and renames). 그만하기 shows a short note pointing to the ? (도우미) button.
 - Theme tokens from `ui/shell.css`, so dark mode works. z-index above every floating element (60).
 
 ### 2.3 Finishing

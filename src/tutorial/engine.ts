@@ -124,7 +124,7 @@ const renderBubble = () => {
       ${last && !nextLesson ? '<button type="button" class="tut-primary" data-tut="finish">끝내기</button>' : ''}
     </div>`;
   bubble.classList.toggle('waiting', waiting);
-  bubble.querySelector('[data-tut="quit"]')?.addEventListener('click', () => stopTutorial());
+  bubble.querySelector('[data-tut="quit"]')?.addEventListener('click', () => { stopTutorial(); showQuitNote(); });
   bubble.querySelector('[data-tut="prev"]')?.addEventListener('click', () => goTo(index - 1));
   bubble.querySelector('[data-tut="skip"]')?.addEventListener('click', () => goTo(index + 1));
   bubble.querySelector('[data-tut="next"]')?.addEventListener('click', () => goTo(index + 1));
@@ -211,8 +211,29 @@ const goTo = (next: number) => {
   renderBubble();
 };
 
+/**
+ * Enter = 다음 (보이는 다음·끝내기 버튼을 누른다). Esc는 쓰지 않는다:
+ * 놓기 도구 취소, 이름 입력 취소에도 Esc를 쓰므로 튜토리얼까지 꺼지면 안 된다.
+ */
 const onKey = (e: KeyboardEvent) => {
-  if (e.key === 'Escape' && lesson) stopTutorial();
+  if (!lesson || !bubble || e.key !== 'Enter' || e.isComposing) return;
+  const target = e.target instanceof Element ? e.target : null;
+  if (target?.closest('input, textarea, select, [contenteditable="true"]')) return;
+  const primary = bubble.querySelector<HTMLButtonElement>('.tut-primary');
+  if (!primary) return;
+  e.preventDefault();
+  primary.click();
+};
+
+/** 그만두면 어디서 다시 할 수 있는지 잠깐 알려 준다 */
+const showQuitNote = () => {
+  const note = document.createElement('div');
+  note.className = 'tut-note';
+  note.setAttribute('role', 'status');
+  note.innerHTML = '튜토리얼을 멈췄습니다. 아래 왼쪽 <b>?</b> 버튼(도우미)에서 언제든 다시 시작할 수 있습니다.';
+  document.body.appendChild(note);
+  window.setTimeout(() => note.classList.add('out'), 4000);
+  window.setTimeout(() => note.remove(), 4600);
 };
 
 /* ---------- 시작과 끝 ---------- */

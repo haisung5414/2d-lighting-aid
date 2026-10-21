@@ -51,5 +51,13 @@ Done notes:
 - Lesson 5's last step now points to lesson 6.
 - Verified in the browser on 5173: with lessons 1–5 recorded and `로그인 없이 시작` set, opening the app auto-started lesson 6; lessons 6 → 7 → 8 ran to the end via 다음 강의 (the 3D actor drag was simulated with a state change; everything else used the real controls); all eight lessons recorded; on the next load nothing auto-starts.
 
-## T4 — Polish `[ ]`
+## T4 — Polish `[x]`
 - Copy review, dark mode, narrow screens, full run-through of every lesson.
+
+Done notes:
+- Copy: lesson 4's closing line no longer promises "sets blocking light"; the help-panel checkbox reads `들어올 때 남은 강의 이어서 하기` (it covers signed-out visitors too); lesson 1 mentions Enter.
+- Keys: Esc no longer quits (it already cancels placing tools and renames, so it was quitting the tutorial by accident); Enter presses the bubble's primary button (다음 / 끝내기 / 다음 강의) unless focus is in a text field or an IME composition is active.
+- 그만하기 shows a 4-second note above the status bar pointing to the ? (도우미) button.
+- Layout check at 900 × 640 (dark mode) for every step of all eight lessons with CSS transitions disabled during measurement: every bubble is fully on screen; the only bubble/spotlight overlap is lesson 1 step 3, whose target is the whole plan.
+- Measurement gotcha: in a hidden preview pane CSS transitions and requestAnimationFrame freeze, so positions read mid-animation; the tutorial's 120 ms interval keeps step checks working, but layout tests must disable transitions.
+- Regression: lessons 1–2 again with real input and Enter; Esc keeps the lesson; quitting shows the note.

@@ -60,6 +60,24 @@
 /* 할 일을 기다리는 동안 */
 .tut-bubble.waiting h3::before { content: "▶ "; color: var(--chrome-accent, #1f6fd1); }
 
+/* 그만두었을 때 잠깐 뜨는 안내 (상태 바 위) */
+.tut-note {
+  position: fixed;
+  left: 50%;
+  bottom: 54px;
+  z-index: 61;
+  transform: translateX(-50%);
+  max-width: min(460px, calc(100vw - 24px));
+  padding: 8px 14px;
+  border-radius: 8px;
+  background: var(--tip-bg, #1d2733);
+  color: #fff;
+  font-size: 13px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, .3);
+  transition: opacity .5s;
+}
+.tut-note.out { opacity: 0; }
+
 /* 도우미 패널 안의 강의 목록 */
 .tut-section { padding-bottom: 0; }
 .tut-section .tut-sub { margin-top: 0; padding-top: 0; border-top: 0; }
