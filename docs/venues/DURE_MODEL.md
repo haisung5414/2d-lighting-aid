@@ -17,11 +17,11 @@ Preset key `dure` in `src/config/venues.ts`. There is no vector drawing; everyth
 | Balcony edge (railing line) | x 0.8 – 15.6, y 1.1 | 1F plan |
 | Stage-side corners | curved, 2.3 m along the stage wall × 0.95 m along the side | 1F plan |
 | 1F wall face | 0.35 m outside the B1 wall on both sides (x −0.35 / 16.75) | 1F plan vs grid |
-| Balcony floor height | 2.5 m | photo: about the height of a 2440 plywood sheet |
+| Balcony floor height | 2.7 m | user decision (first 2.5 m from a 2440 plywood sheet in the photo, then raised 0.2 m) |
 | Spiral stair | upstage-left corner (balcony → grid); left out of the 3D model to keep rendering light | 1F plan |
 | Railing | 1.0 m metal railing: handrail, three horizontal bars, posts every 1.2 m, dark grey; merged into one mesh | photos |
-| Projection room wall | y 18.0 (end of the seating), three windows z 3.9–4.55 | 1F plan + audience-side photo |
-| Seating top row | 2.5 m | estimate (photo) |
+| Projection room wall | y 18.0 (end of the seating), three windows z 4.9–5.55 (raised 1 m by the user) | 1F plan + audience-side photo |
+| Seating top row | 2.7 m | follows the balcony height |
 | Ceiling | 8.0 m | assumption (just above the grid) |
 
 No balcony on the audience side: the projection room sits over the back aisle. The back aisle (y 18.0–23.1) is left outside the 3D walls; it stays on the 2D plan.
