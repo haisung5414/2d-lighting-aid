@@ -16,6 +16,7 @@
 * 언어: Vanilla TypeScript (엄격한 타입 정의로 런타임 에러 및 데이터 오염 방지)
 * 그래픽 엔진: HTML5 Canvas API (2D 평면도), three.js (3D 보기, 지연 로딩)
 * 스타일링: CSS3 (Flexbox 기반 레이아웃)
+* 온라인 저장: Supabase (Google 로그인, Postgres + 행 단위 보안). 서버 없이 정적 사이트에서 공개 키만 쓴다. 설정이 없으면 이 기능만 꺼진다
 
 ---
 
@@ -43,6 +44,9 @@
 ├── index.html              # 앱 진입점 HTML (시작 화면, 편집 화면의 떠 있는 요소들의 틀)
 ├── tsconfig.json           # TypeScript 설정 (verbatimModuleSyntax 켜짐)
 ├── docs/redesign/          # 화면 재구성 사양(UI_REDESIGN_SPEC.md)과 단계 기록(UI_REDESIGN_PHASES.md)
+├── docs/cloud/             # 온라인 저장 사양(CLOUD_SPEC.md), 단계(CLOUD_PHASES.md), 설정 안내(SETUP_GUIDE.md)
+├── supabase/migrations/    # 온라인 작업 표(projects)와 RLS. supabase db push로 올린다
+├── public/privacy.html     # 개인정보 처리방침 (Google 로그인 동의 화면에 등록)
 └── src/
     ├── main.ts             # 메인 엔트리 포인트 (초기화, 모듈 결합, 실행 취소 단축키)
     ├── style.css           # 기본 요소, 시작 화면, 3D 보기 스타일
@@ -57,6 +61,10 @@
     │   ├── canvas.ts       # 2D 평면도 그리기, 손잡이, 썸네일, 마우스 조작
     │   ├── view3d.ts       # three.js 3D 보기 (처음 켤 때만 불러옴)
     │   ├── stageLightMaterial.ts, fixtureShadows.ts, venueModel.ts  # 3D 조명 셰이더, 그림자, 극장 모형
+    ├── cloud/              # 로그인 화면과 홈, Google 로그인, 온라인 저장 (src/cloud/index.ts의 initCloud)
+    │   ├── home.ts / home.css  # 로그인 화면과 홈(극장에서 시작, 내 작업 카드)
+    │   ├── auth.ts, account.ts # 로그인 상태, 편집 화면 오른쪽 위 계정 칩
+    │   └── projects.ts, fileMenu.ts  # 온라인 저장·열기·이름 바꾸기·삭제, ☰ 메뉴 항목
     └── ui/
         ├── shell.ts / shell.css  # SketchUp Web식 화면 골격: 파일 알약, 2D/3D, 트레이, 씬 서랍, 상태 바
         ├── tools.ts        # 왼쪽 도구 레일 (선택, 조명 3종, 세트·벽·덧마루·애플박스, 사람 모형)
@@ -78,6 +86,10 @@
 
 화면 구성은 `docs/redesign/UI_REDESIGN_SPEC.md`(SketchUp Web식 재구성)를 따른다.
 
+### 시작 화면 (로그인과 홈)
+* 로그인하지 않았으면 로그인 화면(Google로 계속 진행 / 로그인 없이 시작하기)이 먼저 보이고, 그다음은 SketchUp Web식 홈이다.
+* 홈: 새로 만들기·기기에서 열기, 극장에서 시작(인문소극장, 빈 무대), 내 작업 카드(썸네일, 마지막 수정, 극장·씬 수, ⋯ 메뉴로 열기·이름 바꾸기·내려받기·삭제). 편집 화면의 ☰ "홈으로"로 돌아온다.
+
 ### 화면 골격
 * 캔버스가 화면 전체를 채우고, 파일 알약(☰ 메뉴·파일 이름·실행 취소·저장 상태), 2D/3D 전환, 왼쪽 도구 레일, 오른쪽 아코디언 트레이, 아래 씬 서랍과 상태 바가 그 위에 떠 있다. 운영체제의 다크 모드를 따른다.
 * 트레이: "선택한 것"(선택한 객체 속성, 도우미)과 "작업 전체"(빛 범위 표시, 3D 극장 구조, 레이어, 채널 검사, 공연장 정보, 객체 전체 목록). 조명을 고르면 맨 위에 조명 설정이 펼쳐진다. 두 패널 모두 "자동으로 열지 않기"를 고를 수 있고, 두 번 누르면 언제든 열린다.
@@ -95,7 +107,7 @@
 
 ### 씬과 파일
 * 씬 서랍: 썸네일 카드, 끌어서 순서 바꾸기, 새 씬·복사·그 자리에서 이름 변경·두 번 눌러 삭제. 씬별 배경 이미지는 레이어 패널에 있다.
-* 파일: JSON 저장(Ctrl+S, 다른 이름으로 저장)과 불러오기. 예전 파일(사람 모형 하나 = probe, 여러 개 선택 목록)은 불러올 때 자동으로 바뀐다.
+* 파일: 저장 위치가 "내 컴퓨터"면 JSON으로 내려받고, "온라인"(로그인 후 홈에서 만들거나 연 작업)이면 Supabase에 저장한다. 저장(Ctrl+S), 다른 이름으로 저장, 온라인에 저장, 내 컴퓨터에 내려받기. 위쪽 바에 "저장됨 · 온라인/내 컴퓨터"가 보인다. 예전 파일(사람 모형 하나 = probe, 여러 개 선택 목록)은 불러올 때 자동으로 바뀐다.
 * Undo/Redo: Ctrl+Z, Ctrl+Y / Ctrl+Shift+Z. 끌기는 실제로 움직였을 때만 기록한다.
 
 ---

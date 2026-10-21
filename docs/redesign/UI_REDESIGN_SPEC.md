@@ -30,14 +30,14 @@ Positions are from the mockup CSS (px, relative to the editor area).
 | Canvas | fills the editor area above the status bar | 2D plan (`#stageCanvas`) or 3D view (`#view3d`) |
 | File pill | top-left, `top:10 left:10` | menu ☰, file name, undo, redo, save state |
 | View switch | top-center, `top:10` | segmented `2D 평면` / `3D 보기` |
-| Account | top-right, `top:10 right:10` | `로그인`, `공유` — disabled placeholders (future cloud features) |
+| Account | top-right, `top:10 right:10` | `로그인` (Google sign-in) / account chip, `공유` (disabled placeholder). See `docs/cloud/CLOUD_SPEC.md` §4 |
 | Tool rail | left, `top:58 left:10 width:46` | 9 tools (§3; 사람 모형 놓기 added 2026-10-21) |
 | Panel tray | right, `top:58 right:10` | icon + label buttons in two groups (§5) |
 | Panel column | `top:58 right:196 width:300 bottom:64` | open floating panels, stacked vertically |
 | Scene drawer | bottom, `left:70 right:510 bottom:10` | collapsed bar; expands upward (§6) |
 | Status bar | full-width row under the canvas | hint, cursor coords, numeric input, zoom (§7) |
 
-The old three-column layout (left sidebar, header, right sidebar) is removed entirely. The landing screen (venue picker) stays as is.
+The old three-column layout (left sidebar, header, right sidebar) is removed entirely. The landing screen (venue picker) was later replaced by the login screen and Home (`docs/cloud/CLOUD_SPEC.md` §4.1, §9; 2026-10-21).
 
 The 2D plan must fit inside the area not covered by chrome: use insets of about `left 70, right 200, top 56, bottom 64` when computing the fit scale.
 
@@ -172,12 +172,12 @@ VCB details (implemented in Phase 6): the field label reads `거리` after a mov
 
 ## 8. Top bar details
 
-- ☰ menu: 작업 공간 바꾸기 (back to landing), 불러오기, 저장, 다른 이름으로 저장.
+- ☰ menu: 홈으로 (renamed from 작업 공간 바꾸기; back to Home), 불러오기, 저장, 다른 이름으로 저장; when signed in also 온라인에 저장 / 내 컴퓨터에 내려받기 (`docs/cloud/CLOUD_SPEC.md` §5.1).
 - File name: shows the loaded/saved file name (or `이름 없는 작업`); click to rename.
 - Undo / Redo buttons call the existing store `undo()` / `redo()` (shortcuts stay).
 - Save state: `저장 안 됨 · 내 컴퓨터` after a change, `저장됨 · 내 컴퓨터` after saving.
 - 저장 (also Ctrl+S) saves under the current file name, asking for one first when the work is untitled; 다른 이름으로 저장 always asks. Names are typed in place in the file pill, never in a `prompt()`.
-- 작업 공간 바꾸기 asks for confirmation only when there are unsaved changes.
+- 홈으로 asks for confirmation only when there are unsaved changes.
 - 2D/3D switch replaces the old `3D 보기` header button.
 
 ## 9. Data model changes
@@ -213,7 +213,7 @@ VCB details (implemented in Phase 6): the field label reads `거리` after a mov
 
 ## 11. Out of scope for this redesign
 
-Login, sharing, cloud save, tape measure tool, tool search. Keep the `로그인` / `공유` buttons as disabled placeholders.
+Sharing, tape measure tool, tool search. Keep the `공유` button as a disabled placeholder. (Login and cloud save were added later by `docs/cloud/`.)
 
 ## 12. Visual tokens (from the mockup)
 

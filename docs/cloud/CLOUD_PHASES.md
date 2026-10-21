@@ -91,8 +91,12 @@ Done notes (2026-10-21)
 - The real sign-in from the **login screen** button was not repeated (sign-in itself was verified in Phase 1, from the editor dialog); the session was signed out at the end of testing, so the next start shows the login screen.
 - Two test rows remain in the account: `자동시험 첫 저장`, `로컬에서 온 작업`.
 
-## Phase 4 — Deploy check `[ ]`
+## Phase 4 — Deploy check `[x]`
 
 - After the user approves merging to `main` and pushing: confirm the GitHub Variables are set, the Pages build succeeds, and on `https://haisung5414.github.io/2d-lighting-aid/` sign-in, save online, list, open and sign-out all work; local save still works signed out.
 - Update `PROJECT_BRIEF.md` (top bar / account, Home replaces the venue picker) and `UI_REDESIGN_SPEC.md` §2 / §8 (account area no longer a placeholder for 로그인; landing screen replaced by login + Home; ☰ `홈으로`).
 - Merge note: `feature/sketchup-ui` also edits `index.html` and `src/ui/shell.ts`; the cloud hooks there are small (spec §8) and should be re-applied by hand if they conflict.
+
+Done notes (2026-10-21)
+- `main` had moved to 45cd618 (feature/sketchup-ui work); merged it into `feature/cloud-save` without conflicts (181f9fe), retested locally, then fast-forwarded `main` and pushed. Pages run 39519054858 succeeded.
+- On https://haisung5414.github.io/2d-lighting-aid/: login screen with sign-in enabled (GitHub Variables reached the build), `privacy.html` 200, local mode (로그인 없이 시작하기 → new work → `내 컴퓨터`), real Google sign-in returning to the live site's Home with the two online projects, open → edit → Ctrl+S → `저장됨 · 온라인`, 홈으로 refreshes the list.
