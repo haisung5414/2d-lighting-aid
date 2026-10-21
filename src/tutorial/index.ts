@@ -4,6 +4,7 @@
 
 import { finishedLessons, getLessons, isTutorialRunning, onTutorialChange, registerLessons, startLesson } from './engine';
 import { LESSONS } from './lessons';
+import { initTutorialAutostart } from './autostart';
 
 const renderList = () => {
   const host = document.getElementById('tutorial-list');
@@ -24,4 +25,5 @@ export const initTutorial = () => {
   registerLessons(LESSONS);
   onTutorialChange(renderList);
   renderList();
+  initTutorialAutostart();
 };

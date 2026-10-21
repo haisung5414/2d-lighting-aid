@@ -7,6 +7,7 @@ import { resetCanvasZoom, worldToScreen } from '../render/canvas';
 import { getFileState, openPanel, setViewMode } from '../ui/shell';
 import { getTool, setTool } from '../ui/tools';
 import { markNewWork } from '../cloud/projects';
+import { createFixture } from '../ui/fixture';
 import { VENUES } from '../config/venues';
 import { around, el, first, union, type TutorialLesson } from './engine';
 import type { Position2D } from '../types';
@@ -46,9 +47,13 @@ const FRONT_PIPE: Position2D = (() => {
   return { x: ACTOR_SPOT.x, y: pipe.y };
 })();
 
-/** 인문소극장, 배우 한 명, 조명 없음. 저장 안 된 작업이 있으면 먼저 묻는다 */
-const setupPractice = (): boolean => {
-  if (getFileState().dirty && !window.confirm('지금 작업에 저장하지 않은 내용이 있습니다.\n튜토리얼을 시작하면 연습용 작업으로 바뀝니다. 계속할까요?')) return false;
+/**
+ * 인문소극장, 배우 한 명. withLight면 배우를 앞에서 비추는 엘립소이달 하나를 미리 달아 둔다.
+ * 편집 화면에 저장 안 된 작업이 있으면 먼저 묻는다 (홈에서 시작하면 묻지 않는다)
+ */
+const setupPractice = (withLight: boolean): boolean => {
+  const editorOpen = document.getElementById('editor-screen')?.style.display === 'flex';
+  if (editorOpen && getFileState().dirty && !window.confirm('지금 작업에 저장하지 않은 내용이 있습니다.\n튜토리얼을 시작하면 연습용 작업으로 바뀝니다. 계속할까요?')) return false;
   initVenue('humanities');
   markNewWork();
   setState(s => {
@@ -56,6 +61,12 @@ const setupPractice = (): boolean => {
     s.selected_fixture_id = null;
     const actor = s.actors[0];
     if (actor) { actor.x = ACTOR_SPOT.x; actor.y = ACTOR_SPOT.y; }
+    if (withLight) {
+      const light = createFixture('ellipsoidal', 1, s.stage_config);
+      light.position = { x: FRONT_PIPE.x, y: FRONT_PIPE.y, z: s.stage_config.default_z };
+      light.target = { x: ACTOR_SPOT.x, y: ACTOR_SPOT.y };
+      s.cues[s.active_cue_index].fixtures.push(light);
+    }
   });
   setTool('select');
   openPanel(null);
@@ -71,12 +82,12 @@ const lessonTour: TutorialLesson = {
   title: '1강 · 화면 둘러보기',
   minutes: 3,
   summary: '도구, 오른쪽 목록, 씬, 2D/3D가 어디 있는지 봅니다.',
-  setup: setupPractice,
+  setup: () => setupPractice(true),
   steps: [
     {
       title: '조명 도우미에 오신 것을 환영합니다',
-      body: `<p>이 튜토리얼은 <b>연습용 작업</b>(인문소극장, 배우 한 명)에서 진행합니다. 원래 작업은 건드리지 않습니다.</p>
-        <p>할 일이 있는 단계는 직접 해 보면 저절로 넘어갑니다. 언제든 <b>건너뛰기</b>나 <b>그만하기</b>를 누를 수 있습니다.</p>`
+      body: `<p>이 튜토리얼은 <b>연습용 작업</b>(인문소극장, 배우 한 명, 배우를 비추는 조명 하나)에서 진행합니다. 원래 작업은 건드리지 않습니다.</p>
+        <p>할 일이 있는 단계는 직접 해 보면 넘어갑니다. 설명이 더 있으면 다 읽고 <b>다음</b>을 누르세요. 언제든 <b>건너뛰기</b>나 <b>그만하기</b>를 누를 수 있습니다.</p>`
     },
     {
       title: '왼쪽: 도구',
@@ -101,7 +112,11 @@ const lessonTour: TutorialLesson = {
       target: first(el('[data-panel="display"]'), el('[data-tray="display"]')),
       onEnter: () => openPanel(null),
       done: () => panelOpen('display'),
-      body: '<p>오른쪽의 <b>빛 범위 표시</b> 아이콘을 누르세요. 바닥과 배우 얼굴 높이에 닿는 빛을 어떻게 그릴지 고르는 곳입니다.</p>'
+      manual: true,
+      body: '<p>오른쪽의 <b>빛 범위 표시</b> 아이콘을 누르세요. 평면도에 빛을 어떻게 그릴지 고르는 곳입니다.</p>',
+      afterBody: `<p>체크를 하나씩 켜고 끄면서 평면도의 빛이 어떻게 바뀌는지 보세요.</p>
+        <p><b>바닥에 닿는 빛</b>: 바닥이 밝아지는 범위 (그라데이션 또는 꽉 채우기).<br><b>배우 얼굴 높이에 닿는 빛</b>: 배우 얼굴 높이에서 빛이 닿는 범위.<br><b>빔·필드 각도선</b>: 밝기 50%, 10% 경계선.</p>
+        <p>다 봤으면 <b>다음</b>을 누르세요.</p>`
     },
     {
       title: '아래: 씬',
@@ -112,13 +127,16 @@ const lessonTour: TutorialLesson = {
       title: '3D로 보기',
       target: el('#view-3d'),
       done: is3D,
-      body: '<p>위쪽 가운데의 <b>3D 보기</b>를 눌러 보세요. 같은 조명을 극장 안에서 본 모습으로 보여 줍니다.</p>'
+      manual: true,
+      body: '<p>위쪽 가운데의 <b>3D 보기</b>를 눌러 보세요. 같은 조명을 극장 안에서 본 모습으로 보여 줍니다.</p>',
+      afterBody: `<p>조명이 배우를 어떻게 비추는지, 빛줄기가 어디로 가는지 극장 안에서 본 모습입니다. 평면도로는 알기 어려운 높이와 각도를 여기서 확인합니다.</p>
+        <p>화면을 끌면 시점이 돌아가고, 휠로 확대합니다. 둘러봤으면 <b>다음</b>을 누르세요.</p>`
     },
     {
       title: '다시 2D로',
       target: el('#view-2d'),
       done: () => !is3D(),
-      body: '<p>3D에서는 끌어서 시점을 돌리고, 휠로 확대합니다. 조명을 놓는 일은 2D에서 하므로 <b>2D 평면</b>을 눌러 돌아오세요.</p>'
+      body: '<p>조명을 놓고 고치는 일은 2D에서 하므로 <b>2D 평면</b>을 눌러 돌아오세요.</p>'
     },
     {
       title: '모르겠으면 도우미',
@@ -135,7 +153,7 @@ const lessonFirstLight: TutorialLesson = {
   title: '2강 · 첫 조명 달기',
   minutes: 4,
   summary: '엘립소이달을 달고, 배우를 비추고, 얼굴 밝기를 읽습니다.',
-  setup: setupPractice,
+  setup: () => setupPractice(false),
   steps: [
     {
       title: '엘립소이달 놓기 도구를 고르세요',
@@ -184,7 +202,10 @@ const lessonFirstLight: TutorialLesson = {
         if (fix && !lightSettingsOpen()) document.getElementById('light-settings-btn')?.click();
       },
       done: () => !lightSettingsOpen(),
-      body: '<p>조명 설정 오른쪽 위의 <b>✕</b>를 누르세요.</p>'
+      manual: true,
+      body: '<p>조명 설정 오른쪽 위의 <b>✕</b>를 누르세요.</p>',
+      afterBody: `<p>닫혔습니다. 조명 설정은 조명을 고를 때마다 저절로 열리고, 오른쪽 <b>조명 설정</b> 아이콘으로도 열고 닫을 수 있습니다.</p>
+        <p>자꾸 열리는 게 불편하면 패널 맨 아래의 <b>조명을 누를 때 자동으로 열지 않기</b>를 켜 두세요. 다음 단계에서 다시 여는 방법을 해 봅니다.</p>`
     },
     {
       title: '조명을 두 번 누르면 다시 열립니다',

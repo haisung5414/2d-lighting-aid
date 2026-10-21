@@ -39,7 +39,8 @@ let showVenue = true;
 // 3D 극장 구조 기본값: 캣워크만 끄고, 극장 구조·객석·작업등은 켠다 (index.html 체크박스와 같아야 한다)
 let showCatwalk = false;
 let showSeating = true;
-let workLightOn = true;
+// 작업등은 처음에 끈다: 조명이 만드는 밝기만 보이게 (사용자 결정 2026-10-21)
+let workLightOn = false;
 let hemisphere: THREE.HemisphereLight | null = null;
 const HEMISPHERE_BASE = 0.6;
 /** 극장 구조를 보여 줄 때의 바깥 배경과 땅 색. 어두운 극장 안과 구분되도록 밝은 회색으로 둔다 */

@@ -11,7 +11,7 @@ In-app guided tutorial for first-time users (student theatre club members who ha
 
 ## 1. Principles
 
-- The tutorial runs on a **practice work** (인문소극장, one actor, no fixtures), so the user's own work is never touched. If the open work has unsaved changes, ask first (`confirm`).
+- The tutorial runs on a **practice work** (인문소극장, one actor at the acting-area centre; lessons that are not about placing lights start with one front ellipsoidal already aimed at the actor), so the user's own work is never touched. If the editor has unsaved changes, ask first (`confirm`); starting from Home never asks.
 - The tutorial never blocks the app: the dimmed area is visual only (`pointer-events: none`), so a user who wanders off can keep working; the bubble stays and the step still completes when its condition becomes true.
 - Code lives in `src/tutorial/`. Existing UI gets only stable hooks (ids / data attributes it already has) and the entry point in the 도우미 panel. No tutorial logic inside existing modules.
 - Progress (finished lesson ids) is kept in `localStorage` key `lightingAid.tutorial.done` (try/catch; works without it).
@@ -30,6 +30,7 @@ interface TutorialStep {
 }
 ```
 - A step **without** `done` shows a `다음` button. A step **with** `done` shows `건너뛰기` instead (and `다음` appears once done, for the short moment before auto-advance).
+- `manual: true` (user decision 2026-10-21): once done, the step does **not** auto-advance; it shows `afterBody` (if any) and waits for `다음`, so there is time to read and look at the result. Use it whenever there is something to read or see after the action.
 - `done()` is evaluated every animation frame while the step is active (predicates are cheap reads of the store / DOM). When it turns true the step shows a check and advances after ~600 ms.
 - Targets are re-measured every frame, so the spotlight follows panels that open, scrolling, zoom and resizing. A target that is missing (e.g. a closed panel) falls back to a centred bubble.
 - Canvas targets use `worldToScreen` (`render/canvas.ts`) to spotlight a stage point (aim point, actor, a fixture).
@@ -46,7 +47,7 @@ interface TutorialStep {
 ## 3. Entry points
 
 - **도우미 panel** (T1): a `튜토리얼` section listing lessons — title, minutes, a ✓ when finished, and a `시작` button (or `다시 하기`).
-- **First visit** (T3): on Home, a card `처음이라면 튜토리얼부터` with `시작`; dismissible, remembered in `localStorage`.
+- **First sign-in** (user decision 2026-10-21, replaces the Home card idea): the first time an account signs in on this browser and Home is showing, lesson 1 starts **immediately, without asking**. Remembered per account id in `localStorage` key `lightingAid.tutorial.autoStartedUsers`. Not triggered when sign-in restored an open work into the editor. (`src/tutorial/autostart.ts`)
 
 ## 4. Lessons
 

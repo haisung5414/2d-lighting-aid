@@ -11,8 +11,12 @@ export interface TutorialStep {
   body: string;
   /** 강조할 곳. 없거나 찾지 못하면 말풍선만 가운데에 띄운다 */
   target?: () => DOMRect | null;
-  /** 할 일이 있는 단계: 참이 되면 저절로 다음으로 넘어간다 */
+  /** 할 일이 있는 단계: 참이 되면 저절로 다음으로 넘어간다 (manual이면 다음 버튼으로 직접 넘긴다) */
   done?: () => boolean;
+  /** 할 일을 마친 뒤에도 읽을 내용이 있으면 true: 저절로 넘어가지 않고 다음 버튼을 보인다 */
+  manual?: boolean;
+  /** 할 일을 마친 뒤 본문 대신 보여 줄 설명 */
+  afterBody?: string;
   /** 단계를 시작할 때 한 번 (패널 닫기 등) */
   onEnter?: () => void;
 }
@@ -98,7 +102,7 @@ const renderBubble = () => {
   bubble.innerHTML = `
     <div class="tut-head"><span>${lesson.title}</span><small>${index + 1} / ${lesson.steps.length}</small></div>
     <h3>${completedAt ? '✓ ' : ''}${step.title}</h3>
-    <div class="tut-body">${step.body}</div>
+    <div class="tut-body">${completedAt && step.afterBody ? step.afterBody : step.body}</div>
     <div class="tut-actions">
       <button type="button" class="tut-quiet" data-tut="quit">그만하기</button>
       <span class="tut-grow"></span>
@@ -183,7 +187,7 @@ const tick = () => {
       completedAt = performance.now();
       renderBubble();
     }
-  } else if (completedAt && performance.now() - completedAt > ADVANCE_DELAY && index < lesson.steps.length - 1) {
+  } else if (completedAt && !step.manual && performance.now() - completedAt > ADVANCE_DELAY && index < lesson.steps.length - 1) {
     goTo(index + 1);
   }
 };

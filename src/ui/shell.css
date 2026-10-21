@@ -256,7 +256,8 @@
 
 
 /* 아래: 씬 서랍 (도구 레일과 패널 사이) */
-.scenes { left: 80px; right: 520px; bottom: 10px; display: flex; flex-direction: column; max-height: calc(100% - 80px); }
+/* 오른쪽은 펼친 트레이 패널(300px + 여백)만큼 비운다. 좁은 화면에서도 찌그러지지 않게 최소 폭을 둔다 */
+.scenes { left: 80px; right: 330px; min-width: 260px; bottom: 10px; display: flex; flex-direction: column; max-height: calc(100% - 80px); }
 .scenes-handle { display: flex; align-items: center; gap: 10px; border: 0; background: none; padding: 7px 12px; cursor: pointer; width: 100%; text-align: left; font-size: 13px; color: var(--ink); }
 .scenes-handle small { color: var(--ink-3); margin-left: auto; }
 .scenes-handle .chev { width: 16px; height: 16px; color: var(--ink-3); transition: transform .2s; flex: none; }

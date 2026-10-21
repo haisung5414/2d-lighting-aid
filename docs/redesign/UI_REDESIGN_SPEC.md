@@ -103,7 +103,7 @@ Order changed 2026-10-21 (user review of Phase 3): 선택한 것 comes first, an
 | | `props` | 선택한 객체 속성 | depends on selection (§5.3). Bottom of the panel: checkbox `객체를 누를 때 자동으로 열지 않기` (§5.4). |
 | | `help` | 도우미 | current tool's name, key, hint and what happens next. |
 | 작업 전체 | `display` | 빛 범위 표시 | 2D light drawing only: 바닥에 닿는 빛 (default **on**; style 그라데이션 (default) or 꽉 채우기), 배우 얼굴 높이에 닿는 빛 (default **on**), 각도선 with an (i) hover tip explaining beam (50 %) and field (10 %), 빔 각도선 (solid, default off), 필드 각도선 (dashed, default **on**). |
-| | `venue3d` | 3D 극장 구조 | 3D only: 극장 구조 (default on), 캣워크 (default **off**), 객석 (on), 작업등 (on). The tray button is **disabled in 2D** and the panel closes when switching back to 2D. Separate from 빛 범위 표시 on purpose (user decision 2026-10-20). |
+| | `venue3d` | 3D 극장 구조 | 3D only: 극장 구조 (default on), 캣워크 (default **off**), 객석 (on), 작업등 (default **off** since 2026-10-21). The tray button is **disabled in 2D** and the panel closes when switching back to 2D. Separate from 빛 범위 표시 on purpose (user decision 2026-10-20). |
 | | `layers` | 레이어 | 극장 평면도, 캣워크 오버레이 (visibility + opacity), 이 씬의 배경 이미지 (upload / position / size / opacity / delete). |
 | | `patch` | 채널 검사 | channel usage grid with over-capacity warning (current patch panel, always expanded). |
 | | `venue` | 공연장 정보 | 공연장 name, 무대 폭·깊이, 배우 얼굴 높이, 기본 조명 높이, 램프 규격 (HPL 575/750). |
