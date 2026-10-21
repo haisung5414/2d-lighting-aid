@@ -29,6 +29,7 @@
 .cloud-dialog p { margin: 0 0 18px; font-size: 13px; line-height: 1.6; color: var(--ink-2); }
 .cloud-dialog-actions { display: flex; justify-content: flex-end; gap: 8px; }
 .cloud-google-btn { height: 34px; padding: 0 16px; border: 0; border-radius: 6px; background: var(--chrome-accent); color: #fff; font-size: 13px; font-weight: 600; cursor: pointer; }
+.cloud-warn-btn { background: #c5221f; }
 .cloud-google-btn:disabled { opacity: .6; cursor: progress; }
 .cloud-text-btn { height: 34px; padding: 0 12px; border: 0; border-radius: 6px; background: none; color: var(--ink-2); font-size: 13px; cursor: pointer; }
 .cloud-text-btn:hover { background: var(--surface-2); }

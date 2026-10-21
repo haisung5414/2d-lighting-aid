@@ -91,12 +91,14 @@ Two columns like the mockup (the right column stacks under the left on narrow sc
 
 ### 4.3 Flow
 - `supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: <app URL> } })` with PKCE (`flowType: 'pkce'`). `<app URL>` = `location.origin + import.meta.env.BASE_URL`.
-- The page **leaves and comes back**. Before leaving, if the editor is open, the current state, file name and dirty flag are put in `sessionStorage` (`lightingAid.cloud.pendingWork`); after returning, that work is restored through the normal load path, and the dirty flag is kept. If the editor is not open, nothing is stored and Home shows.
+- The page **leaves and comes back**, and Home shows after returning. The open work is **not** restored (changed 2026-10-21 by the user: the earlier sessionStorage hand-off was removed); the editor warns first when there are unsaved changes (§4.4).
 - The session persists in `localStorage` (Supabase default), so a reload stays signed in.
 - `로그아웃` calls `signOut({ scope: 'local' })`. An open work stays on screen; its save location becomes `내 컴퓨터` (online saving needs an account).
 
-### 4.4 Sign-in dialog (editor only)
-`로그인` in the editor's top bar opens a small centred dialog: title `로그인`, text `Google 계정으로 로그인하면 작업을 온라인에 저장하고 다른 컴퓨터에서도 열 수 있습니다. 로그인하지 않아도 내 컴퓨터에 저장하는 기능은 그대로 쓸 수 있습니다.`, buttons `닫기` / `Google로 로그인`.
+### 4.4 Signing in from the editor (changed 2026-10-21)
+`로그인` in the editor's top bar:
+- No unsaved changes → goes straight to Google sign-in.
+- Unsaved changes → a centred warning dialog: title `저장하지 않은 작업이 있습니다`, text `로그인하면 Google 로그인 화면으로 넘어갔다가 홈으로 돌아옵니다. 지금 작업에서 저장하지 않은 내용은 사라집니다. 남기려면 먼저 ☰ 메뉴에서 저장해 주세요.`, buttons `취소` / `저장하지 않고 로그인` (red).
 
 ## 5. Online save
 
@@ -121,7 +123,7 @@ The open work has a **location**: `local` or `cloud` (with the row `id` and the 
 
 Save-state text in the file pill: `저장 안 됨 · 온라인` / `저장됨 · 온라인` / `온라인` for cloud, the existing `… · 내 컴퓨터` for local.
 
-The ☰ item `작업 공간 바꾸기` is renamed **`홈으로`** (Home now holds both the venue templates and the files); it still asks only when there are unsaved changes.
+Going back to Home: the **집 (home) button** left of the file pill (it replaced the ☰ item `홈으로`, formerly `작업 공간 바꾸기`, on 2026-10-21); it asks only when there are unsaved changes.
 
 ### 5.2 Overwrite questions
 - Saving under a name that another of my rows already has: `confirm('온라인에 같은 이름의 작업이 있습니다. 덮어쓸까요?')`. Yes → that row is replaced (the open work takes it over).
@@ -150,7 +152,7 @@ Kept minimal so `feature/sketchup-ui` merges cleanly.
 
 | File | Change |
 |---|---|
-| `index.html` | `id="account"` on the account div; the `로그인` button gets `id="login-btn"`; ☰ `작업 공간 바꾸기` → `홈으로`. The old landing card stays in the DOM but is hidden by `src/cloud/home.css`. |
+| `index.html` | `id="account"` on the account div; the `로그인` button gets `id="login-btn"`; the ☰ item `작업 공간 바꾸기` became the 집 button `#home-btn` left of the file pill. The old landing card stays in the DOM but is hidden by `src/cloud/home.css`. |
 | `src/main.ts` | one `initCloud()` call. |
 | `src/ui/manager.ts` | extract the body of `loadFile` into exported `loadProjectData(parsed, name)`; `loadFile` calls it. |
 | `src/ui/shell.ts` | (a) export a way to ask the file name in place and get it back; (b) `saveCurrent` delegates to a registered save handler when the location is `cloud`; (c) the `lighting:file` event gains an optional `location` and the save-state text uses it; (d) `dirty` exposed through a getter. |

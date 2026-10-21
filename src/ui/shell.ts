@@ -7,6 +7,7 @@
 import './shell.css';
 import { getState, onEdit, subscribe, undo, redo } from '../state/store';
 import { saveProject } from './manager';
+import { exportPlanImage } from './exportPlan';
 import { getViewZoom, onViewChange, resetCanvasZoom, zoomCanvas } from '../render/canvas';
 import { initTools, setToolsViewMode } from './tools';
 import { getSelectionKind, onOpenRequest, onSelect } from './selection';
@@ -238,12 +239,15 @@ const initFilePill = () => {
       if (action === 'load') $('file-upload')?.click();
       if (action === 'save') saveCurrent();
       if (action === 'saveas') startFileRename(name => saveTo(name, true));
-      // 저장하지 않은 변경이 있을 때만 확인을 묻는다
-      if (action === 'workspace' && (!dirty || window.confirm('저장하지 않은 작업은 사라집니다. 홈으로 돌아갈까요?'))) {
-        if (view3DOn) void setViewMode('2d');
-        showLanding();
-      }
+      if (action === 'export-plan') exportPlanImage(fileName);
     });
+  });
+
+  // 파일 알약 왼쪽의 집 버튼: 홈으로. 저장하지 않은 변경이 있을 때만 확인을 묻는다
+  $('home-btn')?.addEventListener('click', () => {
+    if (dirty && !window.confirm('저장하지 않은 작업은 사라집니다. 홈으로 돌아갈까요?')) return;
+    if (view3DOn) void setViewMode('2d');
+    showLanding();
   });
 
   $('undo-btn')?.addEventListener('click', () => undo());

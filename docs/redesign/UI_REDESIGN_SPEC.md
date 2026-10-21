@@ -28,7 +28,8 @@ Positions are from the mockup CSS (px, relative to the editor area).
 | Region | Position | Contents |
 |---|---|---|
 | Canvas | fills the editor area above the status bar | 2D plan (`#stageCanvas`) or 3D view (`#view3d`) |
-| File pill | top-left, `top:10 left:10` | menu ☰, file name, undo, redo, save state |
+| Home button | top-left, `top:10 left:10`, 42 × 42 | 집 icon → back to Home (added 2026-10-21) |
+| File pill | top-left, `top:10 left:58` | menu ☰, file name, undo, redo, save state |
 | View switch | top-center, `top:10` | segmented `2D 평면` / `3D 보기` |
 | Account | top-right, `top:10 right:10` | `로그인` (Google sign-in) / account chip, `공유` (disabled placeholder). See `docs/cloud/CLOUD_SPEC.md` §4 |
 | Tool rail | left, `top:58 left:10 width:46` | 9 tools (§3; 사람 모형 놓기 added 2026-10-21) |
@@ -172,12 +173,14 @@ VCB details (implemented in Phase 6): the field label reads `거리` after a mov
 
 ## 8. Top bar details
 
-- ☰ menu: 홈으로 (renamed from 작업 공간 바꾸기; back to Home), 불러오기, 저장, 다른 이름으로 저장; when signed in also 온라인에 저장 / 내 컴퓨터에 내려받기 (`docs/cloud/CLOUD_SPEC.md` §5.1).
+- 집 button (left of the file pill): back to Home. It replaced the ☰ item 홈으로 (formerly 작업 공간 바꾸기) on 2026-10-21.
+- ☰ menu: 불러오기, 저장, 다른 이름으로 저장; when signed in also 온라인에 저장 / 내 컴퓨터에 내려받기 (`docs/cloud/CLOUD_SPEC.md` §5.1); then, under a divider, **평면도 내보내기**.
+- 평면도 내보내기 (`src/ui/exportPlan.ts`): downloads the current scene's 2D plan as a PNG (`<file name> 평면도 - <scene>.png`). The whole stage is fitted (screen-like 25–80 px per m, saved at 2.5× resolution), selection marks are left out, and a title bar shows `<file name> · <scene>` and `<venue> · 무대 W × D m · 격자 1칸 = 1 m · <date>`. It uses the current 빛 범위 표시 settings and works from the 3D view too.
 - File name: shows the loaded/saved file name (or `이름 없는 작업`); click to rename.
 - Undo / Redo buttons call the existing store `undo()` / `redo()` (shortcuts stay).
 - Save state: `저장 안 됨 · 내 컴퓨터` after a change, `저장됨 · 내 컴퓨터` after saving.
 - 저장 (also Ctrl+S) saves under the current file name, asking for one first when the work is untitled; 다른 이름으로 저장 always asks. Names are typed in place in the file pill, never in a `prompt()`.
-- 홈으로 asks for confirmation only when there are unsaved changes.
+- The 집 button asks for confirmation only when there are unsaved changes.
 - 2D/3D switch replaces the old `3D 보기` header button.
 
 ## 9. Data model changes

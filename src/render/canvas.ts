@@ -173,15 +173,16 @@ const pointInSetPiece = (point: Position2D, piece: SetPiece): boolean => {
   return Math.abs(lx) <= piece.width / 2 && Math.abs(ly) <= piece.depth / 2;
 };
 
-const drawSetPieces = (targetCtx: CanvasRenderingContext2D, pieces: SetPiece[], selectedId: string | null | undefined) => {
+// s, ox, oy: 기본은 지금 화면의 배율과 위치. 평면도 내보내기는 자기 값을 넘긴다
+const drawSetPieces = (targetCtx: CanvasRenderingContext2D, pieces: SetPiece[], selectedId: string | null | undefined, s = scale, ox = offsetX, oy = offsetY) => {
   pieces.forEach(piece => {
     const corners = setPieceCorners(piece);
     const selected = piece.id === selectedId;
     targetCtx.save();
     targetCtx.beginPath();
     corners.forEach((p, i) => {
-      const px = offsetX + toPx(p.x);
-      const py = offsetY + toPx(p.y);
+      const px = ox + toPx(p.x, s);
+      const py = oy + toPx(p.y, s);
       if (i === 0) targetCtx.moveTo(px, py); else targetCtx.lineTo(px, py);
     });
     targetCtx.closePath();
@@ -197,7 +198,7 @@ const drawSetPieces = (targetCtx: CanvasRenderingContext2D, pieces: SetPiece[], 
     targetCtx.fillStyle = '#fff';
     targetCtx.font = '11px "Segoe UI", sans-serif';
     targetCtx.textAlign = 'center';
-    targetCtx.fillText(`${piece.label} (${piece.height}m)`, offsetX + toPx(piece.x), offsetY + toPx(piece.y) + 4);
+    targetCtx.fillText(`${piece.label} (${piece.height}m)`, ox + toPx(piece.x, s), oy + toPx(piece.y, s) + 4);
     targetCtx.restore();
   });
 };
@@ -625,6 +626,44 @@ const zoomCanvasAt = (screenX: number, screenY: number, factor: number) => {
   renderCanvas();
 };
 
+/** 평면도의 바탕: 보이는 극장 도면 레이어, 1 m 격자, 세트. 화면과 평면도 내보내기가 함께 쓴다 */
+const drawPlanBase = (target: CanvasRenderingContext2D, s: number, ox: number, oy: number, selectedSetId: string | null | undefined) => {
+  const state = getState();
+  const sw = state.stage_config.width;
+  const sd = state.stage_config.depth;
+
+  state.stage_config.reference_layers
+    .filter(layer => layer.is_visible)
+    .forEach(layer => {
+      drawImageLayer(target, layer.image, layer.x, layer.y, layer.width, layer.height, layer.opacity, s, ox, oy, layer.blend_mode);
+    });
+
+  target.strokeStyle = "#444";
+  target.lineWidth = 1;
+  for (let i = 0; i <= sw; i++) {
+    target.beginPath();
+    target.moveTo(ox + toPx(i, s), oy);
+    target.lineTo(ox + toPx(i, s), oy + toPx(sd, s));
+    target.stroke();
+  }
+  for (let j = 0; j <= sd; j++) {
+    target.beginPath();
+    target.moveTo(ox, oy + toPx(j, s));
+    target.lineTo(ox + toPx(sw, s), oy + toPx(j, s));
+    target.stroke();
+  }
+
+  drawSetPieces(target, state.stage_config.set_pieces ?? [], selectedSetId, s, ox, oy);
+};
+
+/** 평면도 내보내기 (ui/exportPlan.ts): 지금 씬을 선택 표시 없이 그린다. s = 1 m당 픽셀, (ox, oy) = 무대 왼쪽 위 */
+export const drawPlanForExport = (target: CanvasRenderingContext2D, s: number, ox: number, oy: number) => {
+  const state = getState();
+  drawPlanBase(target, s, ox, oy, null);
+  const cue = getCurrentCue();
+  if (cue) drawCueToContext(target, cue, s, ox, oy, state.ui_toggles, state.stage_config, null, state.actors, null);
+};
+
 export const renderCanvas = () => {
   if (!canvas || !ctx || !canvasWrapper) return;
 
@@ -635,8 +674,6 @@ export const renderCanvas = () => {
   canvas.height = rect.height;
 
   const state = getState();
-  const sw = state.stage_config.width;
-  const sd = state.stage_config.depth;
 
   scale = fitFrame(0).fitScale * viewZoom;
   const { baseX, baseY } = fitFrame(scale);
@@ -648,28 +685,7 @@ export const renderCanvas = () => {
   ctx.fillStyle = "#535353";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  state.stage_config.reference_layers
-    .filter(layer => layer.is_visible)
-    .forEach(layer => {
-      drawImageLayer(ctx!, layer.image, layer.x, layer.y, layer.width, layer.height, layer.opacity, scale, offsetX, offsetY, layer.blend_mode);
-    });
-
-  ctx.strokeStyle = "#444";
-  ctx.lineWidth = 1;
-  for (let i = 0; i <= sw; i++) {
-    ctx.beginPath();
-    ctx.moveTo(offsetX + toPx(i), offsetY);
-    ctx.lineTo(offsetX + toPx(i), offsetY + toPx(sd));
-    ctx.stroke();
-  }
-  for (let j = 0; j <= sd; j++) {
-    ctx.beginPath();
-    ctx.moveTo(offsetX, offsetY + toPx(j));
-    ctx.lineTo(offsetX + toPx(sw), offsetY + toPx(j));
-    ctx.stroke();
-  }
-
-  drawSetPieces(ctx, state.stage_config.set_pieces ?? [], state.selected_set_id);
+  drawPlanBase(ctx, scale, offsetX, offsetY, state.selected_set_id);
   const selectedSet = (state.stage_config.set_pieces ?? []).find(p => p.id === state.selected_set_id);
   if (selectedSet) {
     drawSetHandles(ctx, selectedSet);

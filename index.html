@@ -38,17 +38,20 @@
   <div id="canvas-wrapper">
     <canvas id="stageCanvas"></canvas>
 
-    <!-- 왼쪽 위: 파일 -->
+    <!-- 왼쪽 위: 홈 버튼과 파일 알약 -->
+    <button type="button" class="float homebtn" id="home-btn" title="홈으로" aria-label="홈으로">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h5v-6h4v6h5V9.5"/></svg>
+    </button>
     <div class="float filepill">
       <div class="menu-wrap">
         <button class="ibtn" id="file-menu-btn" type="button" aria-label="메뉴" aria-haspopup="true" aria-expanded="false">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
         </button>
         <div class="float file-menu" id="file-menu" role="menu" hidden>
-          <button type="button" role="menuitem" data-menu="workspace">홈으로</button>
           <button type="button" role="menuitem" data-menu="load">불러오기</button>
           <button type="button" role="menuitem" data-menu="save">저장</button>
           <button type="button" role="menuitem" data-menu="saveas">다른 이름으로 저장</button>
+          <button type="button" role="menuitem" data-menu="export-plan" class="menu-sep-above">평면도 내보내기</button>
         </div>
       </div>
       <button type="button" class="filename" id="file-name" title="눌러서 이름 바꾸기">이름 없는 작업</button>

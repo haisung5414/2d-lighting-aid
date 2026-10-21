@@ -87,7 +87,11 @@
 
 /* 왼쪽 위: 파일 */
 /* 파일 메뉴가 펼쳐지면 아래 도구 레일을 덮어야 하므로 다른 떠 있는 요소(20)보다 위에 둔다 */
-.filepill { z-index: 30; top: 10px; left: 10px; display: flex; align-items: center; gap: 2px; padding: 4px 6px; }
+/* 홈 버튼: 파일 알약과 같은 높이로 그 왼쪽에 둔다 */
+.homebtn { top: 10px; left: 10px; width: 42px; height: 42px; display: grid; place-items: center; padding: 0; cursor: pointer; color: var(--ink-2); }
+.homebtn:hover { color: var(--ink); background: var(--surface-2); }
+.homebtn svg { width: 20px; height: 20px; }
+.filepill { z-index: 30; top: 10px; left: 58px; display: flex; align-items: center; gap: 2px; padding: 4px 6px; }
 .filename { font-family: inherit; font-weight: 700; font-size: 14px; color: var(--ink); background: none; border: 0; border-radius: 5px; padding: 3px 8px; white-space: nowrap; max-width: 260px; overflow: hidden; text-overflow: ellipsis; cursor: text; }
 .filename:hover { background: var(--surface-2); }
 .filename-input { font-weight: 700; font-size: 14px; width: 200px; padding: 2px 6px; margin: 0 2px; border: 1px solid var(--chrome-accent); border-radius: 5px; color: var(--ink); background: var(--surface); }
@@ -97,6 +101,7 @@
 .file-menu { top: 38px; left: 0; min-width: 170px; padding: 4px; display: grid; }
 .file-menu button { border: 0; background: none; text-align: left; padding: 8px 10px; border-radius: 5px; cursor: pointer; font-size: 13px; color: var(--ink); }
 .file-menu button:hover { background: var(--surface-2); }
+.file-menu .menu-sep-above { border-top: 1px solid var(--line); border-radius: 0 0 5px 5px; margin-top: 4px; padding-top: 10px; }
 
 /* 위 가운데: 2D/3D */
 .viewswitch { top: 10px; left: 50%; transform: translateX(-50%); display: flex; padding: 3px; border-radius: 999px; }
