@@ -158,6 +158,15 @@ const normalizeFixtureSelection = () => {
     }
   });
 
+  // 공연장 도면이 바뀐 경우(예: 두레문예관 사진 → 다시 그린 도면) 저장 파일의 레이어도 지금 도면과 위치를 쓴다.
+  // 보기 여부와 투명도는 사용자가 정한 값을 둔다
+  const venueLayers = VENUES[state.stage_config.venue_key as VenueKey]?.referenceLayers ?? [];
+  state.stage_config.reference_layers?.forEach(layer => {
+    const current = venueLayers.find(item => item.id === layer.id);
+    if (!current) return;
+    Object.assign(layer, { image: current.image, x: current.x, y: current.y, width: current.width, height: current.height });
+  });
+
   // 예전 파일: 사람 모형 하나(probe)를 actors로 옮긴다. 얼굴 높이가 그대로 되도록 키를 정한다
   if (!Array.isArray(state.actors)) {
     const old = state.probe;

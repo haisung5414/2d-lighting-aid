@@ -27,7 +27,7 @@ Preset key `dure` in `src/config/venues.ts`. There is no vector drawing; everyth
 No balcony on the audience side: the projection room sits over the back aisle. The back aisle (y 18.0–23.1) is left outside the 3D walls; it stays on the 2D plan.
 
 ## Plan image
-`public/venues/dure/dure_floor_plan.png`: the B1 dimension photo with the coloured measurement marks and label boxes removed (OpenCV inpaint), one smeared seat row and the back bar patched by copying neighbouring pixels, cropped to the inner walls plus 0.4 m. Layer placed at x −0.4, y −0.4, 17.21 × 23.91 m.
+`public/venues/dure/dure_floor_plan.svg` is drawn from the measured values by `node scripts/draw-dure-plan.mjs` (vector, sharp at any zoom). It shows walls (0.6 m), side and back doors, the 10-row seating with two aisles, the back platform and the two stairs, the spiral stair, and dashed upper-level lines (balcony edge, projection-room wall). Doors, stairs and the back platform come from the B1 photo (±0.3 m). Layer placed at x −1.2, y −1.2, 18.8 × 25.5 m (must match `VIEW` in the script). Saved works that still point at the old photo layer are switched to the current image and position on load.
 
 ## Model support added
 - `catwalk` is optional; `lightingGrid` shows a grid of unknown pipe layout as a translucent plane (3D toggle "캣워크·조명 그리드").

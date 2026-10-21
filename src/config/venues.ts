@@ -370,29 +370,30 @@ export const DURE_VENUE: VenuePreset = {
     yAxis: '객석 방향 (도면의 아래쪽)'
   },
   venueMap: {
-    image: assetPath('venues/dure/dure_floor_plan.png'),
+    image: assetPath('venues/dure/dure_floor_plan.svg'),
     sourceDocument: '두레문예관 B1 평면도 사진',
-    x: -0.4,
-    y: -0.4,
-    width: 17.21,
-    depth: 23.91,
+    x: -1.2,
+    y: -1.2,
+    width: 18.8,
+    depth: 25.5,
     opacity: 0.65,
     defaultVisible: true,
-    note: '평면도 사진에서 치수 표시를 지우고 안쪽 벽 둘레 0.4 m까지 잘라 낸 이미지.'
+    note: '평면도 사진에서 잰 값으로 다시 그린 벡터 도면 (scripts/draw-dure-plan.mjs).'
   },
   referenceLayers: [
     {
       id: 'dure-floor-plan',
       label: '두레문예관 평면도',
-      image: assetPath('venues/dure/dure_floor_plan.png'),
+      image: assetPath('venues/dure/dure_floor_plan.svg'),
       blendMode: 'multiply',
-      x: -0.4,
-      y: -0.4,
-      width: 17.21,
-      height: 23.91,
+      // scripts/draw-dure-plan.mjs의 VIEW와 같아야 한다
+      x: -1.2,
+      y: -1.2,
+      width: 18.8,
+      height: 25.5,
       opacity: 0.85,
       defaultVisible: true,
-      note: 'B1 평면도 사진 (치수 표시를 지운 것). 사진이라 선 위치에 ±0.1 m 정도 오차가 있다.'
+      note: 'B1 평면도 사진에서 잰 값으로 다시 그린 벡터 도면. 문·계단 위치는 ±0.3 m 정도 오차가 있다.'
     }
   ],
   referenceAreas: [
