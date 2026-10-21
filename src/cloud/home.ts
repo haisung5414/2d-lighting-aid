@@ -11,7 +11,7 @@ import { avatar } from './account';
 import { getUser, hasSkippedLogin, isAuthResolved, onAuthChange, setSkippedLogin, signInWithGoogle, signOut, type CloudUser } from './auth';
 import { cloudConfig } from './config';
 import {
-  deleteProject, downloadProject, listProjects, markNewWork, NETWORK_MESSAGE, onProjectsChange, openProject, renameProject,
+  deleteProject, downloadProject, listProjects, markNewWork, MAX_PROJECTS, NETWORK_MESSAGE, onProjectsChange, openProject, renameProject,
   type ProjectSummary,
 } from './projects';
 
@@ -380,7 +380,12 @@ const renderFiles = () => {
     return;
   }
 
-  filesHeading.textContent = '내 작업';
+  const count = projects?.length ?? 0;
+  filesHeading.replaceChildren('내 작업');
+  if (projects) {
+    filesHeading.append(h('span', { class: `lh-count${count >= MAX_PROJECTS ? ' lh-full' : ''}`, title: `한 사람당 ${MAX_PROJECTS}개까지 온라인에 저장할 수 있습니다` },
+      count >= MAX_PROJECTS ? `${count} / ${MAX_PROJECTS} · 가득 참` : `${count} / ${MAX_PROJECTS}`));
+  }
   if (listState === 'loading' && !projects) {
     filesSlot.replaceChildren(h('p', { class: 'lh-status' }, '불러오는 중…'));
     return;

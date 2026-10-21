@@ -67,6 +67,7 @@ thumbnail   text generated always as (coalesce(data->'cues'->((data->>'active_cu
 
 - `data` is the whole `AppState` JSON, the same object `saveProject` downloads. Scene thumbnails (`cue.thumbnail`, a 160 px JPEG data URL made by `generateThumbnail`) are already inside it.
 - Names are unique per user, so "save with a name that already exists" is an overwrite question (§5.2).
+- **At most 20 projects per user** (decided 2026-10-21; migration `20261021020000_project_limit.sql`): a `before insert` trigger raises `project limit reached` (P0001) when the user already has 20 rows. Updates and overwrites are not limited. The client counts first and shows the Korean message (§6) instead of the raw error; Home shows `내 작업 N / 20` (red `20 / 20 · 가득 참` when full).
 - The 5 MB cap protects the 500 MB quota; the client checks the size first and shows a Korean error instead of a raw database error.
 
 ## 4. Sign-in
@@ -140,6 +141,7 @@ Online projects are opened from Home (§9); there is no separate dialog. Opening
 | Not configured | §2: cloud UI off, local save unchanged. |
 | Network / paused project / RLS error | Korean `alert`: `온라인 작업을 처리하지 못했습니다. 인터넷 연결을 확인하거나 잠시 뒤에 다시 시도해 주세요.` + the error message in the console. Work on screen is untouched. |
 | Session expired | Supabase refreshes tokens automatically; if a call still returns 401, the app shows the signed-out state and asks to sign in again. |
+| 20 projects already (new save only) | `온라인 작업은 한 사람당 20개까지 저장할 수 있습니다. 홈에서 쓰지 않는 작업을 지운 뒤 다시 저장해 주세요. (내 컴퓨터에 저장하는 것은 언제든 됩니다)` |
 | Too large (> 5 MB) | `작업 파일이 너무 커서 온라인에 저장할 수 없습니다 (최대 5MB). 배경 이미지를 줄이거나 내 컴퓨터에 저장해 주세요.` |
 
 ## 7. Out of scope
