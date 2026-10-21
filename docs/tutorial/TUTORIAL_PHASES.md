@@ -40,9 +40,16 @@ Review fixes (user, after T2):
 
 - Signed-out visitors too (user request): `home.ts` now exposes `onHomeShown` / `isHomeShown`, and auto-start runs whenever Home (not the login screen) is shown, once per page load. Checked on 5173 with the real login screen: no tutorial on the login screen; `로그인 없이 시작하기` → lesson 1 at once; after lesson 1 is recorded, the next page load starts lesson 2. Merged main (47e4c79) into this branch first because `home.ts` changed there.
 
-## T3 — Lessons 6–8 + first visit `[ ]`
+## T3 — Lessons 6–8 `[x]`
 - 씬 만들기, 3D로 확인하기, 저장과 채널 검사.
-- (First-visit entry point moved to T1 review fixes: auto-start on first sign-in.)
+- (The first-visit entry point became auto-start / auto-continue, see the T1 and T2 review fixes.)
+
+Done notes:
+- Lesson 6 (scenes): open the drawer, copy, rename in place (`2장 밤`), give the copy a gel (stored per scene), switch back to Scene 1 to compare, drag a card to reorder.
+- Lesson 7 (view3d): enter 3D, 3D 극장 구조 panel, turn the work light on, toggle seating, orbit / zoom / pan (explanation only), drag the actor in 3D (done when the actor moves), back to 2D. Clicking a fixture in 3D is only mentioned: the practice front light hangs over the audience and may be outside the default 3D view.
+- Lesson 8 (save): set channel 4 in 선택한 객체 속성, open 채널 검사 (legend explained), click cell 4 for the detail, then explanation-only steps for ☰ 저장 (online when signed in, a JSON download otherwise; Ctrl+S; the practice work need not be saved) and the home button.
+- Lesson 5's last step now points to lesson 6.
+- Verified in the browser on 5173: with lessons 1–5 recorded and `로그인 없이 시작` set, opening the app auto-started lesson 6; lessons 6 → 7 → 8 ran to the end via 다음 강의 (the 3D actor drag was simulated with a state change; everything else used the real controls); all eight lessons recorded; on the next load nothing auto-starts.
 
 ## T4 — Polish `[ ]`
 - Copy review, dark mode, narrow screens, full run-through of every lesson.

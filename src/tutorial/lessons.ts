@@ -514,9 +514,218 @@ const lessonSets: TutorialLesson = {
       title: '세트와 그림자를 봤습니다',
       onEnter: () => { void setViewMode('2d'); },
       body: `<p>벽을 세우고, 숫자로 높이를 정하고, 손잡이로 크기와 각도를 바꾸고, 3D 그림자를 봤습니다.</p>
-        <p>남은 강의(씬 만들기, 3D 확인, 저장과 채널 검사)는 곧 추가됩니다.</p>`
+        <p>다음 강의에서는 장면마다 조명을 바꾸는 <b>씬</b>을 만들어 봅니다.</p>`
     }
   ]
 };
 
-export const LESSONS: TutorialLesson[] = [lessonTour, lessonFirstLight, lessonShape, lessonActors, lessonSets];
+/* ---------- 6강: 씬 만들기 ---------- */
+
+const cues = () => getState().cues;
+const activeCue = () => getState().cues[getState().active_cue_index];
+const drawerOpen = () => document.getElementById('scene-body')?.hidden === false;
+const openDrawer = () => { if (!drawerOpen()) document.getElementById('scene-handle')?.click(); };
+let cueOrderAtStart = '';
+const cueOrder = () => cues().map(c => c.cue_id).join(',');
+
+const lessonScenes: TutorialLesson = {
+  id: 'scenes',
+  title: '6강 · 씬 만들기',
+  minutes: 4,
+  summary: '씬을 복사하고, 이름을 바꾸고, 씬마다 조명을 다르게 하고, 순서를 바꿉니다.',
+  setup: () => setupPractice(true),
+  steps: [
+    {
+      title: '씬 서랍을 여세요',
+      target: el('#scene-drawer'),
+      done: drawerOpen,
+      body: '<p>공연은 여러 장면으로 나뉘고, 장면마다 조명이 바뀝니다. 이 프로그램에서는 장면 하나를 <b>씬</b>이라고 부릅니다.</p><p>아래의 <b>씬</b> 막대를 누르세요.</p>'
+    },
+    {
+      title: '지금 씬을 복사하세요',
+      target: el('#scene-copy'),
+      onEnter: openDrawer,
+      done: () => cues().length >= 2,
+      manual: true,
+      body: '<p><b>복사</b>를 누르세요. 지금 씬의 조명 구성을 그대로 가진 새 씬이 바로 뒤에 생깁니다.</p>',
+      afterBody: `<p>새 씬 <b>Scene 1 복사본</b>이 생겼고, 지금은 그 씬을 보고 있습니다 (파란 테두리 카드).</p>
+        <p>보통 앞 장면을 복사한 다음 바뀌는 조명만 고칩니다. 다 봤으면 <b>다음</b>을 누르세요.</p>`
+    },
+    {
+      title: '씬 이름을 바꾸세요',
+      target: first(el('.scene-rename'), el('#scene-rename')),
+      onEnter: openDrawer,
+      done: () => { const cue = activeCue(); return Boolean(cue && !cue.label.endsWith('복사본') && cues().length >= 2); },
+      body: '<p><b>이름 변경</b>을 누르면 카드 이름이 입력칸으로 바뀝니다. <b>2장 밤</b>처럼 적고 <kbd>Enter</kbd>를 누르세요.</p>'
+    },
+    {
+      title: '이 씬의 조명을 바꾸세요',
+      target: first(lsSection(2), el('#light-settings-btn')),
+      onEnter: focusLight,
+      done: () => Boolean(activeCue()?.fixtures[0]?.gel),
+      manual: true,
+      body: '<p>밤 장면이니 L1에 푸른 젤을 넣어 보세요. <b>젤</b>의 파란 칸 중 하나를 누르세요.</p>',
+      afterBody: `<p>이 씬(2장 밤)의 L1만 바뀌었습니다. 조명 설정은 <b>씬마다 따로</b> 저장됩니다.</p>
+        <p>다 봤으면 <b>다음</b>을 누르세요.</p>`
+    },
+    {
+      title: '앞 씬으로 돌아가 비교하세요',
+      target: el('#cue-list'),
+      onEnter: openDrawer,
+      done: () => getState().active_cue_index === 0,
+      manual: true,
+      body: '<p>씬 서랍에서 첫 번째 카드(<b>Scene 1</b>)를 누르세요.</p>',
+      afterBody: `<p>Scene 1의 L1에는 젤이 없습니다. 카드를 번갈아 누르면서 장면마다 빛이 어떻게 바뀌는지 비교하세요.</p>
+        <p>카드의 작은 그림(썸네일)에도 그 씬의 빛이 보입니다. 다 봤으면 <b>다음</b>을 누르세요.</p>`
+    },
+    {
+      title: '카드를 끌어 순서를 바꿔 보세요',
+      target: el('#cue-list'),
+      onEnter: () => { openDrawer(); cueOrderAtStart = cueOrder(); },
+      done: () => cueOrder() !== cueOrderAtStart,
+      manual: true,
+      body: '<p>씬 카드 하나를 잡고 다른 카드의 앞이나 뒤로 끌어 놓으세요. 파란 세로줄이 놓일 자리입니다.</p>',
+      afterBody: '<p>순서가 바뀌었습니다. 공연 순서대로 씬을 늘어놓으세요. 지우기는 <b>삭제</b>를 두 번 누르면 됩니다 (실행 취소로 되돌릴 수 있음). 다 봤으면 <b>다음</b>을 누르세요.</p>'
+    },
+    {
+      title: '씬을 만들었습니다',
+      body: `<p>씬을 복사하고, 이름을 바꾸고, 씬마다 조명을 다르게 하고, 순서를 바꿔 봤습니다.</p>
+        <p>다음 강의에서는 3D 보기를 더 자세히 써 봅니다.</p>`
+    }
+  ]
+};
+
+/* ---------- 7강: 3D로 확인하기 ---------- */
+
+const venueToggle = (layer: string) => document.querySelector<HTMLInputElement>(`[data-venue3d="${layer}"]`);
+let seatingAtStart = true;
+let actorAtStart = '';
+const actorKey = () => { const a = firstActor(); return a ? `${a.x.toFixed(2)},${a.y.toFixed(2)}` : ''; };
+
+const lessonView3D: TutorialLesson = {
+  id: 'view3d',
+  title: '7강 · 3D로 확인하기',
+  minutes: 4,
+  summary: '극장 구조와 작업등을 켜고 끄고, 시점을 돌리고, 3D에서 배우를 옮깁니다.',
+  setup: () => setupPractice(true),
+  steps: [
+    {
+      title: '3D 보기를 켜세요',
+      target: el('#view-3d'),
+      done: is3D,
+      body: '<p>위쪽 가운데의 <b>3D 보기</b>를 누르세요.</p>'
+    },
+    {
+      title: '3D 극장 구조',
+      target: first(el('[data-panel="venue3d"]'), el('[data-tray="venue3d"]')),
+      onEnter: () => { if (!panelOpen('venue3d')) openPanel('venue3d'); },
+      body: `<p>3D로 들어가면 오른쪽에 <b>3D 극장 구조</b>가 열립니다. 극장 벽·천장, 캣워크, 객석, 작업등을 켜고 끕니다.</p>
+        <p>필요 없으면 패널 아래의 <b>3D로 들어갈 때 자동으로 열지 않기</b>를 켜 두세요.</p>`
+    },
+    {
+      title: '작업등을 켜 보세요',
+      target: first(() => venueToggle('worklight')?.closest<HTMLElement>('label')?.getBoundingClientRect() ?? null, el('[data-tray="venue3d"]')),
+      onEnter: () => { if (!panelOpen('venue3d')) openPanel('venue3d'); },
+      done: () => Boolean(venueToggle('worklight')?.checked),
+      manual: true,
+      body: '<p><b>작업등</b>을 체크하세요.</p>',
+      afterBody: `<p>작업등은 공간 전체를 약하게 밝혀서 극장 모양을 알아보기 쉽게 합니다. 조명이 만드는 빛만 보려면 다시 끄세요.</p>
+        <p>다 봤으면 <b>다음</b>을 누르세요.</p>`
+    },
+    {
+      title: '객석을 꺼 보세요',
+      target: first(() => venueToggle('seating')?.closest<HTMLElement>('label')?.getBoundingClientRect() ?? null, el('[data-tray="venue3d"]')),
+      onEnter: () => { if (!panelOpen('venue3d')) openPanel('venue3d'); seatingAtStart = venueToggle('seating')?.checked ?? true; },
+      done: () => (venueToggle('seating')?.checked ?? true) !== seatingAtStart,
+      manual: true,
+      body: '<p><b>객석</b> 체크를 바꿔 보세요. 객석이 가려서 무대가 잘 안 보일 때 끕니다.</p>',
+      afterBody: '<p>켜고 끄는 것은 화면에만 해당하고 작업 파일에는 영향이 없습니다. 다 봤으면 <b>다음</b>을 누르세요.</p>'
+    },
+    {
+      title: '시점을 돌려 보세요',
+      target: el('#view3d'),
+      body: `<p>무대 위 빈 곳을 <b>끌면</b> 시점이 돌아가고, <b>휠</b>로 확대·축소, <b>오른쪽 버튼으로 끌면</b> 옆으로 이동합니다.</p>
+        <p>배우 얼굴에 빛이 어떻게 닿는지 여러 방향에서 보세요. 다 봤으면 <b>다음</b>을 누르세요.</p>`
+    },
+    {
+      title: '3D에서 배우를 옮겨 보세요',
+      target: el('#view3d'),
+      onEnter: () => { actorAtStart = actorKey(); },
+      done: () => actorKey() !== actorAtStart,
+      manual: true,
+      body: '<p>3D 화면의 <b>배우 모형</b>을 잡고 끌어 보세요. 바닥을 따라 움직입니다.</p>',
+      afterBody: `<p>빛 안팎으로 옮기면 얼굴이 밝아지고 어두워지는 것이 보입니다. 2D 평면도의 배우도 같이 움직입니다.</p>
+        <p>3D에서 조명 기구를 누르면 그 조명의 설정이 열립니다. 다 봤으면 <b>다음</b>을 누르세요.</p>`
+    },
+    {
+      title: '2D로 돌아오세요',
+      target: el('#view-2d'),
+      done: () => !is3D(),
+      body: '<p><b>2D 평면</b>을 눌러 돌아오세요. 조명을 놓고 고치는 일은 2D에서 합니다.</p>'
+    },
+    {
+      title: '3D 보기를 써 봤습니다',
+      body: `<p>극장 구조와 작업등을 켜고 끄고, 시점을 돌리고, 배우를 옮겨 봤습니다.</p>
+        <p>마지막 강의에서는 작업을 저장하고 채널을 확인합니다.</p>`
+    }
+  ]
+};
+
+/* ---------- 8강: 저장과 채널 검사 ---------- */
+
+const patchDetailShown = () => /번 채널/.test(document.getElementById('patch-detail')?.textContent ?? '');
+
+const lessonSave: TutorialLesson = {
+  id: 'save',
+  title: '8강 · 저장과 채널 검사',
+  minutes: 3,
+  summary: '조명에 채널을 정하고, 채널이 겹치는지 보고, 작업을 저장합니다.',
+  setup: () => setupPractice(true),
+  steps: [
+    {
+      title: '조명에 채널을 정하세요',
+      target: ppRow('pp-channel'),
+      onEnter: () => { const fix = firstFixture(); if (fix) { selectFixture(fix.id); openPanel('props'); } },
+      done: () => (firstFixture()?.channel ?? 0) > 0,
+      manual: true,
+      body: '<p>조명은 극장의 <b>채널</b>(디머 회로)에 꽂아야 켤 수 있습니다. 선택한 객체 속성의 <b>채널</b> 칸에 <b>4</b>를 적고 <kbd>Enter</kbd>를 누르세요.</p>',
+      afterBody: '<p>L1이 4번 채널에 배정되었습니다. 다 봤으면 <b>다음</b>을 누르세요.</p>'
+    },
+    {
+      title: '채널 검사를 여세요',
+      target: first(el('[data-panel="patch"]'), el('[data-tray="patch"]')),
+      done: () => panelOpen('patch'),
+      manual: true,
+      body: '<p>오른쪽의 <b>채널 검사</b>를 누르세요.</p>',
+      afterBody: `<p>칸 하나가 채널 하나이고, 아래 숫자는 그 채널에 배정된 조명 수입니다 (모든 씬을 합친 수).</p>
+        <p><b>파란 칸</b>은 사용 중, <b>빨간 칸</b>은 콘센트 수보다 많이 배정된 채널입니다. 빨간 칸이 있으면 조명을 다른 채널로 옮기세요. 다 봤으면 <b>다음</b>을 누르세요.</p>`
+    },
+    {
+      title: '4번 채널 칸을 눌러 보세요',
+      target: first(el('.patch-cell[data-channel="4"]'), el('[data-panel="patch"]')),
+      onEnter: () => { if (!panelOpen('patch')) openPanel('patch'); },
+      done: patchDetailShown,
+      manual: true,
+      body: '<p>파랗게 바뀐 <b>4</b>번 칸을 누르세요.</p>',
+      afterBody: '<p>아래에 그 채널의 위치와 콘센트 수, 어느 씬의 어떤 조명이 쓰는지가 나옵니다. 다 봤으면 <b>다음</b>을 누르세요.</p>'
+    },
+    {
+      title: '작업 저장하기',
+      target: first(el('#file-menu'), el('#file-menu-btn')),
+      body: `<p>왼쪽 위 <b>☰</b> 메뉴의 <b>저장</b>으로 작업을 저장합니다. 로그인했으면 <b>온라인</b>에 저장되어 다른 컴퓨터에서도 열 수 있고, 로그인하지 않았으면 <b>내 컴퓨터</b>에 파일로 내려받습니다.</p>
+        <p>파일 이름은 왼쪽 위 이름을 눌러 바꿉니다. <kbd>Ctrl</kbd>+<kbd>S</kbd>로도 저장됩니다. 지금은 연습용 작업이라 저장하지 않아도 됩니다.</p>`
+    },
+    {
+      title: '홈으로 가기',
+      target: el('#home-btn'),
+      body: '<p>맨 왼쪽 위의 <b>집 버튼</b>을 누르면 홈으로 갑니다. 홈에서 새 작업을 시작하거나, 저장한 작업을 엽니다.</p>'
+    },
+    {
+      title: '튜토리얼을 모두 마쳤습니다',
+      body: `<p>조명 달기부터 저장까지 기본을 모두 해 봤습니다. 이제 실제 공연의 조명을 그려 보세요.</p>
+        <p>다시 보고 싶은 강의는 아래 왼쪽 <b>?</b> 버튼(도우미)에서 언제든 다시 할 수 있습니다.</p>`
+    }
+  ]
+};
+
+export const LESSONS: TutorialLesson[] = [lessonTour, lessonFirstLight, lessonShape, lessonActors, lessonSets, lessonScenes, lessonView3D, lessonSave];
