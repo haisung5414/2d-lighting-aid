@@ -22,8 +22,15 @@ Review fixes (user, after T1):
 - 3D work light (작업등) is off by default.
 - Scene drawer: right offset 330 px (was 520) with min-width 260 px; it collapsed to a sliver on an 800 px-wide window.
 
-## T2 — Lessons 3–5 `[ ]`
+## T2 — Lessons 3–5 `[x]`
 - 조명 다듬기, 배우 얼굴 밝기 읽기, 세트와 그림자.
+
+Done notes:
+- Lesson 3 (shape): selects L1 and forces 조명 설정 open (`selectFixture` + `openSelected`, so the auto-open opt-out does not hide it); steps for lens, gel, dimmer (explains the square law), shutter on, drag a red corner. All "look at the result" steps are `manual`.
+- Lesson 4 (actors): place a second actor at a marked spot, 선택한 객체 속성, change 키 (explains face = 키 − 120 mm and that 빛 범위 표시 uses its own height), drag the actor into the light (done when its face lux > 50 and ≥ half of actor 1), contribution table.
+- Lesson 5 (sets): wall placed 0.8 m in front of the actor — the front light's ray to the face crosses that line at ≈ 2.2 m, so the 2.44 m wall blocks it (face 0 lux) and typing `1200mm` in the VCB brings it back (979 lux in the test); corner handle, rotation handle (spotlight computed like `canvas.ts`: top-edge midpoint + 26 px), 3D, 3D shadow on.
+- Practice work is remembered (`practiceOpen`, cleared by any `lighting:file` event), so chaining lessons or restarting one never asks to save the practice work.
+- Verified in the browser with the real inputs (select change, gel click, slider change, shutter corner drag, actor tool + click, height input, actor drag, wall tool + click, VCB typing, corner drag, rotate handle drag, 3D, shadow checkbox).
 
 ## T3 — Lessons 6–8 + first visit `[ ]`
 - 씬 만들기, 3D로 확인하기, 저장과 채널 검사.

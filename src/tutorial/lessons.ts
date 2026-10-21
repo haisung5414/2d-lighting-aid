@@ -2,7 +2,10 @@
 // 튜토리얼 강의 내용. 강의 순서와 목적은 docs/tutorial/TUTORIAL_SPEC.md §4
 // 할 일이 있는 단계는 done()으로 앱 상태를 읽어 저절로 넘어간다.
 
-import { getCurrentCue, getState, initVenue, setState } from '../state/store';
+import { actorFaceHeight, getCurrentCue, getState, initVenue, setState } from '../state/store';
+import { GeometryEngine } from '../engine/geometry';
+import { dimmerLevel } from '../engine/photometrics';
+import { openSelected, selectFixture, selectSet } from '../ui/selection';
 import { resetCanvasZoom, worldToScreen } from '../render/canvas';
 import { getFileState, openPanel, setViewMode } from '../ui/shell';
 import { getTool, setTool } from '../ui/tools';
@@ -10,7 +13,7 @@ import { markNewWork } from '../cloud/projects';
 import { createFixture } from '../ui/fixture';
 import { VENUES } from '../config/venues';
 import { around, el, first, union, type TutorialLesson } from './engine';
-import type { Position2D } from '../types';
+import type { Actor, Position2D, SetPiece } from '../types';
 
 /* ---------- 읽기 도우미 ---------- */
 
@@ -47,13 +50,18 @@ const FRONT_PIPE: Position2D = (() => {
   return { x: ACTOR_SPOT.x, y: pipe.y };
 })();
 
+/** 지금 열린 작업이 튜토리얼 연습용인가. 새 작업·불러오기·저장(lighting:file)이 일어나면 아니게 된다 */
+let practiceOpen = false;
+window.addEventListener('lighting:file', () => { practiceOpen = false; });
+
 /**
  * 인문소극장, 배우 한 명. withLight면 배우를 앞에서 비추는 엘립소이달 하나를 미리 달아 둔다.
  * 편집 화면에 저장 안 된 작업이 있으면 먼저 묻는다 (홈에서 시작하면 묻지 않는다)
  */
 const setupPractice = (withLight: boolean): boolean => {
   const editorOpen = document.getElementById('editor-screen')?.style.display === 'flex';
-  if (editorOpen && getFileState().dirty && !window.confirm('지금 작업에 저장하지 않은 내용이 있습니다.\n튜토리얼을 시작하면 연습용 작업으로 바뀝니다. 계속할까요?')) return false;
+  // 열려 있는 것이 튜토리얼 연습용 작업이면 저장 여부를 묻지 않는다
+  if (editorOpen && !practiceOpen && getFileState().dirty && !window.confirm('지금 작업에 저장하지 않은 내용이 있습니다.\n튜토리얼을 시작하면 연습용 작업으로 바뀝니다. 계속할까요?')) return false;
   initVenue('humanities');
   markNewWork();
   setState(s => {
@@ -72,6 +80,7 @@ const setupPractice = (withLight: boolean): boolean => {
   openPanel(null);
   void setViewMode('2d');
   resetCanvasZoom();
+  practiceOpen = true;
   return true;
 };
 
@@ -221,4 +230,296 @@ const lessonFirstLight: TutorialLesson = {
   ]
 };
 
-export const LESSONS: TutorialLesson[] = [lessonTour, lessonFirstLight];
+
+/* ---------- 공통 도우미 (3~5강) ---------- */
+
+/** 조명 설정 패널의 n번째 묶음 (1 기종·렌즈, 2 젤, 3 디머, 4 셔터, 5 3D 그림자) */
+const lsSection = (n: number) => el(`#light-settings-body .ls-section:nth-child(${n})`);
+/** 선택한 객체 속성에서 입력칸이 들어 있는 줄 */
+const ppRow = (inputId: string) => (): DOMRect | null => {
+  const row = document.getElementById(inputId)?.closest<HTMLElement>('.pp-row');
+  return row && !row.closest('[hidden]') ? row.getBoundingClientRect() : null;
+};
+/** 무대 좌표 여러 점을 감싸는 화면 사각형 */
+const stageBox = (points: () => Position2D[] | null, pad = 14) => (): DOMRect | null => {
+  const pts = (points() ?? []).map(screenOf).filter((q): q is { x: number; y: number } => q !== null);
+  if (!pts.length) return null;
+  const xs = pts.map(q => q.x);
+  const ys = pts.map(q => q.y);
+  return new DOMRect(Math.min(...xs) - pad, Math.min(...ys) - pad, Math.max(...xs) - Math.min(...xs) + pad * 2, Math.max(...ys) - Math.min(...ys) + pad * 2);
+};
+const faceLux = (actor: Actor | undefined) => {
+  const cue = getCurrentCue();
+  if (!actor || !cue) return 0;
+  return GeometryEngine.calculateProbeBrightness(cue, getState().stage_config, actor, actorFaceHeight(actor)).faceLux;
+};
+/** 연습용 조명을 고르고 조명 설정을 연다 (자동으로 열지 않기를 켜 둔 사람도 보이게) */
+const focusLight = () => {
+  const fix = firstFixture();
+  if (!fix) return;
+  selectFixture(fix.id);
+  openSelected();
+};
+
+/** 세트의 지역 좌표 → 무대 좌표 (canvas.ts와 같은 계산) */
+const setLocal = (piece: SetPiece, lx: number, ly: number): Position2D => {
+  const r = piece.rotation * Math.PI / 180;
+  return { x: piece.x + lx * Math.cos(r) - ly * Math.sin(r), y: piece.y + lx * Math.sin(r) + ly * Math.cos(r) };
+};
+const firstSet = () => (getState().stage_config.set_pieces ?? [])[0];
+/** 노란 회전 손잡이: 위쪽 변 가운데에서 화면 기준 26px 바깥 (canvas.ts ROTATE_STICK_PX) */
+const rotateHandleRect = (): DOMRect | null => {
+  const piece = firstSet();
+  if (!piece) return null;
+  const c = screenOf(piece);
+  const top = screenOf(setLocal(piece, 0, -piece.depth / 2));
+  if (!c || !top) return null;
+  const len = Math.hypot(top.x - c.x, top.y - c.y) || 1;
+  return around(top.x + (top.x - c.x) / len * 26, top.y + (top.y - c.y) / len * 26, 16);
+};
+
+/* ---------- 3강: 조명 다듬기 ---------- */
+
+let lensAtStart = '';
+let shutterAtStart = '';
+const lensKey = () => {
+  const fix = firstFixture();
+  if (!fix) return '';
+  return fix.type === 'ellipsoidal' ? fix.lens_type : fix.type === 'zoom' ? `zoom-${fix.zoom_range}` : fix.type;
+};
+const shutterKey = () => {
+  const fix = firstFixture();
+  return fix && 'shutter_polygon' in fix ? JSON.stringify(fix.shutter_polygon) : '';
+};
+const shutterCorners = (): Position2D[] | null => {
+  const fix = firstFixture();
+  if (!fix || !('shutter_polygon' in fix) || !fix.shutter_active) return null;
+  return fix.shutter_polygon.map(p => ({ x: fix.target.x + p.dx, y: fix.target.y + p.dy }));
+};
+
+const lessonShape: TutorialLesson = {
+  id: 'shape',
+  title: '3강 · 조명 다듬기',
+  minutes: 4,
+  summary: '렌즈, 젤, 디머, 셔터로 빛의 크기·색·밝기·모양을 바꿉니다.',
+  setup: () => setupPractice(true),
+  steps: [
+    {
+      title: '조명 설정',
+      target: first(el('#light-settings'), el('#light-settings-btn')),
+      onEnter: focusLight,
+      body: `<p>배우를 비추는 조명 <b>L1</b>을 골랐습니다. 오른쪽 <b>조명 설정</b>에서 이 조명의 렌즈, 젤(색), 디머(밝기), 셔터, 3D 그림자를 바꿉니다.</p>
+        <p>하나씩 바꿔 보면서 평면도의 빛과 배우 옆의 <b>얼굴 N lux</b>가 어떻게 달라지는지 보세요.</p>`
+    },
+    {
+      title: '렌즈를 바꿔 보세요',
+      target: lsSection(1),
+      onEnter: () => { focusLight(); lensAtStart = lensKey(); },
+      done: () => lensKey() !== lensAtStart,
+      manual: true,
+      body: '<p><b>렌즈</b> 목록에서 지금(36°)과 다른 렌즈를 고르세요. 숫자는 빛이 퍼지는 각도입니다.</p>',
+      afterBody: `<p>평면도의 빛 크기가 바뀌었습니다. <b>19°</b>처럼 좁은 렌즈는 작고 밝게, <b>50°</b>처럼 넓은 렌즈는 넓고 어둡게 비춥니다.</p>
+        <p>배우 얼굴 밝기 숫자도 함께 바뀐 것을 확인하고 <b>다음</b>을 누르세요.</p>`
+    },
+    {
+      title: '젤(색)을 넣어 보세요',
+      target: lsSection(2),
+      onEnter: focusLight,
+      done: () => Boolean(firstFixture()?.gel),
+      manual: true,
+      body: '<p><b>젤</b>의 색 칸 중 하나를 누르세요. 극장에 있는 LEE 필터들입니다.</p>',
+      afterBody: `<p>빛 색이 바뀌고 얼굴 밝기가 줄었습니다. 젤은 빛의 일부만 통과시키기 때문입니다 (투과율). 진한 색일수록 더 어두워집니다.</p>
+        <p><b>✕</b> 칸을 누르면 젤을 뺄 수 있습니다. 다 봤으면 <b>다음</b>을 누르세요.</p>`
+    },
+    {
+      title: '디머로 밝기를 줄여 보세요',
+      target: lsSection(3),
+      onEnter: focusLight,
+      done: () => { const fix = firstFixture(); return Boolean(fix && dimmerLevel(fix) < 100); },
+      manual: true,
+      body: '<p><b>디머</b> 막대를 왼쪽으로 끌었다가 놓으세요.</p>',
+      afterBody: `<p>디머를 <b>50%</b>로 내려도 실제 빛은 약 <b>25%</b>입니다. 텅스텐 램프는 전압을 낮추면 빛이 그보다 더 빨리 줄어들기 때문입니다 (막대 아래 "실제 광량"을 보세요).</p>
+        <p>다 봤으면 <b>다음</b>을 누르세요.</p>`
+    },
+    {
+      title: '셔터를 켜세요',
+      target: lsSection(4),
+      onEnter: focusLight,
+      done: () => { const fix = firstFixture(); return Boolean(fix && 'shutter_active' in fix && fix.shutter_active); },
+      body: '<p><b>셔터 켜기</b>를 체크하세요. 엘립소이달은 안쪽의 날(셔터)로 빛의 가장자리를 곧게 자를 수 있습니다.</p>'
+    },
+    {
+      title: '빨간 꼭짓점을 끌어 빛을 잘라 보세요',
+      target: stageBox(shutterCorners),
+      onEnter: () => { shutterAtStart = shutterKey(); },
+      done: () => shutterKey() !== shutterAtStart,
+      manual: true,
+      body: '<p>평면도에 생긴 <b>빨간 꼭짓점 4개</b> 중 하나를 끌어 보세요. 빛이 그 선을 따라 잘립니다.</p>',
+      afterBody: `<p>빛이 잘렸습니다. 셔터는 무대 밖 벽이나 객석, 무대 장치로 새어 나가는 빛을 자를 때 씁니다.</p>
+        <p>꼭짓점마다 따로 움직여서 비스듬하게 자를 수도 있습니다. 다 봤으면 <b>다음</b>을 누르세요.</p>`
+    },
+    {
+      title: '빛을 다듬었습니다',
+      body: `<p>렌즈로 크기를, 젤로 색을, 디머로 밝기를, 셔터로 모양을 바꿔 봤습니다.</p>
+        <p>다음 강의에서는 배우를 더 세우고, 배우마다 얼굴이 얼마나 밝은지 읽어 봅니다.</p>`
+    }
+  ]
+};
+
+/* ---------- 4강: 배우 얼굴 밝기 읽기 ---------- */
+
+const secondActor = () => getState().actors[1];
+const SECOND_SPOT: Position2D = { x: ACTOR_SPOT.x + 3, y: ACTOR_SPOT.y + 0.5 };
+
+const lessonActors: TutorialLesson = {
+  id: 'actors',
+  title: '4강 · 배우 얼굴 밝기 읽기',
+  minutes: 4,
+  summary: '배우를 더 세우고, 키를 바꾸고, 어느 조명이 얼마나 비추는지 봅니다.',
+  setup: () => setupPractice(true),
+  steps: [
+    {
+      title: '사람 모형 놓기 도구를 고르세요',
+      target: el('[data-tool="actor"]'),
+      done: () => getTool() === 'actor',
+      body: '<p>왼쪽 맨 아래의 <b>사람 모형 놓기</b>를 누르거나 키보드 <kbd>A</kbd>를 누르세요. 배우는 여러 명 세울 수 있습니다.</p>'
+    },
+    {
+      title: '표시한 곳을 누르세요',
+      target: stagePoint(() => SECOND_SPOT, 26),
+      done: () => getState().actors.length >= 2,
+      body: '<p>평면도에서 <b>파란 테두리로 표시한 곳</b>을 누르세요. 그 자리에 두 번째 배우가 섭니다.</p>'
+    },
+    {
+      title: '선택한 객체 속성',
+      target: first(el('[data-panel="props"]'), el('[data-tray="props"]')),
+      onEnter: () => { if (!panelOpen('props')) openPanel('props'); },
+      body: `<p>새 배우(<b>배우2</b>)의 속성입니다. 이름, 위치, 키, 의상 색, 그리고 <b>이 자리의 밝기</b>가 나옵니다.</p>
+        <p>배우2는 조명 밖에 서 있어서 얼굴 밝기가 낮습니다.</p>`
+    },
+    {
+      title: '키를 바꿔 보세요',
+      target: ppRow('pp-aheight'),
+      onEnter: () => { if (!panelOpen('props')) openPanel('props'); },
+      done: () => Boolean(secondActor() && Math.abs(secondActor().height - 1.75) > 0.001),
+      manual: true,
+      body: '<p><b>키</b> 칸의 숫자(mm)를 바꾸고 Enter를 누르세요. 예: 1600</p>',
+      afterBody: `<p>키를 바꾸면 <b>얼굴 높이</b>(키 − 120 mm)가 바뀌고, 그 높이에서 밝기를 다시 계산합니다. 어린이 역이나 키 큰 배우처럼 사람마다 다르게 둘 수 있습니다.</p>
+        <p>평면도의 "배우 얼굴 높이에 닿는 빛"은 이와 상관없이 <b>빛 범위 표시</b>에서 정한 높이로 그립니다. 다 봤으면 <b>다음</b>을 누르세요.</p>`
+    },
+    {
+      title: '배우2를 빛 안으로 옮기세요',
+      target: stageBox(() => {
+        const a = firstActor();
+        const b = secondActor();
+        return a && b ? [a, b] : null;
+      }, 24),
+      done: () => {
+        const lux = faceLux(secondActor());
+        return lux > 50 && lux >= faceLux(getState().actors[0]) * 0.5;
+      },
+      body: '<p>배우2의 초록 십자를 끌어서 <b>첫 배우 옆, 빛이 닿는 곳</b>으로 옮기세요. 옮기는 동안 얼굴 밝기 숫자가 바뀝니다.</p>'
+    },
+    {
+      title: '어느 조명이 얼마나 비추나',
+      target: first(el('.pp-contrib'), el('[data-panel="props"]')),
+      onEnter: () => { if (!panelOpen('props')) openPanel('props'); },
+      body: `<p>아래 표는 <b>조명별</b>로 이 배우의 얼굴과 머리 위(수평면)에 닿는 밝기입니다. 줄을 누르면 그 조명이 선택됩니다.</p>
+        <p>배우가 어둡거나 너무 밝을 때, 어느 조명이 일을 하고 있는지 여기서 찾습니다.</p>`
+    },
+    {
+      title: '배우 밝기를 읽었습니다',
+      body: `<p>배우를 더 세우고, 키를 바꾸고, 조명별 밝기를 읽어 봤습니다.</p>
+        <p>다음 강의에서는 벽 같은 세트가 빛을 가리는 모습과 그림자를 봅니다.</p>`
+    }
+  ]
+};
+
+/* ---------- 5강: 세트와 그림자 ---------- */
+
+/** 앞 조명과 배우 사이: 2.44m 벽은 얼굴로 가는 빛을 가리고, 1.2m로 낮추면 가리지 않는 자리 */
+const WALL_SPOT: Position2D = { x: ACTOR_SPOT.x, y: ACTOR_SPOT.y + 0.8 };
+let setSizeAtStart = '';
+const setSizeKey = () => { const piece = firstSet(); return piece ? `${piece.width}x${piece.depth}` : ''; };
+const keepSetSelected = () => { const piece = firstSet(); if (piece && getState().selected_set_id !== piece.id) selectSet(piece.id); };
+
+const lessonSets: TutorialLesson = {
+  id: 'sets',
+  title: '5강 · 세트와 그림자',
+  minutes: 5,
+  summary: '벽을 세워 빛을 가리고, 높이·크기·각도를 바꾸고, 3D 그림자를 봅니다.',
+  setup: () => setupPractice(true),
+  steps: [
+    {
+      title: '벽 놓기 도구를 고르세요',
+      target: el('[data-tool="wall"]'),
+      done: () => getTool() === 'wall',
+      body: '<p>왼쪽의 <b>벽 놓기</b>를 누르거나 <kbd>W</kbd>를 누르세요. 가로 1220 · 두께 30 · 높이 2440 mm 벽(평)이 놓입니다.</p>'
+    },
+    {
+      title: '배우 바로 앞에 벽을 놓으세요',
+      target: stagePoint(() => WALL_SPOT, 26),
+      done: () => Boolean(firstSet()),
+      manual: true,
+      body: '<p><b>파란 테두리로 표시한 곳</b>(배우와 조명 사이)을 누르세요.</p>',
+      afterBody: `<p>배우 옆의 <b>얼굴 lux</b>가 0이 되었죠? 벽이 조명과 배우 얼굴 사이를 막아서 빛이 닿지 않습니다.</p>
+        <p>세트는 높이까지 계산해서 빛을 가립니다. 다 봤으면 <b>다음</b>을 누르세요.</p>`
+    },
+    {
+      title: '숫자로 벽 높이를 바꾸세요',
+      target: union('.vcb'),
+      onEnter: keepSetSelected,
+      done: () => Boolean(firstSet() && Math.abs(firstSet().height - 2.44) > 0.001),
+      manual: true,
+      body: '<p>세트를 놓은 직후에는 숫자를 바로 치면 높이가 됩니다. 키보드로 <kbd>1200mm</kbd>를 치고 <kbd>Enter</kbd>를 누르세요. (아래 <b>높이</b> 칸에 들어갑니다)</p>',
+      afterBody: `<p>벽이 1.2 m로 낮아져 빛이 벽 위로 넘어가고, 배우 얼굴 밝기가 다시 생겼습니다.</p>
+        <p>단위 없이 치면 m입니다 (예: 1.2). 다 봤으면 <b>다음</b>을 누르세요.</p>`
+    },
+    {
+      title: '흰 꼭짓점을 끌어 크기를 바꾸세요',
+      target: stageBox(() => {
+        const piece = firstSet();
+        return piece ? [setLocal(piece, piece.width / 2, -piece.depth / 2)] : null;
+      }, 16),
+      onEnter: () => { keepSetSelected(); setSizeAtStart = setSizeKey(); },
+      done: () => setSizeKey() !== setSizeAtStart,
+      manual: true,
+      body: '<p>고른 벽의 네 귀퉁이에 있는 <b>흰 동그라미</b> 중 하나를 끌어 보세요.</p>',
+      afterBody: `<p>반대쪽 꼭짓점은 그대로 있고 크기만 바뀝니다. 끄는 동안 치수(mm)가 보입니다.</p>
+        <p>정확한 값은 <b>선택한 객체 속성</b>에서 mm로 적을 수도 있습니다. 다 봤으면 <b>다음</b>을 누르세요.</p>`
+    },
+    {
+      title: '노란 손잡이로 돌려 보세요',
+      target: rotateHandleRect,
+      onEnter: keepSetSelected,
+      done: () => Boolean(firstSet() && Math.abs(firstSet().rotation) > 0.5),
+      manual: true,
+      body: '<p>벽 위쪽의 <b>노란 동그라미</b>를 잡고 돌리세요.</p>',
+      afterBody: '<p>15°, 30°, 45° … 근처에서는 딱 맞게 붙습니다. 몸통을 끌면 옮겨집니다. 다 봤으면 <b>다음</b>을 누르세요.</p>'
+    },
+    {
+      title: '3D로 보세요',
+      target: el('#view-3d'),
+      done: is3D,
+      body: '<p>위쪽의 <b>3D 보기</b>를 누르세요. 벽이 실제로 어떻게 서 있는지 봅니다.</p>'
+    },
+    {
+      title: '조명의 그림자를 켜세요',
+      target: first(lsSection(5), el('#light-settings-btn')),
+      onEnter: focusLight,
+      done: () => Boolean(firstFixture()?.cast_shadow),
+      manual: true,
+      body: '<p>조명 설정의 <b>3D 그림자</b>에서 <b>3D에서 이 조명의 그림자 계산</b>을 체크하세요.</p>',
+      afterBody: `<p>벽과 배우 뒤로 그림자가 생겼습니다. 그림자는 계산이 무거워서 한 번에 <b>4개 조명</b>까지만 켤 수 있습니다.</p>
+        <p>다 봤으면 <b>다음</b>을 누르세요.</p>`
+    },
+    {
+      title: '세트와 그림자를 봤습니다',
+      onEnter: () => { void setViewMode('2d'); },
+      body: `<p>세트가 빛을 가리는 모습, 숫자로 높이를 정하는 법, 손잡이로 크기와 각도를 바꾸는 법, 3D 그림자를 봤습니다.</p>
+        <p>남은 강의(씬 만들기, 3D 확인, 저장과 채널 검사)는 곧 추가됩니다.</p>`
+    }
+  ]
+};
+
+export const LESSONS: TutorialLesson[] = [lessonTour, lessonFirstLight, lessonShape, lessonActors, lessonSets];

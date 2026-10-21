@@ -11,7 +11,7 @@ In-app guided tutorial for first-time users (student theatre club members who ha
 
 ## 1. Principles
 
-- The tutorial runs on a **practice work** (인문소극장, one actor at the acting-area centre; lessons that are not about placing lights start with one front ellipsoidal already aimed at the actor), so the user's own work is never touched. If the editor has unsaved changes, ask first (`confirm`); starting from Home never asks.
+- The tutorial runs on a **practice work** (인문소극장, one actor at the acting-area centre; lessons that are not about placing lights start with one front ellipsoidal already aimed at the actor), so the user's own work is never touched. If the editor has unsaved changes, ask first (`confirm`); starting from Home, or replacing a practice work that is still open, never asks.
 - The tutorial never blocks the app: the dimmed area is visual only (`pointer-events: none`), so a user who wanders off can keep working; the bubble stays and the step still completes when its condition becomes true.
 - Code lives in `src/tutorial/`. Existing UI gets only stable hooks (ids / data attributes it already has) and the entry point in the 도우미 panel. No tutorial logic inside existing modules.
 - Progress (finished lesson ids) is kept in `localStorage` key `lightingAid.tutorial.done` (try/catch; works without it).
