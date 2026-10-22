@@ -61,3 +61,6 @@ Done notes:
 - Layout check at 900 × 640 (dark mode) for every step of all eight lessons with CSS transitions disabled during measurement: every bubble is fully on screen; the only bubble/spotlight overlap is lesson 1 step 3, whose target is the whole plan.
 - Measurement gotcha: in a hidden preview pane CSS transitions and requestAnimationFrame freeze, so positions read mid-animation; the tutorial's 120 ms interval keeps step checks working, but layout tests must disable transitions.
 - Regression: lessons 1–2 again with real input and Enter; Esc keeps the lesson; quitting shows the note.
+
+## T5 — Catch up with features added after the tutorial `[ ]`
+- Features added since T4 (두레문예관, per-scene hiding, 씬 가져오기, share links) and the lesson changes they need are listed in `TUTORIAL_BACKLOG.md`. Start there.
