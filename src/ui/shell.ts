@@ -12,6 +12,8 @@ import { getViewZoom, onViewChange, resetCanvasZoom, zoomCanvas } from '../rende
 import { initTools, setToolsViewMode } from './tools';
 import { getSelectionKind, onOpenRequest, onSelect } from './selection';
 import { deleteFixture } from './fixture';
+import { deleteSetPiece } from './sets';
+import { deleteActor } from './properties';
 
 let openPanelId: string | null = null;
 /** 조명 설정 패널: 조명을 고를 때마다 트레이 맨 위에서 펼쳐진다 */
@@ -365,8 +367,28 @@ const initZoom = () => {
   renderZoom();
 };
 
+/* ---------- Delete 키: 고른 객체 지우기 (실행 취소 가능) ---------- */
+
+const initDeleteKey = () => {
+  document.addEventListener('keydown', e => {
+    // Mac 키보드의 delete 키는 Backspace로 들어온다
+    if ((e.key !== 'Delete' && e.key !== 'Backspace') || e.ctrlKey || e.metaKey || e.altKey) return;
+    const el = e.target instanceof Element ? e.target : null;
+    if (el?.closest('input, textarea, select, [contenteditable="true"]')) return;
+    if ($('editor-screen')?.style.display !== 'flex') return;
+    const state = getState();
+    const kind = getSelectionKind();
+    if (kind === 'fixture' && state.selected_fixture_id) deleteFixture(state.selected_fixture_id);
+    else if (kind === 'set' && state.selected_set_id) deleteSetPiece(state.selected_set_id);
+    else if (kind === 'actor' && state.selected_actor_id) deleteActor(state.selected_actor_id);
+    else return;
+    e.preventDefault();
+  });
+};
+
 export const initShell = () => {
   initTray();
+  initDeleteKey();
   $('help-btn')?.addEventListener('click', () => openPanel(openPanelId === 'help' ? null : 'help'));
   initTools();
   initFilePill();

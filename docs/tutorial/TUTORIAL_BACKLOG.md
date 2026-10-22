@@ -21,6 +21,7 @@ Status legend: **main** = merged and deployed · **branch** = built, not merged 
 | F11 | **두레문예관 legs (다리막)**: new works start with two pairs (2 m wide); leg 1 is 0.5 m from the seating | new 두레문예관 work | branch `feature/dure-legs` | `docs/venues/DURE_MODEL.md` |
 | F12 | **줄자 (tape measure) tool**, key `M`: press and drag on the plan; the distance (mm) is drawn on the line and the status bar shows horizontal/vertical parts. Stays on the tool for repeated measuring; not saved | tool rail (last) | branch `feature/dure-legs` | `ui/tools.ts` |
 | F13 | 벽 놓기 default thickness 30 → 50 mm (easier to click) | tool rail | branch `feature/dure-legs` | `ui/tools.ts` |
+| F14 | **Delete / Backspace key** deletes the selected light, set piece or actor (undoable); ignored while typing in a field | 2D plan, 3D view | branch `feature/dure-legs` | `ui/shell.ts` `initDeleteKey` |
 
 Behaviour changes that make existing tutorial text slightly off:
 - The actor's eye button used to hide an actor in **all** scenes; now it is per scene (F5). Old files are converted on load.
