@@ -101,7 +101,7 @@ Done notes (2026-10-21)
 - `main` had moved to 45cd618 (feature/sketchup-ui work); merged it into `feature/cloud-save` without conflicts (181f9fe), retested locally, then fast-forwarded `main` and pushed. Pages run 39519054858 succeeded.
 - On https://haisung5414.github.io/2d-lighting-aid/: login screen with sign-in enabled (GitHub Variables reached the build), `privacy.html` 200, local mode (로그인 없이 시작하기 → new work → `내 컴퓨터`), real Google sign-in returning to the live site's Home with the two online projects, open → edit → Ctrl+S → `저장됨 · 온라인`, 홈으로 refreshes the list.
 
-## Phase 5 — Share links `[ ]`
+## Phase 5 — Share links `[x]`
 
 Spec §10. Branch `feature/share` (from main 605d41b).
 - Migration: `share_token`, `get_shared_project`, `updated_at` trigger only on name/data.
@@ -113,3 +113,12 @@ Acceptance
 - Viewer (signed out, private window): the link opens the work in the editor directly (no login screen, no tutorial), with the banner and `저장 안 됨 · 내 컴퓨터`; moving a light works; 저장 downloads JSON; the owner's row is unchanged.
 - Viewer signed in: `온라인에 저장` creates a copy in their own account.
 - Broken link: the Korean alert, then the normal start.
+
+Done notes (2026-10-22, real account; owner on `localhost:5180`, signed-out viewer on `127.0.0.1:5180` = separate storage)
+- Owner: new work → 공유 → "먼저 온라인에 저장" → name in the pill → saved → share dialog opened; switch on → link; 링크 복사 wrote to the clipboard (`복사했습니다`).
+- Viewer (signed out): the link opened the editor directly (no login screen, tutorial not running) with the banner `Haesung Choi 님이 공유한 작업 · 보기 전용` and `저장 안 됨 · 내 컴퓨터`; a moved light and Ctrl+S downloaded `share test.json`; the banner cleared on save; the owner's row kept the original position and `updated_at`.
+- 새 링크 만들기: confirm text shown; the old token returned nothing and the old link fell back to the login screen with the address cleaned; the new token worked. The RPC returns `name, data, updated_at, owner_name` only (no email).
+- Switch off: the link field disappears and the token returns nothing.
+- Home: ⋯ → 공유… works; the card shows the link icon; sharing on/off did not change `마지막 수정`.
+- Signed-in viewer: ☰ shows `온라인에 저장`; it created a separate, unshared copy. 집 → Home removed `?share=` from the address.
+- Test rows (`share test`, `share test 사본`) were deleted afterwards.
