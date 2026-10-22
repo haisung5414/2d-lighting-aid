@@ -5,7 +5,7 @@ import { GeometryEngine } from '../engine/geometry';
 import { gelDisplayHex } from '../engine/gels';
 import { dimmerOutput, getPhotometry } from '../engine/photometrics';
 import { reportMove, reportPointer, type MovableKind } from '../ui/statusbar';
-import { getSetDraft, getTool, onToolRedraw, toolPointerDown, toolPointerMove, toolPointerUp } from '../ui/tools';
+import { getMeasure, getSetDraft, getTool, measureText, onToolRedraw, toolPointerDown, toolPointerMove, toolPointerUp } from '../ui/tools';
 import { clearSelection, openSelected, selectActor, selectFixture, selectSet } from '../ui/selection';
 import type { Actor, Position2D, Cue, Fixture, UIToggles, StageConfig, SetPiece } from '../types';
 import { isActorShown, visibleSetPieces } from '../state/sceneVisibility';
@@ -721,6 +721,34 @@ export const renderCanvas = () => {
     ctx.fillStyle = '#fff';
     ctx.font = '12px "IBM Plex Sans KR", sans-serif';
     ctx.fillText(`${Math.abs(draft.end.x - draft.start.x).toFixed(2)} × ${Math.abs(draft.end.y - draft.start.y).toFixed(2)} m`, x + 4, y - 6);
+    ctx.restore();
+  }
+
+  // 줄자: 두 점을 잇는 선과 거리
+  const measure = getMeasure();
+  if (measure) {
+    const ax = offsetX + toPx(measure.start.x), ay = offsetY + toPx(measure.start.y);
+    const bx = offsetX + toPx(measure.end.x), by = offsetY + toPx(measure.end.y);
+    ctx.save();
+    ctx.strokeStyle = '#ffd166';
+    ctx.fillStyle = '#ffd166';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(ax, ay);
+    ctx.lineTo(bx, by);
+    ctx.stroke();
+    for (const [x, y] of [[ax, ay], [bx, by]]) { ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI * 2); ctx.fill(); }
+    const { length } = measureText(measure);
+    ctx.font = '600 13px "IBM Plex Sans KR", "Segoe UI", sans-serif';
+    const w = ctx.measureText(length).width + 14;
+    const mx = (ax + bx) / 2, my = (ay + by) / 2 - 18;
+    ctx.fillStyle = 'rgba(20, 24, 30, 0.9)';
+    ctx.beginPath();
+    ctx.roundRect(mx - w / 2, my - 11, w, 22, 6);
+    ctx.fill();
+    ctx.fillStyle = '#ffd166';
+    ctx.textAlign = 'center';
+    ctx.fillText(length, mx, my + 4);
     ctx.restore();
   }
 

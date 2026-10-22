@@ -358,23 +358,28 @@ const DURE = {
 };
 
 /**
- * 두레문예관 다리막: 무대 양옆, 발코니 난간 선 바로 안쪽에 폭 1.5 m씩 3쌍.
+ * 두레문예관 다리막: 무대 양옆, 발코니 난간 선 바로 안쪽에 폭 2 m씩 2쌍 (1번과 3번. 2번은 사용자 요청으로 뺐다).
  * 조명 그리드(7.2 m) 아래에 걸린 검은 막으로 보고 바닥부터 7.0 m 높이 상자로 둔다.
- * 1번이 객석 쪽이다. 위치(y)는 앞 평무대(0~9.6 m)를 고르게 나눈 기본값이라 실제 걸린 자리에 맞게 옮기면 된다
+ * 1번이 객석 쪽이고, 객석 맨 앞줄 끝(y 9.6)에서 50 cm 떨어져 있다. 3번 위치(y 2.0)는 처음 정한 기본값이다
  */
+const DURE_LEG_DEPTH = 0.1;
 const dureLegs = (): Omit<SetPiece, 'id'>[] => {
-  const width = 1.5;
-  const rows = [7.0, 4.5, 2.0];
-  return rows.flatMap((y, i) => ([
+  const width = 2.0;
+  const seatFront = 9.6;
+  const rows = [
+    { no: 1, y: Number((seatFront - 0.5 - DURE_LEG_DEPTH / 2).toFixed(3)) },
+    { no: 3, y: 2.0 }
+  ];
+  return rows.flatMap(({ no, y }) => ([
     { side: '왼쪽', x: DURE.voidX0 + width / 2 },
     { side: '오른쪽', x: DURE.voidX1 - width / 2 }
   ]).map(({ side, x }) => ({
-    label: `다리막 ${i + 1} ${side}`,
+    label: `다리막 ${no} ${side}`,
     kind: 'leg' as const,
     x,
     y,
     width,
-    depth: 0.1,
+    depth: DURE_LEG_DEPTH,
     height: 7.0,
     rotation: 0,
     color: '#1d1d21'

@@ -12,7 +12,7 @@ import { selectActor, selectFixture, selectSet } from './selection';
 import { reportSetPlaced, resetVcb } from './statusbar';
 import type { Fixture, LensType, PlaceableSetKind, Position2D, SetPiece } from '../types';
 
-export type ToolId = 'select' | 'ellip' | 'fresnel' | 'par' | PlaceableSetKind | 'actor';
+export type ToolId = 'select' | 'ellip' | 'fresnel' | 'par' | PlaceableSetKind | 'actor' | 'measure';
 
 interface ToolDef {
   id: ToolId;
@@ -38,14 +38,17 @@ const TOOLS: (ToolDef | 'sep')[] = [
   { id: 'set', name: '세트 그리기', key: 'r', keyLabel: 'R', icon: '<rect x="4" y="6" width="16" height="12" rx="1" stroke-dasharray="3 2"/><path d="M8 12h8M12 8v8"/>',
     hint: '세트 그리기: 무대를 끌어서 사각형을 그리면 세트가 생깁니다. 그냥 누르면 2 × 1 m 세트가 생깁니다.' },
   { id: 'wall', name: '벽 놓기', key: 'w', keyLabel: 'W', icon: '<rect x="8" y="3" width="8" height="18" rx=".5"/><path d="M8 9h8M8 15h8"/>',
-    hint: '벽 놓기: 무대를 누르면 가로 1220 · 두께 30 · 높이 2440 mm 벽이 놓입니다.' },
+    hint: '벽 놓기: 무대를 누르면 가로 1220 · 두께 50 · 높이 2440 mm 벽이 놓입니다.' },
   { id: 'deck', name: '덧마루 놓기', key: 'd', keyLabel: 'D', icon: '<path d="M3 11l9-4 9 4-9 4z"/><path d="M3 11v2l9 4 9-4v-2"/>',
     hint: '덧마루 놓기: 무대를 누르면 1800 × 900 × 150 mm 덧마루가 놓입니다.' },
   { id: 'apple', name: '애플박스 놓기', key: 'b', keyLabel: 'B', icon: '<rect x="6" y="8" width="12" height="9" rx="1"/><path d="M9 12h6"/>',
     hint: '애플박스 놓기: 무대를 누르면 450 × 300 × 150 mm 애플박스가 놓입니다.' },
   'sep',
   { id: 'actor', name: '사람 모형 놓기', key: 'a', keyLabel: 'A', icon: '<circle cx="12" cy="5.5" r="2.5"/><path d="M12 8v7M8 11h8M9.5 21l2.5-6 2.5 6"/>',
-    hint: '사람 모형 놓기: 무대를 누르면 그 자리에 배우가 섭니다. 키는 선택한 객체 속성에서 사람마다 따로 정합니다.' }
+    hint: '사람 모형 놓기: 무대를 누르면 그 자리에 배우가 섭니다. 키는 선택한 객체 속성에서 사람마다 따로 정합니다.' },
+  'sep',
+  { id: 'measure', name: '줄자', key: 'm', keyLabel: 'M', icon: '<path d="M3 16.5 16.5 3 21 7.5 7.5 21z"/><path d="M7 12.5l2 2M10 9.5l1.5 1.5M12.5 7l2 2"/>',
+    hint: '줄자: 무대에서 시작점을 누른 채 끌어 끝점에서 놓으면 두 점 사이 거리가 나옵니다.' }
 ];
 
 const toolDefs = TOOLS.filter((t): t is ToolDef => t !== 'sep');
@@ -54,7 +57,7 @@ const toolById = new Map(toolDefs.map(t => [t.id, t]));
 /** 세트 바로가기 크기 (m). 벽·덧마루·애플박스도 모두 같은 세트다 */
 const SET_PRESETS: Record<PlaceableSetKind, { prefix: string; width: number; depth: number; height: number }> = {
   set: { prefix: '세트', width: 2, depth: 1, height: 0.4 },
-  wall: { prefix: '벽', width: 1.22, depth: 0.03, height: 2.44 },
+  wall: { prefix: '벽', width: 1.22, depth: 0.05, height: 2.44 },
   deck: { prefix: '덧마루', width: 1.8, depth: 0.9, height: 0.15 },
   apple: { prefix: '애플박스', width: 0.45, depth: 0.3, height: 0.15 }
 };
@@ -74,6 +77,8 @@ let flyoutOpen = false;
 let view3D = false;
 /** 세트 그리기 중인 사각형 (평면 좌표) */
 let draft: { start: Position2D; end: Position2D } | null = null;
+/** 줄자로 잰 선 (평면 좌표). 끄는 중이면 dragging */
+let measure: { start: Position2D; end: Position2D; dragging: boolean } | null = null;
 
 const redrawListeners = new Set<() => void>();
 const changeListeners = new Set<() => void>();
@@ -90,7 +95,8 @@ const TOOL_NEXT: Record<ToolId, string> = {
   wall: '놓은 뒤에는 선택 도구로 돌아옵니다. 꼭짓점 손잡이로 크기를, 노란 손잡이로 각도를 바꾸고, 바로 숫자를 치면 높이가 바뀝니다.',
   deck: '놓은 뒤에는 선택 도구로 돌아옵니다. 꼭짓점 손잡이로 크기를, 노란 손잡이로 각도를 바꾸고, 바로 숫자를 치면 높이가 바뀝니다.',
   apple: '놓은 뒤에는 선택 도구로 돌아옵니다. 꼭짓점 손잡이로 크기를, 노란 손잡이로 각도를 바꾸고, 바로 숫자를 치면 높이가 바뀝니다.',
-  actor: '놓은 뒤에는 선택 도구로 돌아오고, 그 사람의 선택한 객체 속성(키·의상 색·얼굴 밝기)을 볼 수 있습니다. 사람 모형은 여러 명 세울 수 있습니다.'
+  actor: '놓은 뒤에는 선택 도구로 돌아오고, 그 사람의 선택한 객체 속성(키·의상 색·얼굴 밝기)을 볼 수 있습니다. 사람 모형은 여러 명 세울 수 있습니다.',
+  measure: '잰 선은 다시 재거나 다른 도구를 고르거나 Esc를 누를 때까지 남습니다. 작업에는 저장되지 않습니다. 줄자는 여러 번 잴 수 있도록 선택 도구로 돌아가지 않습니다.'
 };
 
 /* ---------- 극장에 없는 조명 (config/fixtureAvailability.ts) ---------- */
@@ -136,6 +142,22 @@ export const onToolChange = (listener: () => void) => { changeListeners.add(list
 
 export const getTool = () => tool;
 export const getSetDraft = () => draft;
+/** 줄자 선: 줄자 도구일 때만 보인다 (canvas가 그린다) */
+export const getMeasure = () => (tool === 'measure' ? measure : null);
+
+/** 줄자 거리 글: 3,450 mm (가로 3,000 · 세로 1,700) */
+export const measureText = (m: { start: Position2D; end: Position2D }) => {
+  const mm = (v: number) => Math.round(v * 1000).toLocaleString('ko-KR');
+  const dx = Math.abs(m.end.x - m.start.x);
+  const dy = Math.abs(m.end.y - m.start.y);
+  return { length: `${mm(Math.hypot(dx, dy))} mm`, parts: `가로 ${mm(dx)} · 세로 ${mm(dy)} mm` };
+};
+
+const reportMeasure = () => {
+  if (!measure) return;
+  const { length, parts } = measureText(measure);
+  showReason(`줄자: ${length} (${parts})`);
+};
 /** 세트 그리기 미리보기를 다시 그려야 할 때 (canvas가 등록한다) */
 export const onToolRedraw = (listener: () => void) => { redrawListeners.add(listener); };
 
@@ -177,6 +199,7 @@ export const setTool = (id: ToolId, opts: { fromKey?: boolean } = {}) => {
   flyoutOpen = id === 'ellip' && !opts.fromKey ? !(tool === 'ellip' && flyoutOpen) : false;
   tool = id;
   draft = null;
+  if (id !== 'measure') measure = null;
   renderRail();
   redrawListeners.forEach(listener => listener());
 };
@@ -296,6 +319,12 @@ const placeActor = (point: Position2D): string => {
 
 export const toolPointerDown = (world: Position2D): boolean => {
   if (tool === 'select' || view3D) return false;
+  if (tool === 'measure') {
+    measure = { start: world, end: world, dragging: true };
+    reportMeasure();
+    redrawListeners.forEach(listener => listener());
+    return true;
+  }
   if (tool === 'set') {
     draft = { start: world, end: world };
     return true;
@@ -313,6 +342,12 @@ export const toolPointerDown = (world: Position2D): boolean => {
 };
 
 export const toolPointerMove = (world: Position2D): boolean => {
+  if (measure?.dragging) {
+    measure.end = world;
+    reportMeasure();
+    redrawListeners.forEach(listener => listener());
+    return true;
+  }
   if (!draft) return false;
   draft.end = world;
   redrawListeners.forEach(listener => listener());
@@ -320,6 +355,13 @@ export const toolPointerMove = (world: Position2D): boolean => {
 };
 
 export const toolPointerUp = (world: Position2D): boolean => {
+  if (measure?.dragging) {
+    measure.end = world;
+    measure.dragging = false;
+    reportMeasure();
+    redrawListeners.forEach(listener => listener());
+    return true;
+  }
   if (!draft) return false;
   const { start } = draft;
   draft = null;

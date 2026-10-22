@@ -18,6 +18,9 @@ Status legend: **main** = merged and deployed · **branch** = built, not merged 
 | F8 | Actor name and `얼굴 N lux` label is drawn **only for the selected actor** (was always on). Plan export still labels every actor | 2D plan | branch `feature/scene-import` | `render/canvas.ts` `drawCueToContext(…, labelAllActors)` |
 | F9 | **PAR lamp is MFL only** (the theatre has no other PAR lamps). The lamp row in 조명 설정 is a fixed label; old files with VNSP/NSP/WFL are converted to MFL on load | 조명 설정 (PAR) | branch `feature/scene-import` | `ui/lightSettings.ts`, `state/store.ts` |
 | F10 | **Fixture kinds per venue**: 인문소극장 has no zoom ellipsoidal; 두레문예관 has only zoom ellipsoidals and no PAR. Unavailable tools and lenses are greyed out with the reason on mouse-over (rail button, lens flyout, lens list in 조명 설정); pressing them shows the reason in the status bar. A new 두레문예관 work starts with a zoom ellipsoidal | tool rail, 조명 설정 | branch `feature/venue-fixtures` | `venues.ts` `unavailableFixtures`, `config/fixtureAvailability.ts` |
+| F11 | **두레문예관 legs (다리막)**: new works start with two pairs (2 m wide); leg 1 is 0.5 m from the seating | new 두레문예관 work | branch `feature/dure-legs` | `docs/venues/DURE_MODEL.md` |
+| F12 | **줄자 (tape measure) tool**, key `M`: press and drag on the plan; the distance (mm) is drawn on the line and the status bar shows horizontal/vertical parts. Stays on the tool for repeated measuring; not saved | tool rail (last) | branch `feature/dure-legs` | `ui/tools.ts` |
+| F13 | 벽 놓기 default thickness 30 → 50 mm (easier to click) | tool rail | branch `feature/dure-legs` | `ui/tools.ts` |
 
 Behaviour changes that make existing tutorial text slightly off:
 - The actor's eye button used to hide an actor in **all** scenes; now it is per scene (F5). Old files are converted on load.
@@ -36,6 +39,7 @@ Behaviour changes that make existing tutorial text slightly off:
 ### New steps in existing lessons
 - [ ] **Lesson 5 (sets)**: after the shadow step, add "이 씬에서 숨기기": hide the wall with its eye button in 객체 전체 목록, see the light reach the actor again (face lux goes up), show it again. Teaches that sets are shared by all scenes but can be hidden per scene. (F5)
 - [ ] **Lesson 6 (scenes)**: after comparing the two scenes, hide the wall in `2장 밤` only and switch back to Scene 1 to see it is still there. Natural place to say "set changes between scenes". (F5)
+- [ ] **Lesson 5 (sets)** or 1 (tour): mention the 줄자 tool (F12); lesson 5 could measure the wall's distance from the actor. Lesson 5's wall hint text quotes the wall size; check it says 두께 50 (F13).
 - [ ] **Lesson 8 (save)**: add explanation-only steps for
   - ☰ → **씬 가져오기 (이어 붙이기)**: joining two people's works into one show file, same venue only, imported items are hidden in the other scenes, channel clashes are reported (F6);
   - **공유** button: read-only link, viewers cannot change the original (F7, after it is merged).
