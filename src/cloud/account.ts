@@ -36,7 +36,7 @@ export const avatar = (user: CloudUser) => {
 let warnDialog: HTMLDialogElement | null = null;
 
 /** 저장하지 않은 변경이 있으면 사라진다고 알린 뒤 로그인한다. 변경이 없으면 바로 Google 로그인으로 간다 (CLOUD_SPEC §4.4) */
-const startSignIn = () => {
+export const startSignIn = () => {
   if (!getFileState().dirty) {
     void signInWithGoogle();
     return;

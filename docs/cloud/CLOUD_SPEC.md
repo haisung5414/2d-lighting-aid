@@ -8,7 +8,7 @@ Status: decisions made by the user on 2026-10-21. Implementation plan: [CLOUD_PH
 |---|---|
 | Who signs in | Each club member with their **own account**. Everyone sees and saves only their own projects. |
 | Sign-in method | **Google** (OAuth through Supabase Auth). No email/password. |
-| Sharing / co-editing | **Not now.** The `공유` button stays a disabled placeholder. |
+| Sharing / co-editing | Co-editing: not now. **Read-only share links: added 2026-10-22** (§10): anyone with the link can view without signing in; viewers can try things but never save to the original. |
 | Backend | **Supabase** (free plan). The app stays a static GitHub Pages site; there is no server of our own. |
 
 Supabase free plan (check https://supabase.com/pricing before relying on it): 50,000 monthly active users, 500 MB database, 2 active projects. **A free project is paused after 7 days without requests**; the owner must press *Restore* in the dashboard. While paused, sign-in and online save fail; local save keeps working (§7).
@@ -146,7 +146,7 @@ Online projects are opened from Home (§9); there is no separate dialog. Opening
 
 ## 7. Out of scope
 
-Sharing links, co-editing, folders, version history, offline queueing, autosave, other sign-in providers, search on Home, and the mockup's 내 프로젝트 / 극장 라이브러리 / 튜토리얼 nav items. The `공유` button stays disabled.
+Co-editing, folders, version history, offline queueing, autosave, other sign-in providers, search on Home, and the mockup's 내 프로젝트 / 극장 라이브러리 / 튜토리얼 nav items. (Sharing links were added later, §10.)
 
 ## 8. Touch points in existing files
 
@@ -175,3 +175,36 @@ Layout from `Home.dc.html` (SketchUp Web Home): white left nav + light grey main
   - Loading: `불러오는 중…`; empty: `아직 온라인에 저장한 작업이 없습니다. 위의 새로 만들기로 시작해 보세요.`; error: the §6 message with `다시 시도`.
 - **Signed out**: instead of 내 작업, a card `로그인하면 작업을 온라인에 저장하고 어느 컴퓨터에서나 이어서 할 수 있습니다.` + `Google로 로그인` (configured), or a note that work is saved as a JSON file on this computer (not configured).
 - The list reloads whenever Home becomes visible and after every online save.
+
+
+## 10. Share links (decided 2026-10-22)
+
+User decisions: **anyone with the link can view without signing in**; viewers may move things around freely, but **nothing they do is ever saved to the original**. They can keep their own copy (JSON on their computer, or a copy in their own account when signed in). Co-editing stays out of scope.
+
+### 10.1 Data
+Migration `20261022000000_share_links.sql`:
+- `projects.share_token uuid unique` — `null` = not shared. The owner sets it with a normal update (RLS: own rows only); the value is `crypto.randomUUID()` (122 random bits, not guessable).
+- `public.get_shared_project(token uuid)` — `security definer`, `stable`, executable by `anon` and `authenticated`. Returns at most one row `(name, data, updated_at, owner_name)` where `share_token = token`. `owner_name` is the Google display name only (`raw_user_meta_data->>'full_name'`, else `name`, else `null`); the email is never returned.
+- The `updated_at` trigger now changes the timestamp only when `name` or `data` change, so turning sharing on/off does not look like "saved elsewhere" (§5.2) or move the card on Home.
+
+### 10.2 Owner: the share dialog
+Opened from the editor's top-right **`공유`** button (enabled when cloud is configured) and from the Home card **⋯ → `공유…`**.
+- Editor, work not saved online yet (local or untitled online work): the dialog says `공유하려면 먼저 온라인에 저장해야 합니다.` with `온라인에 저장` (asks the name in place if needed, then opens the share dialog) and `닫기`. Signed out: `공유하려면 로그인해야 합니다.` + `로그인` (same unsaved-work rule as §4.4).
+- Dialog `"<name>" 공유`:
+  - switch `링크가 있는 사람은 누구나 볼 수 있음` (on = token set, off = token `null`);
+  - when on: the link (read-only field) + `링크 복사` (→ `복사했습니다`), and `새 링크 만들기` (`confirm('새 링크를 만들면 지금 링크로는 더 이상 열 수 없습니다. 새로 만들까요?')`);
+  - note: `링크로 연 사람은 조명을 움직여 볼 수 있지만 이 작업에는 저장되지 않습니다. 내 컴퓨터나 자기 계정에 사본으로 저장할 수 있습니다. 링크는 마지막으로 저장한 상태를 보여 줍니다.`
+  - `닫기`.
+- Link format: `<app URL>?share=<token>`.
+- Home: a shared project's card shows a small link icon next to the cloud icon (`링크로 공유 중`).
+
+### 10.3 Viewer: opening a link
+- On start, if the URL has `?share=<uuid>` and cloud is configured: Home is held in its blank pending state (so neither the login screen nor the tutorial auto-start appears), the project is fetched with `get_shared_project`, and opened through `loadProjectData`.
+- The open work: file name = the shared name, location `local`, **dirty** (it is not saved on this computer yet). So 저장 / Ctrl+S downloads JSON, and a signed-in viewer also sees `온라인에 저장` = a copy in their own account. Nothing can reach the owner's row: the viewer has no id for it and RLS blocks it anyway.
+- A banner under the top bar: `<owner> 님이 공유한 작업 · 보기 전용` + `조명을 움직여 볼 수 있지만 원본에는 저장되지 않습니다. 남기려면 ☰ 메뉴에서 저장하세요.` + `✕`. It disappears when another work is opened, when the work is saved, or with ✕.
+- The `?share=` parameter is removed from the address once Home is shown (so a reload from Home does not reopen it); while viewing, it stays so a reload reopens the latest shared state.
+- Link not found / sharing turned off: `alert('이 공유 링크는 열 수 없습니다. 주인이 공유를 껐거나 새 링크로 바꿨을 수 있습니다.')`, then the normal start (login screen or Home).
+- The owner opening their own link sees the same viewer mode (a copy); they edit the original from Home.
+
+### 10.4 Privacy
+`public/privacy.html` §3 gains: when the owner turns sharing on, anyone with the link can see that work (name, contents, and the owner's display name, not the email) until sharing is turned off or the link is renewed.

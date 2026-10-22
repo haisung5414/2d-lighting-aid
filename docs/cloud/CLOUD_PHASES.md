@@ -100,3 +100,16 @@ Done notes (2026-10-21)
 Done notes (2026-10-21)
 - `main` had moved to 45cd618 (feature/sketchup-ui work); merged it into `feature/cloud-save` without conflicts (181f9fe), retested locally, then fast-forwarded `main` and pushed. Pages run 39519054858 succeeded.
 - On https://haisung5414.github.io/2d-lighting-aid/: login screen with sign-in enabled (GitHub Variables reached the build), `privacy.html` 200, local mode (로그인 없이 시작하기 → new work → `내 컴퓨터`), real Google sign-in returning to the live site's Home with the two online projects, open → edit → Ctrl+S → `저장됨 · 온라인`, 홈으로 refreshes the list.
+
+## Phase 5 — Share links `[ ]`
+
+Spec §10. Branch `feature/share` (from main 605d41b).
+- Migration: `share_token`, `get_shared_project`, `updated_at` trigger only on name/data.
+- `src/cloud/share.ts`: share dialog (editor `공유` button, Home ⋯ `공유…`), link copy / renew / turn off; viewer open on `?share=`, banner, address cleanup; Home hold while a link opens.
+- Home card link icon; privacy page §3.
+
+Acceptance
+- Owner: turning sharing on gives a link; copy works; turning off or renewing makes the old link fail; the Home card shows the link icon; sharing does not change `마지막 수정`.
+- Viewer (signed out, private window): the link opens the work in the editor directly (no login screen, no tutorial), with the banner and `저장 안 됨 · 내 컴퓨터`; moving a light works; 저장 downloads JSON; the owner's row is unchanged.
+- Viewer signed in: `온라인에 저장` creates a copy in their own account.
+- Broken link: the Korean alert, then the normal start.
