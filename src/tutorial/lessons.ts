@@ -457,7 +457,7 @@ const lessonSets: TutorialLesson = {
       title: '벽 놓기 도구를 고르세요',
       target: el('[data-tool="wall"]'),
       done: () => getTool() === 'wall',
-      body: '<p>왼쪽의 <b>벽 놓기</b>를 누르거나 <kbd>W</kbd>를 누르세요. 가로 1220 · 두께 30 · 높이 2440 mm 벽(평)이 놓입니다.</p>'
+      body: '<p>왼쪽의 <b>벽 놓기</b>를 누르거나 <kbd>W</kbd>를 누르세요. 가로 1220 · 두께 50 · 높이 2440 mm 벽(평)이 놓입니다.</p>'
     },
     {
       title: '배우 뒤에 벽을 놓으세요',
