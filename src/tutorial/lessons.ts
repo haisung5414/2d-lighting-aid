@@ -109,7 +109,7 @@ const lessonTour: TutorialLesson = {
       title: '가운데: 무대 평면도',
       target: el('#stageCanvas'),
       body: `<p>무대를 위에서 내려다본 그림입니다. 빈 곳을 끌면 화면이 움직이고, 마우스 휠로 확대·축소합니다.</p>
-        <p>초록 십자는 <b>배우</b>이고, 옆의 숫자가 배우 얼굴에 닿는 밝기입니다.</p>`
+        <p>초록 십자는 <b>배우</b>입니다. 배우를 누르면 옆에 이름과 배우 얼굴에 닿는 밝기가 나옵니다.</p>`
     },
     {
       title: '오른쪽: 설정 목록',
@@ -201,15 +201,17 @@ const lessonFirstLight: TutorialLesson = {
         const s = actor ? screenOf(actor) : null;
         return s ? new DOMRect(s.x - 16, s.y - 16, 200, 32) : null;
       },
-      body: `<p>배우 옆의 <b>얼굴 N lux</b>가 객석 쪽을 보는 배우 얼굴에 닿는 밝기입니다. 조명을 배우에게 돌렸더니 숫자가 커졌죠?</p>
-        <p>배우 <b>뒤쪽</b>에 조명을 달면 얼굴은 0에 가깝게 나옵니다. 얼굴을 밝히려면 객석 쪽에서 비춰야 합니다.</p>`
+      done: () => Boolean(firstActor() && getState().selected_actor_id === firstActor()?.id),
+      manual: true,
+      body: '<p>초록 십자(<b>배우</b>)를 누르세요. 고른 배우 옆에 이름과 <b>얼굴 N lux</b>가 나옵니다.</p>',
+      afterBody: `<p><b>얼굴 N lux</b>는 객석 쪽을 보는 배우 얼굴에 닿는 밝기입니다. 조명을 배우에게 돌렸으니 숫자가 크게 나옵니다.</p>
+        <p>배우 <b>뒤쪽</b>에 조명을 달면 얼굴은 0에 가깝게 나옵니다. 얼굴을 밝히려면 객석 쪽에서 비춰야 합니다. 다 봤으면 <b>다음</b>을 누르세요.</p>`
     },
     {
       title: '조명 설정을 닫아 보세요',
       target: first(el('#light-settings-close'), el('#light-settings-btn')),
       onEnter: () => {
-        const fix = firstFixture();
-        if (fix && !lightSettingsOpen()) document.getElementById('light-settings-btn')?.click();
+        if (!lightSettingsOpen()) focusLight();
       },
       done: () => !lightSettingsOpen(),
       manual: true,
@@ -310,7 +312,7 @@ const lessonShape: TutorialLesson = {
       target: first(el('#light-settings'), el('#light-settings-btn')),
       onEnter: focusLight,
       body: `<p>배우를 비추는 조명 <b>L1</b>을 골랐습니다. 오른쪽 <b>조명 설정</b>에서 이 조명의 렌즈, 젤(색), 디머(밝기), 셔터, 3D 그림자를 바꿉니다.</p>
-        <p>하나씩 바꿔 보면서 평면도의 빛과 배우 옆의 <b>얼굴 N lux</b>가 어떻게 달라지는지 보세요.</p>`
+        <p>하나씩 바꿔 보면서 평면도의 빛이 어떻게 달라지는지 보세요. 배우의 <b>얼굴 N lux</b>는 배우를 누르면 볼 수 있습니다.</p>`
     },
     {
       title: '렌즈를 바꿔 보세요',
@@ -320,7 +322,7 @@ const lessonShape: TutorialLesson = {
       manual: true,
       body: '<p><b>렌즈</b> 목록에서 지금(36°)과 다른 렌즈를 고르세요. 숫자는 빛이 퍼지는 각도입니다.</p>',
       afterBody: `<p>평면도의 빛 크기가 바뀌었습니다. <b>19°</b>처럼 좁은 렌즈는 작고 밝게, <b>50°</b>처럼 넓은 렌즈는 넓고 어둡게 비춥니다.</p>
-        <p>배우 얼굴 밝기 숫자도 함께 바뀐 것을 확인하고 <b>다음</b>을 누르세요.</p>`
+        <p>배우 얼굴 밝기도 함께 바뀝니다 (배우를 누르면 보입니다). 다 봤으면 <b>다음</b>을 누르세요.</p>`
     },
     {
       title: '젤(색)을 넣어 보세요',

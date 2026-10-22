@@ -222,7 +222,8 @@ const normalizeFixtureSelection = () => {
         fixture.shutter_active = false;
       }
       if (fixture.type === 'par') {
-        if (!fixture.lamp_type) fixture.lamp_type = 'MFL';
+        // 극장에 있는 PAR 램프는 MFL뿐이다. 예전 파일의 VNSP·NSP·WFL도 MFL로 바꾼다
+        fixture.lamp_type = 'MFL';
         if (!Number.isFinite(fixture.rotation_angle)) fixture.rotation_angle = 0;
         fixture.shutter_active = false;
       }

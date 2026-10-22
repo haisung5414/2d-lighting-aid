@@ -5,10 +5,10 @@
 
 import { getCurrentCue, getSelectedFixture, subscribe } from '../state/store';
 import { GeometryEngine, ZoomAngleRanges } from '../engine/geometry';
-import { MAX_SHADOW_FIXTURES, PAR_LAMPS, dimmerLevel, getPhotometry } from '../engine/photometrics';
+import { MAX_SHADOW_FIXTURES, dimmerLevel, getPhotometry } from '../engine/photometrics';
 import { GELS, gelDisplayHex, getGel } from '../engine/gels';
 import { FIXTURE_TYPE_LABELS, updateFixtureProp, type LensChoice } from './fixture';
-import type { Fixture, ParLampType } from '../types';
+import type { Fixture } from '../types';
 
 const LENS_OPTIONS: { value: LensChoice; label: string }[] = [
   { value: '19deg', label: '19°' },
@@ -19,12 +19,8 @@ const LENS_OPTIONS: { value: LensChoice; label: string }[] = [
   { value: 'zoom-medium', label: '줌 25~50°' }
 ];
 
-const PAR_LAMP_LABELS: Record<ParLampType, string> = {
-  VNSP: 'VNSP · 아주 좁게 (11×10°)',
-  NSP: 'NSP · 좁게 (12×10°)',
-  MFL: 'MFL · 중간 (25×12°)',
-  WFL: 'WFL · 넓게 (70×45°, 추정)'
-};
+/** 극장에 있는 PAR 램프는 MFL뿐이라 고르지 않고 보여 주기만 한다 (예전 파일의 다른 램프는 store가 MFL로 바꾼다) */
+const PAR_LAMP_LABEL = 'MFL · 중간 (25×12°)';
 
 const currentLens = (fix: Fixture): LensChoice | null => {
   if (fix.type === 'ellipsoidal') return fix.lens_type;
@@ -56,8 +52,7 @@ const kindSection = (fix: Fixture) => {
     return `<div class="ls-row"><span>포커스</span>
       <div class="ls-slider"><small>좁게</small><input type="range" id="ls-focus" min="0" max="1" step="0.05" value="${fix.focus_level}"><small>넓게</small></div></div>`;
   }
-  return `<div class="ls-row"><span>램프</span>
-      <select id="ls-lamp">${(Object.keys(PAR_LAMPS) as ParLampType[]).map(k => `<option value="${k}" ${fix.lamp_type === k ? 'selected' : ''}>${PAR_LAMP_LABELS[k]}</option>`).join('')}</select></div>
+  return `<div class="ls-row"><span>램프</span><span class="ls-fixed">${PAR_LAMP_LABEL}</span></div>
     <div class="ls-row"><span>회전</span>
       <div class="ls-slider"><input type="range" id="ls-rotation" min="0" max="179" step="1" value="${fix.rotation_angle}"><output id="ls-rotation-out">${Math.round(fix.rotation_angle)}°</output></div></div>`;
 };
@@ -116,7 +111,6 @@ export const renderLightSettings = () => {
   on<HTMLInputElement>('#ls-zoom', 'input', el => { body.querySelector('#ls-zoom-out')!.textContent = `${el.value}°`; });
   on<HTMLInputElement>('#ls-zoom', 'change', el => updateFixtureProp(id, 'zoom_angle', el.value));
   on<HTMLInputElement>('#ls-focus', 'change', el => updateFixtureProp(id, 'focus_level', el.value));
-  on<HTMLSelectElement>('#ls-lamp', 'change', el => updateFixtureProp(id, 'lamp_type', el.value));
   on<HTMLInputElement>('#ls-rotation', 'input', el => { body.querySelector('#ls-rotation-out')!.textContent = `${el.value}°`; });
   on<HTMLInputElement>('#ls-rotation', 'change', el => updateFixtureProp(id, 'rotation_angle', el.value));
   on<HTMLInputElement>('#ls-dimmer', 'input', el => {

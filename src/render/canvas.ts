@@ -385,7 +385,9 @@ export const drawCueToContext = (
   stageConfig: StageConfig,
   activeFixtureId: string | null = null,
   actors: Actor[] | null = null,
-  selectedActorId: string | null = null
+  selectedActorId: string | null = null,
+  /** 평면도 내보내기: 고르지 않은 사람 모형에도 이름과 얼굴 밝기를 붙인다 */
+  labelAllActors = false
 ) => {
   const actorH = stageConfig.actor_height;
 
@@ -549,7 +551,11 @@ export const drawCueToContext = (
       targetCtx.stroke();
     }
 
-    // 배우 얼굴에 닿는 밝기를 늘 옆에 보여 준다 (사양 §4). 얼굴 높이는 이 사람의 키에서 정한다
+    // 고른 사람 모형에만 이름과 얼굴에 닿는 밝기를 옆에 붙인다 (평면도를 덜 복잡하게). 얼굴 높이는 이 사람의 키에서 정한다
+    if (actor.id !== selectedActorId && !labelAllActors) {
+      targetCtx.restore();
+      return;
+    }
     const brightness = GeometryEngine.calculateProbeBrightness(cue, stageConfig, actor, actorFaceHeight(actor));
     const text = `${actor.label} · 얼굴 ${Math.round(brightness.faceLux).toLocaleString('ko-KR')} lux`;
     targetCtx.font = '600 12px "IBM Plex Sans KR", "Segoe UI", sans-serif';
@@ -662,7 +668,7 @@ export const drawPlanForExport = (target: CanvasRenderingContext2D, s: number, o
   const state = getState();
   drawPlanBase(target, s, ox, oy, null);
   const cue = getCurrentCue();
-  if (cue) drawCueToContext(target, cue, s, ox, oy, state.ui_toggles, state.stage_config, null, state.actors, null);
+  if (cue) drawCueToContext(target, cue, s, ox, oy, state.ui_toggles, state.stage_config, null, state.actors, null, true);
 };
 
 export const renderCanvas = () => {

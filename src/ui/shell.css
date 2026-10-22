@@ -206,6 +206,7 @@
 .ls-section h3 small { font-weight: 400; color: var(--ink-3); font-family: var(--font-mono); font-size: 11px; }
 .ls-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 13px; color: var(--ink-2); margin: 4px 0; }
 .ls-row > select { flex: 1; max-width: 190px; }
+.ls-row > .ls-fixed { color: var(--ink); }
 .ls-slider { display: flex; align-items: center; gap: 8px; flex: 1; }
 .ls-slider input[type="range"] { flex: 1; min-width: 0; accent-color: var(--chrome-accent); }
 .ls-slider output { width: 40px; text-align: right; font-family: var(--font-mono); font-size: 12px; color: var(--ink); }

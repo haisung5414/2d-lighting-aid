@@ -15,16 +15,20 @@ Status legend: **main** = merged and deployed · **branch** = built, not merged 
 | F5 | **Per-scene hiding of sets and actors**: the eye button in 객체 전체 목록 and the `이 씬에서 · 보이기` checkbox in 선택한 객체 속성 hide a set / actor in the current scene only. Hidden items also stop blocking light and drop out of the face-brightness numbers and 3D shadows | 객체 전체 목록, 선택한 객체 속성 | branch `feature/scene-import` (`971378e`) | `docs/scenes/SCENE_IMPORT.md` |
 | F6 | **씬 가져오기 (이어 붙이기)**: append scenes of another work (local JSON or one of my online works). Same venue only; pick scenes with thumbnails; preview of sets/actors brought along, channel clashes and file size; one undo step | ☰ → 씬 가져오기 (이어 붙이기) | branch `feature/scene-import` | same |
 | F7 | **Share links** (read-only): owner turns on a link in the 공유 dialog; anyone with the link can open the work without signing in, try things, and keep a copy, but never change the original | top-right 공유 button, Home card ⋯ → 공유… | branch `feature/share` (`83e2bea`, `f8cc7ce`), built by the cloud session | `docs/cloud/CLOUD_SPEC.md` §10 |
+| F8 | Actor name and `얼굴 N lux` label is drawn **only for the selected actor** (was always on). Plan export still labels every actor | 2D plan | branch `feature/scene-import` | `render/canvas.ts` `drawCueToContext(…, labelAllActors)` |
+| F9 | **PAR lamp is MFL only** (the theatre has no other PAR lamps). The lamp row in 조명 설정 is a fixed label; old files with VNSP/NSP/WFL are converted to MFL on load | 조명 설정 (PAR) | branch `feature/scene-import` | `ui/lightSettings.ts`, `state/store.ts` |
 
 Behaviour changes that make existing tutorial text slightly off:
 - The actor's eye button used to hide an actor in **all** scenes; now it is per scene (F5). Old files are converted on load.
 - 3D panel label `캣워크` → `캣워크·조명 그리드` (F2).
+- The actor label is no longer always visible (F8). Lessons 1–3 were updated with F8: lesson 1 says the label appears when you click the actor; lesson 2's `배우 얼굴 밝기 읽기` is now an action step (click the actor, then read the label; `manual`), and the next step re-selects the light before opening 조명 설정; lesson 3 says the face lux shows when you click the actor.
 
 ## 2. Tutorial changes to make
 
 ### Corrections to existing lessons
 - [ ] **Lesson 7 (view3d)**, step `3D 극장 구조`: the text lists "캣워크"; the checkbox is now `캣워크·조명 그리드`. Mention that 두레문예관 has a lighting grid instead of a catwalk.
 - [ ] **Lesson 2 (first-light)**, step `배우 앞쪽에 조명을 다세요`: "조명은 누른 곳에서 가장 가까운 파이프에 달립니다" is true for 인문소극장 only (두레문예관 has no known pipe positions, lights stay where you click). Fine while the practice work is 인문소극장; reword if lessons ever run in another venue.
+- [x] F8 text changes in lessons 1–3 (done with F8; still covered by the full re-run below).
 - [ ] Re-check every lesson after F5/F6/F7 merge: run all eight lessons once with real input (same procedure as T4) since the object list rows now have an extra eye button on sets.
 
 ### New steps in existing lessons
