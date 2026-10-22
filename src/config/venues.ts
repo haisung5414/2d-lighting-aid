@@ -1,5 +1,7 @@
 // src/config/venues.ts
 
+import type { SetPiece } from '../types';
+
 export interface VenueSourceDocument {
   title: string;
   fileName: string;
@@ -124,6 +126,8 @@ export interface VenuePreset {
    * 비어 있으면 모두 쓸 수 있다. config/fixtureAvailability.ts가 읽는다
    */
   unavailableFixtures?: Partial<Record<FixtureKind, string>>;
+  /** 새 작업에 처음부터 놓는 세트 (예: 두레문예관 다리막). 보통 세트처럼 옮기고, 숨기고, 지울 수 있다 */
+  defaultSetPieces?: Omit<SetPiece, 'id'>[];
 }
 
 /** 극장마다 있고 없음을 정하는 조명 종류. fixed = 고정 렌즈 엘립소이달, zoom = 줌 엘립소이달 */
@@ -353,6 +357,30 @@ const DURE = {
   balconyZ: 2.7
 };
 
+/**
+ * 두레문예관 다리막: 무대 양옆, 발코니 난간 선 바로 안쪽에 폭 1.5 m씩 3쌍.
+ * 조명 그리드(7.2 m) 아래에 걸린 검은 막으로 보고 바닥부터 7.0 m 높이 상자로 둔다.
+ * 1번이 객석 쪽이다. 위치(y)는 앞 평무대(0~9.6 m)를 고르게 나눈 기본값이라 실제 걸린 자리에 맞게 옮기면 된다
+ */
+const dureLegs = (): Omit<SetPiece, 'id'>[] => {
+  const width = 1.5;
+  const rows = [7.0, 4.5, 2.0];
+  return rows.flatMap((y, i) => ([
+    { side: '왼쪽', x: DURE.voidX0 + width / 2 },
+    { side: '오른쪽', x: DURE.voidX1 - width / 2 }
+  ]).map(({ side, x }) => ({
+    label: `다리막 ${i + 1} ${side}`,
+    kind: 'leg' as const,
+    x,
+    y,
+    width,
+    depth: 0.1,
+    height: 7.0,
+    rotation: 0,
+    color: '#1d1d21'
+  })));
+};
+
 const dureBalconyEdge = (): PlanPoint[] => {
   const { voidX0, voidX1, voidY0, cornerX, cornerY, backWall } = DURE;
   return [
@@ -503,6 +531,7 @@ export const DURE_VENUE: VenuePreset = {
       '캣워크는 없다. 무대 쪽 왼쪽 모서리의 나선계단(발코니 → 조명 그리드)은 3D에서 생략했다.'
     ]
   },
+  defaultSetPieces: dureLegs(),
   // 이 극장의 엘립소이달은 모두 줌이고, PAR는 없다 (사용자 확인 2026-10-22)
   unavailableFixtures: {
     fixed: '이 극장에는 고정 렌즈 엘립소이달이 없습니다. 줌 엘립소이달을 쓰세요.',

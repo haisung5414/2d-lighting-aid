@@ -50,7 +50,9 @@ const createInitialState = (venue: VenuePreset): AppState => {
       depth: venue.stage.depth,
       actor_height: venue.stage.actorHeight,
       default_z: venue.stage.defaultFixtureZ,
-      reference_layers: mapReferenceLayers(venue)
+      reference_layers: mapReferenceLayers(venue),
+      // 공연장 기본 세트 (두레문예관 다리막 등)
+      set_pieces: (venue.defaultSetPieces ?? []).map(piece => ({ ...piece, id: `set_${Math.random().toString(36).substring(2, 11)}` }))
     },
     // 처음에는 바닥·얼굴 높이에 닿는 빛과 필드 각도선이 보인다. 빔 각도선은 "빛 범위 표시" 패널에서 켠다
     ui_toggles: { show_floor: true, show_face: true, show_beam: false, show_field: true, floor_style: 'gradient' },

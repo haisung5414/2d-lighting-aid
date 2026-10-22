@@ -18,7 +18,8 @@ const SET_KIND_LABELS: Record<SetPieceKind, string> = {
   set: '세트 그리기로 만듦',
   wall: '벽 바로가기로 만듦',
   deck: '덧마루 바로가기로 만듦',
-  apple: '애플박스 바로가기로 만듦'
+  apple: '애플박스 바로가기로 만듦',
+  leg: '다리막 (공연장 기본 배치)'
 };
 
 const esc = (text: string) => text.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');

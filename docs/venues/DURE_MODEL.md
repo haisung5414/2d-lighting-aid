@@ -38,6 +38,9 @@ No balcony on the audience side: the projection room sits over the back aisle. T
 ## Fixtures
 Only zoom ellipsoidals, fresnels; no fixed-lens ellipsoidals and no PAR (`unavailableFixtures` in the preset). New works start with a zoom ellipsoidal.
 
+## Legs (다리막)
+New 두레문예관 works start with three pairs of legs as ordinary set pieces (kind `leg`, `defaultSetPieces` in the preset): 1.5 m wide, 0.1 m thick, 7.0 m high (hung under the 7.2 m grid), black, just inside the balcony railing line (x 0.8–2.3 and 14.1–15.6). Leg 1 is downstage: y 7.0, 4.5, 2.0 m, an even split of the 9.6 m flat stage, not measured. They can be moved, resized, hidden per scene or deleted like any set, and they block light. Works created before this change do not get them.
+
 ## Not done
 - Channel check (patch) is still the 인문소극장 patch for every venue.
 - Pipe positions of the grid are unknown, so lights do not snap in 두레문예관.

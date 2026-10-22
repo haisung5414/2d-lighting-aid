@@ -10,9 +10,9 @@ import { unavailableReason } from '../config/fixtureAvailability';
 import { createFixture, nextFixtureNumber } from './fixture';
 import { selectActor, selectFixture, selectSet } from './selection';
 import { reportSetPlaced, resetVcb } from './statusbar';
-import type { Fixture, LensType, Position2D, SetPiece, SetPieceKind } from '../types';
+import type { Fixture, LensType, PlaceableSetKind, Position2D, SetPiece } from '../types';
 
-export type ToolId = 'select' | 'ellip' | 'fresnel' | 'par' | SetPieceKind | 'actor';
+export type ToolId = 'select' | 'ellip' | 'fresnel' | 'par' | PlaceableSetKind | 'actor';
 
 interface ToolDef {
   id: ToolId;
@@ -52,7 +52,7 @@ const toolDefs = TOOLS.filter((t): t is ToolDef => t !== 'sep');
 const toolById = new Map(toolDefs.map(t => [t.id, t]));
 
 /** 세트 바로가기 크기 (m). 벽·덧마루·애플박스도 모두 같은 세트다 */
-const SET_PRESETS: Record<SetPieceKind, { prefix: string; width: number; depth: number; height: number }> = {
+const SET_PRESETS: Record<PlaceableSetKind, { prefix: string; width: number; depth: number; height: number }> = {
   set: { prefix: '세트', width: 2, depth: 1, height: 0.4 },
   wall: { prefix: '벽', width: 1.22, depth: 0.03, height: 2.44 },
   deck: { prefix: '덧마루', width: 1.8, depth: 0.9, height: 0.15 },
@@ -245,7 +245,7 @@ const nextSetName = (prefix: string, pieces: SetPiece[]) => {
   return `${prefix}${max + 1}`;
 };
 
-const placeSet = (kind: SetPieceKind, center: Position2D, size?: { width: number; depth: number }): string => {
+const placeSet = (kind: PlaceableSetKind, center: Position2D, size?: { width: number; depth: number }): string => {
   const preset = SET_PRESETS[kind];
   const id = `set_${Math.random().toString(36).substring(2, 11)}`;
   commitHistory();

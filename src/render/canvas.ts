@@ -199,7 +199,10 @@ const drawSetPieces = (targetCtx: CanvasRenderingContext2D, pieces: SetPiece[], 
     targetCtx.fillStyle = '#fff';
     targetCtx.font = '11px "Segoe UI", sans-serif';
     targetCtx.textAlign = 'center';
-    targetCtx.fillText(`${piece.label} (${piece.height}m)`, ox + toPx(piece.x, s), oy + toPx(piece.y, s) + 4);
+    // 다리막·벽처럼 얇은 세트는 이름이 선에 가리지 않도록 바로 위에 쓴다
+    const thin = Math.min(piece.width, piece.depth) * s < 16;
+    const labelY = thin ? Math.min(...corners.map(p => oy + toPx(p.y, s))) - 5 : oy + toPx(piece.y, s) + 4;
+    targetCtx.fillText(`${piece.label} (${piece.height}m)`, ox + toPx(piece.x, s), labelY);
     targetCtx.restore();
   });
 };

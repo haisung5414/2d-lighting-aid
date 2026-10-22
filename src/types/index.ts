@@ -120,7 +120,9 @@ export interface Cue {
 export type LampKey = 'HPL575_230' | 'HPL750_230';
 
 /** 무대 위 세트 덩어리 (단, 벽, 계단 등). 모든 씬에서 공통으로 쓴다 */
-export type SetPieceKind = 'set' | 'wall' | 'deck' | 'apple';
+export type SetPieceKind = 'set' | 'wall' | 'deck' | 'apple' | 'leg';
+/** 왼쪽 도구로 놓을 수 있는 세트 종류 (다리막은 공연장 기본 배치로만 생긴다) */
+export type PlaceableSetKind = Exclude<SetPieceKind, 'leg'>;
 
 export interface SetPiece {
   id: string;
