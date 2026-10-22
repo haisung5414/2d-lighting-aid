@@ -3,7 +3,8 @@
 // 정확히 다섯 가지만 둔다: 기종·렌즈, 젤, 디머, 셔터, 3D 그림자. (이름·채널·위치·조준점은 "선택한 객체 속성")
 // 사양: docs/redesign/UI_REDESIGN_SPEC.md §5.2
 
-import { getCurrentCue, getSelectedFixture, subscribe } from '../state/store';
+import { getCurrentCue, getSelectedFixture, getState, subscribe } from '../state/store';
+import { fixtureKindOf, unavailableReason } from '../config/fixtureAvailability';
 import { GeometryEngine, ZoomAngleRanges } from '../engine/geometry';
 import { MAX_SHADOW_FIXTURES, dimmerLevel, getPhotometry } from '../engine/photometrics';
 import { GELS, gelDisplayHex, getGel } from '../engine/gels';
@@ -44,15 +45,27 @@ const kindSection = (fix: Fixture) => {
             <div class="ls-slider"><input type="range" id="ls-zoom" min="${range.min}" max="${range.max}" step="1" value="${fix.zoom_angle}"><output id="ls-zoom-out">${Math.round(fix.zoom_angle)}°</output></div></div>`;
         })()
       : '';
+    // 이 극장에 없는 렌즈는 고를 수 없게 두고, 이유를 아래에 적는다 (마우스를 올려도 보인다)
+    const stage = getState().stage_config;
+    const reasonOf = (value: LensChoice) => unavailableReason(stage, value.startsWith('zoom') ? 'zoom' : 'fixed');
+    const reasons = [...new Set(LENS_OPTIONS.map(o => reasonOf(o.value)).filter((r): r is string => Boolean(r)))];
+    const ownReason = unavailableReason(stage, fixtureKindOf(fix));
     return `<div class="ls-row"><span>렌즈</span>
-        <select id="ls-lens">${LENS_OPTIONS.map(o => `<option value="${o.value}" ${o.value === lens ? 'selected' : ''}>${o.label}</option>`).join('')}</select></div>
+        <select id="ls-lens" ${reasons.length ? `title="${reasons.join(' ')}"` : ''}>${LENS_OPTIONS.map(o => {
+          const reason = reasonOf(o.value);
+          // 예전 작업에 이미 있는 렌즈는 보이도록 선택은 남긴다
+          return `<option value="${o.value}" ${o.value === lens ? 'selected' : ''} ${reason && o.value !== lens ? 'disabled' : ''} ${reason ? `title="${reason}"` : ''}>${o.label}${reason ? ' (이 극장에 없음)' : ''}</option>`;
+        }).join('')}</select></div>
+      ${ownReason ? `<p class="ls-unavail">${ownReason}</p>` : ''}
       ${zoom}`;
   }
   if (fix.type === 'fresnel') {
     return `<div class="ls-row"><span>포커스</span>
       <div class="ls-slider"><small>좁게</small><input type="range" id="ls-focus" min="0" max="1" step="0.05" value="${fix.focus_level}"><small>넓게</small></div></div>`;
   }
+  const parReason = unavailableReason(getState().stage_config, 'par');
   return `<div class="ls-row"><span>램프</span><span class="ls-fixed">${PAR_LAMP_LABEL}</span></div>
+    ${parReason ? `<p class="ls-unavail">${parReason} 다른 작업에서 가져온 PAR입니다.</p>` : ''}
     <div class="ls-row"><span>회전</span>
       <div class="ls-slider"><input type="range" id="ls-rotation" min="0" max="179" step="1" value="${fix.rotation_angle}"><output id="ls-rotation-out">${Math.round(fix.rotation_angle)}°</output></div></div>`;
 };

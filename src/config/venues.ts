@@ -119,7 +119,15 @@ export interface VenuePreset {
   sourceDocuments: VenueSourceDocument[];
   notes: string[];
   model3d?: VenueModel3D;
+  /**
+   * 이 극장에 없는 조명 종류와 그 안내 문구 (도구 레일·조명 설정에서 막고, 마우스를 올리면 보여 준다).
+   * 비어 있으면 모두 쓸 수 있다. config/fixtureAvailability.ts가 읽는다
+   */
+  unavailableFixtures?: Partial<Record<FixtureKind, string>>;
 }
+
+/** 극장마다 있고 없음을 정하는 조명 종류. fixed = 고정 렌즈 엘립소이달, zoom = 줌 엘립소이달 */
+export type FixtureKind = 'fixed' | 'zoom' | 'fresnel' | 'par';
 
 export const SANDBOX_VENUE: VenuePreset = {
   key: 'sandbox',
@@ -303,6 +311,9 @@ export const HUMANITIES_VENUE: VenuePreset = {
       '갤러리 높이는 종단면도에 직접 나오지 않아, 이어지는 조정실 앞 단(EL +29.5)과 같다고 보았다.',
       '천장 보, 벽의 문, 계단 등은 생략했다.'
     ]
+  },
+  unavailableFixtures: {
+    zoom: '이 극장에는 줌 엘립소이달이 없습니다.'
   },
   notes: [
     '바텐 위치는 정확한 설치 가능 영역으로 모델링하지 않는다.',
@@ -491,6 +502,11 @@ export const DURE_VENUE: VenuePreset = {
       '객석 뒤 통로·출입부(y 18.0~23.1)는 영사실과 로비 아래라서 3D에서는 벽 뒤로 남겨 둔다.',
       '캣워크는 없다. 무대 쪽 왼쪽 모서리의 나선계단(발코니 → 조명 그리드)은 3D에서 생략했다.'
     ]
+  },
+  // 이 극장의 엘립소이달은 모두 줌이고, PAR는 없다 (사용자 확인 2026-10-22)
+  unavailableFixtures: {
+    fixed: '이 극장에는 고정 렌즈 엘립소이달이 없습니다. 줌 엘립소이달을 쓰세요.',
+    par: '이 극장에는 PAR가 없습니다.'
   },
   notes: [
     '세부 도면이 없어 평면도 사진 두 장과 공연장 사진으로 만든 모형이다.',

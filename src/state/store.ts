@@ -63,8 +63,10 @@ const createInitialState = (venue: VenuePreset): AppState => {
             id: "fixture_1",
             label: "L1 (Center)",
             channel: 1,
-            type: "ellipsoidal",
-            lens_type: "36deg",
+            // 고정 렌즈 엘립소이달이 없는 극장(두레문예관)은 첫 조명을 줌 엘립소이달로 둔다
+            ...(venue.unavailableFixtures?.fixed
+              ? { type: "zoom" as const, zoom_range: "narrow" as const, zoom_angle: 26 }
+              : { type: "ellipsoidal" as const, lens_type: "36deg" as const }),
             position: { x: fixtureX, y: 1, z: venue.stage.defaultFixtureZ },
             target: { x: fixtureX, y: actingY },
             shutter_active: false,

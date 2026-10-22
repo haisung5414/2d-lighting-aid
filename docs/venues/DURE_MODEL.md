@@ -35,6 +35,9 @@ No balcony on the audience side: the projection room sits over the back aisle. T
 - Layer panel toggles are built from the current work's reference layers.
 - New works place the default actor and the first light's aim in the middle of the acting area (in front of the seating) when the venue has seating.
 
+## Fixtures
+Only zoom ellipsoidals, fresnels; no fixed-lens ellipsoidals and no PAR (`unavailableFixtures` in the preset). New works start with a zoom ellipsoidal.
+
 ## Not done
 - Channel check (patch) is still the 인문소극장 patch for every venue.
 - Pipe positions of the grid are unknown, so lights do not snap in 두레문예관.

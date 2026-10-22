@@ -17,6 +17,7 @@ Status legend: **main** = merged and deployed · **branch** = built, not merged 
 | F7 | **Share links** (read-only): owner turns on a link in the 공유 dialog; anyone with the link can open the work without signing in, try things, and keep a copy, but never change the original | top-right 공유 button, Home card ⋯ → 공유… | branch `feature/share` (`83e2bea`, `f8cc7ce`), built by the cloud session | `docs/cloud/CLOUD_SPEC.md` §10 |
 | F8 | Actor name and `얼굴 N lux` label is drawn **only for the selected actor** (was always on). Plan export still labels every actor | 2D plan | branch `feature/scene-import` | `render/canvas.ts` `drawCueToContext(…, labelAllActors)` |
 | F9 | **PAR lamp is MFL only** (the theatre has no other PAR lamps). The lamp row in 조명 설정 is a fixed label; old files with VNSP/NSP/WFL are converted to MFL on load | 조명 설정 (PAR) | branch `feature/scene-import` | `ui/lightSettings.ts`, `state/store.ts` |
+| F10 | **Fixture kinds per venue**: 인문소극장 has no zoom ellipsoidal; 두레문예관 has only zoom ellipsoidals and no PAR. Unavailable tools and lenses are greyed out with the reason on mouse-over (rail button, lens flyout, lens list in 조명 설정); pressing them shows the reason in the status bar. A new 두레문예관 work starts with a zoom ellipsoidal | tool rail, 조명 설정 | branch `feature/venue-fixtures` | `venues.ts` `unavailableFixtures`, `config/fixtureAvailability.ts` |
 
 Behaviour changes that make existing tutorial text slightly off:
 - The actor's eye button used to hide an actor in **all** scenes; now it is per scene (F5). Old files are converted on load.
@@ -28,6 +29,7 @@ Behaviour changes that make existing tutorial text slightly off:
 ### Corrections to existing lessons
 - [ ] **Lesson 7 (view3d)**, step `3D 극장 구조`: the text lists "캣워크"; the checkbox is now `캣워크·조명 그리드`. Mention that 두레문예관 has a lighting grid instead of a catwalk.
 - [ ] **Lesson 2 (first-light)**, step `배우 앞쪽에 조명을 다세요`: "조명은 누른 곳에서 가장 가까운 파이프에 달립니다" is true for 인문소극장 only (두레문예관 has no known pipe positions, lights stay where you click). Fine while the practice work is 인문소극장; reword if lessons ever run in another venue.
+- [x] F10: lesson 2's lens note now says zoom is greyed out in this theatre.
 - [x] F8 text changes in lessons 1–3 (done with F8; still covered by the full re-run below).
 - [ ] Re-check every lesson after F5/F6/F7 merge: run all eight lessons once with real input (same procedure as T4) since the object list rows now have an extra eye button on sets.
 

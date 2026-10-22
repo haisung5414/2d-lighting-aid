@@ -4,8 +4,9 @@
 // 사양: docs/redesign/UI_REDESIGN_SPEC.md §3
 // 도구 상태는 화면용이라 저장 파일과 실행 취소 기록에 들어가지 않는다.
 
-import { commitHistory, createActor, getState, setState } from '../state/store';
+import { commitHistory, createActor, getState, setState, subscribe } from '../state/store';
 import { VENUES } from '../config/venues';
+import { unavailableReason } from '../config/fixtureAvailability';
 import { createFixture, nextFixtureNumber } from './fixture';
 import { selectActor, selectFixture, selectSet } from './selection';
 import { reportSetPlaced, resetVcb } from './statusbar';
@@ -68,7 +69,7 @@ const LENSES: LensChoice[] = [
 ];
 
 let tool: ToolId = 'select';
-let lensIndex = 2; // 기본 36°
+let lensIndex = 2; // 기본 36°. 이 극장에 없는 렌즈면 쓸 수 있는 첫 렌즈를 쓴다 (usableLens)
 let flyoutOpen = false;
 let view3D = false;
 /** 세트 그리기 중인 사각형 (평면 좌표) */
@@ -92,6 +93,31 @@ const TOOL_NEXT: Record<ToolId, string> = {
   actor: '놓은 뒤에는 선택 도구로 돌아오고, 그 사람의 선택한 객체 속성(키·의상 색·얼굴 밝기)을 볼 수 있습니다. 사람 모형은 여러 명 세울 수 있습니다.'
 };
 
+/* ---------- 극장에 없는 조명 (config/fixtureAvailability.ts) ---------- */
+
+const lensReason = (choice: LensChoice) => unavailableReason(getState().stage_config, choice.zoom ? 'zoom' : 'fixed');
+
+/** 이 극장에 없는 도구면 그 안내 문구 */
+const toolReason = (id: ToolId): string | null => {
+  const stage = getState().stage_config;
+  if (id === 'par' || id === 'fresnel') return unavailableReason(stage, id);
+  if (id === 'ellip' && LENSES.every(choice => lensReason(choice))) return lensReason(LENSES[0]);
+  return null;
+};
+
+/** 지금 고른 렌즈. 이 극장에 없으면 쓸 수 있는 첫 렌즈 (두레문예관 = 줌) */
+const usableLens = (): number => {
+  if (!lensReason(LENSES[lensIndex])) return lensIndex;
+  const first = LENSES.findIndex(choice => !lensReason(choice));
+  return first >= 0 ? first : lensIndex;
+};
+
+/** 막힌 도구·렌즈를 누르면 아래 상태 바에 이유를 보여 준다 */
+const showReason = (reason: string) => {
+  const hint = document.getElementById('tool-hint');
+  if (hint) hint.textContent = reason;
+};
+
 export interface ToolHelp { name: string; keyLabel: string; hint: string; next: string; view3D: boolean; }
 
 /** 도우미 패널에 보여 줄 지금 도구의 설명 */
@@ -100,7 +126,7 @@ export const getToolHelp = (): ToolHelp => {
   return {
     name: view3D ? '3D 보기' : def.name,
     keyLabel: def.keyLabel === '␣' ? 'Space' : def.keyLabel,
-    hint: view3D ? VIEW3D_HINT : def.id === 'ellip' ? `${def.hint} (지금 렌즈: ${LENSES[lensIndex].label})` : def.hint,
+    hint: view3D ? VIEW3D_HINT : def.id === 'ellip' ? `${def.hint} (지금 렌즈: ${LENSES[usableLens()].label})` : def.hint,
     next: view3D ? '3D에서는 선택 도구만 씁니다. 2D 평면으로 돌아가면 다른 도구를 다시 쓸 수 있습니다.' : TOOL_NEXT[def.id],
     view3D
   };
@@ -123,12 +149,17 @@ const renderRail = () => {
   rail.innerHTML = TOOLS.map(t => {
     if (t === 'sep') return '<div class="sep"></div>';
     const disabled = view3D && t.id !== 'select';
-    const title = disabled ? `${t.name} (2D 평면에서 쓸 수 있습니다)` : `${t.name} (${t.keyLabel === '␣' ? 'Space' : t.keyLabel})`;
-    const button = `<button type="button" class="tool" data-tool="${t.id}" aria-pressed="${t.id === tool}" aria-label="${t.name}" title="${title}" ${disabled ? 'disabled' : ''} ${t.flyout ? `aria-expanded="${flyoutOpen}"` : ''}>
+    // 이 극장에 없는 조명: 누를 수는 있지만(마우스를 올리면 이유가 보이도록 disabled를 쓰지 않는다) 놓지 않는다
+    const missing = toolReason(t.id);
+    const title = disabled ? `${t.name} (2D 평면에서 쓸 수 있습니다)` : missing ?? `${t.name} (${t.keyLabel === '␣' ? 'Space' : t.keyLabel})`;
+    const button = `<button type="button" class="tool" data-tool="${t.id}" aria-pressed="${t.id === tool}" aria-label="${t.name}" title="${title}" ${disabled ? 'disabled' : ''} ${missing ? 'aria-disabled="true"' : ''} ${t.flyout ? `aria-expanded="${flyoutOpen}"` : ''}>
       ${svg(t.icon)}<span class="key">${t.keyLabel}</span>${t.flyout ? '<span class="more"></span>' : ''}<span class="lbl">${t.name}</span></button>`;
     if (!t.flyout) return button;
-    const flyout = flyoutOpen ? `<div class="float flyout" role="group" aria-label="엘립소이달 렌즈">${LENSES.map((l, i) =>
-      `<button type="button" data-lens="${i}" aria-pressed="${i === lensIndex}">${l.label}${l.sub ? `<small>${l.sub}</small>` : ''}</button>`).join('')}</div>` : '';
+    const current = usableLens();
+    const flyout = flyoutOpen ? `<div class="float flyout" role="group" aria-label="엘립소이달 렌즈">${LENSES.map((l, i) => {
+      const reason = lensReason(l);
+      return `<button type="button" data-lens="${i}" aria-pressed="${i === current}" ${reason ? `aria-disabled="true" title="${reason}"` : ''}>${l.label}${l.sub ? `<small>${l.sub}</small>` : ''}</button>`;
+    }).join('')}</div>` : '';
     return `<div class="toolwrap ${flyoutOpen ? 'open' : ''}">${button}${flyout}</div>`;
   }).join('');
 
@@ -140,6 +171,8 @@ const renderRail = () => {
 
 export const setTool = (id: ToolId, opts: { fromKey?: boolean } = {}) => {
   if (view3D && id !== 'select') return;
+  const missing = toolReason(id);
+  if (missing) { showReason(missing); return; }
   // 엘립소이달 버튼을 누르면 옆에 렌즈 고르기가 펼쳐진다. 키보드 E는 마지막 렌즈로 바로 켠다
   flyoutOpen = id === 'ellip' && !opts.fromKey ? !(tool === 'ellip' && flyoutOpen) : false;
   tool = id;
@@ -192,7 +225,7 @@ const placeFixture = (point: Position2D): string | null => {
     const number = nextFixtureNumber(cue.fixtures);
     let fixture: Fixture;
     if (tool === 'ellip') {
-      const choice = LENSES[lensIndex];
+      const choice = LENSES[usableLens()];
       fixture = createFixture(choice.zoom ? 'zoom' : 'ellipsoidal', number);
       if (fixture.type === 'ellipsoidal' && choice.lens) fixture.lens_type = choice.lens;
     } else {
@@ -307,6 +340,8 @@ export const initTools = () => {
     const target = e.target as HTMLElement;
     const lens = target.closest<HTMLElement>('[data-lens]');
     if (lens) {
+      const reason = lensReason(LENSES[Number(lens.dataset.lens)]);
+      if (reason) { showReason(reason); return; }
       lensIndex = Number(lens.dataset.lens);
       flyoutOpen = false;
       tool = 'ellip';
@@ -327,6 +362,16 @@ export const initTools = () => {
     if (!def) return;
     e.preventDefault();
     setTool(def.id, { fromKey: true });
+  });
+
+  // 다른 극장의 작업을 열면 쓸 수 있는 조명이 바뀐다
+  let venueKey = getState().stage_config.venue_key;
+  subscribe(() => {
+    const next = getState().stage_config.venue_key;
+    if (next === venueKey) return;
+    venueKey = next;
+    if (toolReason(tool)) tool = 'select';
+    renderRail();
   });
 
   renderRail();
