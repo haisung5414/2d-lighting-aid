@@ -1,0 +1,28 @@
+/* 씬 가져오기 창 (ui/importScenes.ts). 바탕은 cloud.css의 .cloud-dialog를 쓴다 */
+.imp-dialog { width: min(560px, calc(100vw - 32px)); max-height: calc(100vh - 48px); overflow: auto; }
+.imp-dialog p.imp-note { margin: 0 0 8px; }
+.imp-dialog p.imp-warn { margin: 0 0 8px; color: var(--warn); }
+.imp-dialog p.imp-error { margin: 0 0 14px; color: #c5221f; font-weight: 600; }
+.imp-sub { margin: 14px 0 6px; font-size: 12px; font-weight: 600; color: var(--ink-2); }
+
+.imp-source { width: 100%; display: grid; gap: 2px; padding: 10px 12px; margin-bottom: 4px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface-2); color: var(--ink); text-align: left; cursor: pointer; font-size: 13px; }
+.imp-source small { color: var(--ink-2); }
+.imp-source:hover, .imp-project:hover { border-color: var(--chrome-accent); }
+
+.imp-online-list { display: grid; gap: 6px; max-height: 260px; overflow: auto; margin-bottom: 14px; }
+.imp-project { display: flex; align-items: center; gap: 10px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--ink); text-align: left; cursor: pointer; font-size: 13px; }
+.imp-project span { display: grid; gap: 2px; min-width: 0; }
+.imp-project small { color: var(--ink-2); }
+.imp-project img, .imp-project .imp-thumb-empty { width: 44px; height: 44px; flex: none; border-radius: 5px; object-fit: cover; background: #1f2329; }
+
+.imp-pick-bar { display: flex; align-items: center; gap: 4px; margin-bottom: 6px; }
+.imp-count { flex: 1; font-size: 12px; color: var(--ink-2); }
+.imp-cues { display: grid; grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); gap: 8px; margin-bottom: 12px; }
+.imp-cue { position: relative; display: grid; gap: 3px; padding: 6px; border: 1px solid var(--line); border-radius: 8px; cursor: pointer; font-size: 12px; }
+.imp-cue:has(input:checked) { border-color: var(--chrome-accent); background: var(--chrome-accent-soft, transparent); }
+.imp-cue input { position: absolute; top: 10px; left: 10px; margin: 0; }
+.imp-cue img, .imp-cue .imp-thumb-empty { width: 100%; aspect-ratio: 1; border-radius: 5px; object-fit: cover; background: #1f2329; display: block; }
+.imp-cue-name { font-weight: 600; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.imp-cue small { color: var(--ink-2); }
+.imp-preview { margin-bottom: 12px; padding: 10px 12px 2px; border-radius: 8px; background: var(--surface-2); }
+.imp-dialog .cloud-google-btn:disabled { cursor: not-allowed; }

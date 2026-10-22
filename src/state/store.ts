@@ -2,6 +2,7 @@
 
 import type { AppState, Cue, Fixture, ReferenceLayer } from '../types';
 import { generateThumbnail } from '../render/canvas';
+import { setHiddenIn } from './sceneVisibility';
 import { HUMANITIES_VENUE, VENUES, type VenueKey, type VenuePreset } from '../config/venues';
 
 const mapReferenceLayers = (venue: VenuePreset): ReferenceLayer[] => (
@@ -182,6 +183,26 @@ const normalizeFixtureSelection = () => {
   }
   delete state.probe;
   if (state.selected_actor_id && !state.actors.some(a => a.id === state.selected_actor_id)) state.selected_actor_id = null;
+
+  // 예전 파일: 사람 모형의 "숨김"은 모든 씬에 함께 적용됐다. 지금은 씬마다 숨기므로 모든 씬의 숨김 목록으로 옮긴다
+  state.actors.forEach(actor => {
+    if (actor.is_visible !== false) return;
+    state.cues.forEach(cue => setHiddenIn(cue, 'hidden_actor_ids', actor.id, true));
+    actor.is_visible = true;
+  });
+  // 지워진 세트·사람 모형은 씬의 숨김 목록에서도 뺀다
+  const setIds = new Set((state.stage_config.set_pieces ?? []).map(piece => piece.id));
+  const actorIds = new Set(state.actors.map(actor => actor.id));
+  state.cues.forEach(cue => {
+    if (cue.hidden_set_ids?.some(id => !setIds.has(id))) {
+      cue.hidden_set_ids = cue.hidden_set_ids.filter(id => setIds.has(id));
+      if (!cue.hidden_set_ids.length) delete cue.hidden_set_ids;
+    }
+    if (cue.hidden_actor_ids?.some(id => !actorIds.has(id))) {
+      cue.hidden_actor_ids = cue.hidden_actor_ids.filter(id => actorIds.has(id));
+      if (!cue.hidden_actor_ids.length) delete cue.hidden_actor_ids;
+    }
+  });
 
   state.cues.forEach(item => {
     item.fixtures.forEach((fixture: any) => {

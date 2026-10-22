@@ -112,6 +112,9 @@ export interface Cue {
   fixtures: Fixture[];
   thumbnail?: string;
   background?: BackgroundImage;
+  /** 이 씬에서 숨긴 세트·사람 모형 id (state/sceneVisibility.ts). 숨긴 것은 밝기·그림자 계산에서도 빠진다 */
+  hidden_set_ids?: string[];
+  hidden_actor_ids?: string[];
 }
 
 export type LampKey = 'HPL575_230' | 'HPL750_230';
@@ -182,6 +185,7 @@ export interface Actor {
   y: number;
   /** 키 m (얼굴 높이 = 키 - ACTOR_FACE_OFFSET) */
   height: number;
+  /** 예전 파일의 "모든 씬에서 숨김". 불러오면 씬마다의 숨김 목록(Cue.hidden_actor_ids)으로 옮기고 true로 둔다 */
   is_visible: boolean;
   /** 3D 사람 모형의 의상 색 (#rrggbb) */
   costume_color?: string;

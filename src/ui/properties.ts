@@ -10,7 +10,8 @@ import { GeometryEngine } from '../engine/geometry';
 import { gelDisplayHex, toDisplayHex } from '../engine/gels';
 import { getSelectionKind, openSelected, selectFixture } from './selection';
 import { updateFixtureProp } from './fixture';
-import { deleteSetPiece, updateSetPiece } from './sets';
+import { deleteSetPiece, setShownInScene, updateSetPiece } from './sets';
+import { isActorShown, isSetShown } from '../state/sceneVisibility';
 import type { SetPieceKind } from '../types';
 
 const SET_KIND_LABELS: Record<SetPieceKind, string> = {
@@ -54,6 +55,8 @@ const setBody = () => {
     ${field('높이', numInput('pp-sh', mm(piece.height), 10, 'mm'))}
     ${field('회전', numInput('pp-sr', Math.round(piece.rotation), 15, '°'))}
     ${field('색', `<input type="color" id="pp-scolor" value="${piece.color}">`)}
+    ${field('이 씬에서', `<label class="toggle-row"><input type="checkbox" id="pp-scene-visible" ${isSetShown(getCurrentCue(), piece) ? 'checked' : ''}> 보이기</label>`)}
+    <p class="pp-note">세트는 모든 씬이 함께 씁니다. 숨기면 지금 씬에서만 사라지고 빛도 가리지 않습니다.</p>
     <button type="button" class="del-btn" id="pp-delete">이 세트 지우기</button>`;
 };
 
@@ -72,7 +75,7 @@ const actorBody = () => {
     ${field('키', numInput('pp-aheight', Math.round(actor.height * 1000), 10, 'mm'))}
     ${field('얼굴 높이', `<span class="pp-ro">${Math.round(face * 1000)} mm <small>(키 − ${Math.round(ACTOR_FACE_OFFSET * 1000)} mm, 밝기를 재는 높이)</small></span>`)}
     ${field('의상 색', `<input type="color" id="pp-costume" value="${actor.costume_color ?? DEFAULT_COSTUME_COLOR}">`)}
-    ${field('무대에 보이기', `<label class="toggle-row"><input type="checkbox" id="pp-visible" ${actor.is_visible ? 'checked' : ''}> 보이기</label>`)}
+    ${field('이 씬에서', `<label class="toggle-row"><input type="checkbox" id="pp-scene-visible" ${isActorShown(cue, actor) ? 'checked' : ''}> 보이기</label>`)}
     <div class="pp-sub">이 자리의 밝기</div>
     ${result ? `
       <div class="pp-lux"><span class="gel-dot big" style="background:${result.faceLux >= 1 ? toDisplayHex(result.faceRgb) : '#000'}" title="얼굴에 닿는 빛의 색"></span>
@@ -122,6 +125,7 @@ export const renderProperties = () => {
     bind('pp-sh', el => updateSetPiece(sid, 'height', mm(el)));
     bind('pp-sr', el => updateSetPiece(sid, 'rotation', el.value));
     bind('pp-scolor', el => updateSetPiece(sid, 'color', el.value));
+    bind('pp-scene-visible', el => setShownInScene('set', sid, el.checked));
     body.querySelector('#pp-delete')?.addEventListener('click', () => deleteSetPiece(sid));
   }
   if (kind === 'actor' && state.selected_actor_id) {
@@ -138,7 +142,7 @@ export const renderProperties = () => {
     bind('pp-ay', el => updateActor((a, s) => { const v = parseFloat(el.value); if (Number.isFinite(v)) a.y = Math.min(s.stage_config.depth, Math.max(0, v)); }));
     bind('pp-aheight', el => updateActor(a => { const v = parseFloat(el.value) / 1000; if (Number.isFinite(v)) a.height = Math.min(2.5, Math.max(0.5, v)); }));
     bind('pp-costume', el => updateActor(a => { a.costume_color = el.value; }));
-    bind('pp-visible', el => updateActor(a => { a.is_visible = el.checked; }));
+    bind('pp-scene-visible', el => setShownInScene('actor', aid, el.checked));
     body.querySelectorAll<HTMLButtonElement>('[data-contrib]').forEach(button => {
       button.addEventListener('click', () => selectFixture(button.dataset.contrib!));
     });

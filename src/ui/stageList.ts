@@ -1,13 +1,15 @@
 // src/ui/stageList.ts
 // "객체 전체 목록" 패널: 조명 / 세트 / 사람 모형을 나무 구조로 보여 준다.
 // 줄을 누르면 무대에서 고르고, 줄 끝 버튼으로 숨기거나 지운다.
+// 세트와 사람 모형의 눈 버튼은 지금 씬에서만 숨긴다 (다른 씬에는 그대로 보인다).
 // 사양: docs/redesign/UI_REDESIGN_SPEC.md §5.1
 
-import { commitHistory, getCurrentCue, getState, setState, subscribe } from '../state/store';
+import { getCurrentCue, getState, subscribe } from '../state/store';
 import { gelDisplayHex } from '../engine/gels';
 import { dimmerLevel } from '../engine/photometrics';
 import { FIXTURE_TYPE_LABELS, deleteFixture, toggleFixtureVisible } from './fixture';
-import { deleteSetPiece } from './sets';
+import { deleteSetPiece, setShownInScene } from './sets';
+import { isActorShown, isSetShown } from '../state/sceneVisibility';
 import { getSelectionKind, openSelected, selectActor, selectFixture, selectSet } from './selection';
 import { deleteActor } from './properties';
 
@@ -42,21 +44,24 @@ export const renderStageList = () => {
 
   const setRows = sets.map(p => {
     const selected = kind === 'set' && state.selected_set_id === p.id;
-    return `<div class="sl-row ${selected ? 'sel' : ''}">
+    const shown = isSetShown(cue, p);
+    return `<div class="sl-row ${selected ? 'sel' : ''} ${shown ? '' : 'hidden-item'}">
       <button type="button" class="sl-main" data-set="${p.id}">
         <span class="gel-dot square" style="background:${p.color}"></span>
         <span class="sl-name">${esc(p.label)}</span>
-        <small>높이 ${Math.round(p.height * 1000)} mm</small>
+        <small>높이 ${Math.round(p.height * 1000)} mm${shown ? '' : ' · 이 씬에서 숨김'}</small>
       </button>
+      <button type="button" class="sl-act" data-set-vis="${p.id}" title="${shown ? '이 씬에서 숨기기' : '이 씬에서 보이기'}" aria-label="${shown ? '이 씬에서 숨기기' : '이 씬에서 보이기'}">${shown ? EYE : EYE_OFF}</button>
       <button type="button" class="sl-act danger" data-set-del="${p.id}" title="지우기" aria-label="지우기">${TRASH}</button>
     </div>`;
   }).join('');
 
   const actorRows = state.actors.map(a => {
     const selected = kind === 'actor' && state.selected_actor_id === a.id;
-    return `<div class="sl-row ${selected ? 'sel' : ''} ${a.is_visible ? '' : 'hidden-item'}">
-      <button type="button" class="sl-main" data-actor="${a.id}"><span class="gel-dot actor"></span><span class="sl-name">${esc(a.label)}</span><small>키 ${Math.round(a.height * 1000)} mm</small></button>
-      <button type="button" class="sl-act" data-actor-vis="${a.id}" title="${a.is_visible ? '숨기기' : '보이기'}" aria-label="${a.is_visible ? '숨기기' : '보이기'}">${a.is_visible ? EYE : EYE_OFF}</button>
+    const shown = isActorShown(cue, a);
+    return `<div class="sl-row ${selected ? 'sel' : ''} ${shown ? '' : 'hidden-item'}">
+      <button type="button" class="sl-main" data-actor="${a.id}"><span class="gel-dot actor"></span><span class="sl-name">${esc(a.label)}</span><small>키 ${Math.round(a.height * 1000)} mm${shown ? '' : ' · 이 씬에서 숨김'}</small></button>
+      <button type="button" class="sl-act" data-actor-vis="${a.id}" title="${shown ? '이 씬에서 숨기기' : '이 씬에서 보이기'}" aria-label="${shown ? '이 씬에서 숨기기' : '이 씬에서 보이기'}">${shown ? EYE : EYE_OFF}</button>
       <button type="button" class="sl-act danger" data-actor-del="${a.id}" title="지우기" aria-label="지우기">${TRASH}</button>
     </div>`;
   }).join('');
@@ -73,14 +78,15 @@ export const renderStageList = () => {
   body.querySelectorAll<HTMLElement>('[data-fixture-vis]').forEach(el => el.addEventListener('click', () => toggleFixtureVisible(el.dataset.fixtureVis!)));
   body.querySelectorAll<HTMLElement>('[data-fixture-del]').forEach(el => el.addEventListener('click', () => deleteFixture(el.dataset.fixtureDel!)));
   body.querySelectorAll<HTMLElement>('[data-set]').forEach(el => el.addEventListener('click', () => selectSet(el.dataset.set!)));
+  body.querySelectorAll<HTMLElement>('[data-set-vis]').forEach(el => el.addEventListener('click', () => {
+    const piece = sets.find(p => p.id === el.dataset.setVis);
+    if (piece) setShownInScene('set', piece.id, !isSetShown(cue, piece));
+  }));
   body.querySelectorAll<HTMLElement>('[data-set-del]').forEach(el => el.addEventListener('click', () => deleteSetPiece(el.dataset.setDel!)));
   body.querySelectorAll<HTMLElement>('[data-actor]').forEach(el => el.addEventListener('click', () => selectActor(el.dataset.actor!)));
   body.querySelectorAll<HTMLElement>('[data-actor-vis]').forEach(el => el.addEventListener('click', () => {
-    commitHistory();
-    setState(s => {
-      const actor = s.actors.find(a => a.id === el.dataset.actorVis);
-      if (actor) actor.is_visible = !actor.is_visible;
-    });
+    const actor = state.actors.find(a => a.id === el.dataset.actorVis);
+    if (actor) setShownInScene('actor', actor.id, !isActorShown(cue, actor));
   }));
   body.querySelectorAll<HTMLElement>('[data-actor-del]').forEach(el => el.addEventListener('click', () => deleteActor(el.dataset.actorDel!)));
   // 줄을 두 번 누르면 그 대상의 패널을 연다

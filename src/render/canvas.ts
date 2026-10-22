@@ -8,6 +8,7 @@ import { reportMove, reportPointer, type MovableKind } from '../ui/statusbar';
 import { getSetDraft, getTool, onToolRedraw, toolPointerDown, toolPointerMove, toolPointerUp } from '../ui/tools';
 import { clearSelection, openSelected, selectActor, selectFixture, selectSet } from '../ui/selection';
 import type { Actor, Position2D, Cue, Fixture, UIToggles, StageConfig, SetPiece } from '../types';
+import { isActorShown, visibleSetPieces } from '../state/sceneVisibility';
 
 let canvas: HTMLCanvasElement | null = null;
 let ctx: CanvasRenderingContext2D | null = null;
@@ -122,7 +123,7 @@ const updateHoverCursor = (e: MouseEvent) => {
   if (!canvas) return;
   let cursor = '';
   const state = getState();
-  const piece = (state.stage_config.set_pieces ?? []).find(p => p.id === state.selected_set_id);
+  const piece = visibleSetPieces(getCurrentCue(), state.stage_config).find(p => p.id === state.selected_set_id);
   if (piece && getTool() === 'select' && !isViewPanning) {
     const rect = canvas.getBoundingClientRect();
     const hit = hitSetHandle(piece, toWorld(e.clientX - rect.left, e.clientY - rect.top));
@@ -518,7 +519,7 @@ export const drawCueToContext = (
   });
 
   (actors ?? []).forEach(actor => {
-    if (!actor.is_visible) return;
+    if (!isActorShown(cue, actor)) return;
     targetCtx.save();
     targetCtx.translate(currentOffsetX, currentOffsetY);
     const px = toPx(actor.x, currentScale);
@@ -653,7 +654,7 @@ const drawPlanBase = (target: CanvasRenderingContext2D, s: number, ox: number, o
     target.stroke();
   }
 
-  drawSetPieces(target, state.stage_config.set_pieces ?? [], selectedSetId, s, ox, oy);
+  drawSetPieces(target, visibleSetPieces(getCurrentCue(), state.stage_config), selectedSetId, s, ox, oy);
 };
 
 /** 평면도 내보내기 (ui/exportPlan.ts): 지금 씬을 선택 표시 없이 그린다. s = 1 m당 픽셀, (ox, oy) = 무대 왼쪽 위 */
@@ -686,7 +687,7 @@ export const renderCanvas = () => {
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   drawPlanBase(ctx, scale, offsetX, offsetY, state.selected_set_id);
-  const selectedSet = (state.stage_config.set_pieces ?? []).find(p => p.id === state.selected_set_id);
+  const selectedSet = visibleSetPieces(getCurrentCue(), state.stage_config).find(p => p.id === state.selected_set_id);
   if (selectedSet) {
     drawSetHandles(ctx, selectedSet);
     const mode = state.interaction.dragMode;
@@ -760,7 +761,7 @@ export const initCanvas = (canvasEl: HTMLCanvasElement, wrapperEl: HTMLElement) 
     };
 
     // 0) 선택한 세트의 손잡이: 꼭짓점(크기), 노란 원(회전)
-    const selectedSet = (state.stage_config.set_pieces ?? []).find(p => p.id === state.selected_set_id);
+    const selectedSet = visibleSetPieces(getCurrentCue(), state.stage_config).find(p => p.id === state.selected_set_id);
     if (selectedSet) {
       const hit = hitSetHandle(selectedSet, worldPos);
       if (hit?.kind === 'rotate') { startDrag('set-rotate'); return; }
@@ -804,7 +805,7 @@ export const initCanvas = (canvasEl: HTMLCanvasElement, wrapperEl: HTMLElement) 
     // 3) 사람 모형 (위에 그려진 것부터)
     for (let a = state.actors.length - 1; a >= 0; a--) {
       const actor = state.actors[a];
-      if (!actor.is_visible || Math.hypot(worldPos.x - actor.x, worldPos.y - actor.y) >= 0.6) continue;
+      if (!isActorShown(getCurrentCue(), actor) || Math.hypot(worldPos.x - actor.x, worldPos.y - actor.y) >= 0.6) continue;
       selectActor(actor.id);
       moveStart = { kind: 'actor', id: actor.id, from: { x: actor.x, y: actor.y } };
       startDrag('probe');
@@ -812,7 +813,7 @@ export const initCanvas = (canvasEl: HTMLCanvasElement, wrapperEl: HTMLElement) 
     }
 
     // 4) 세트 (위에 그려진 것부터)
-    const pieces = state.stage_config.set_pieces ?? [];
+    const pieces = visibleSetPieces(getCurrentCue(), state.stage_config);
     for (let k = pieces.length - 1; k >= 0; k--) {
       const piece = pieces[k];
       if (!pointInSetPiece(worldPos, piece)) continue;

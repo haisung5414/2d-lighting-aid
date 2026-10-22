@@ -3,6 +3,7 @@
 // 할 일이 있는 단계는 done()으로 앱 상태를 읽어 저절로 넘어간다.
 
 import { actorFaceHeight, getCurrentCue, getState, initVenue, setState } from '../state/store';
+import { isActorShown } from '../state/sceneVisibility';
 import { GeometryEngine } from '../engine/geometry';
 import { dimmerLevel } from '../engine/photometrics';
 import { openSelected, selectFixture, selectSet } from '../ui/selection';
@@ -32,7 +33,7 @@ const stagePoint = (p: () => Position2D | null | undefined, half = 22) => (): DO
 };
 
 const firstFixture = () => getCurrentCue()?.fixtures[0];
-const firstActor = () => getState().actors.find(a => a.is_visible);
+const firstActor = () => getState().actors.find(a => isActorShown(getCurrentCue(), a));
 const panelOpen = (id: string) => document.querySelector<HTMLElement>(`[data-panel="${id}"]`)?.hidden === false;
 const lightSettingsOpen = () => document.getElementById('light-settings')?.hidden === false;
 const is3D = () => document.getElementById('stageCanvas')?.style.display === 'none';

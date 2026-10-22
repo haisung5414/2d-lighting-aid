@@ -3,6 +3,7 @@
 // 화면은 properties.ts(선택한 객체 속성)와 stageList.ts(객체 전체 목록)가 그린다.
 
 import { commitHistory, setState } from '../state/store';
+import { setHiddenIn } from '../state/sceneVisibility';
 import type { SetPiece } from '../types';
 
 type EditableSetProp = 'label' | 'color' | 'x' | 'y' | 'width' | 'depth' | 'height' | 'rotation';
@@ -23,6 +24,17 @@ export const updateSetPiece = (id: string, prop: EditableSetProp, value: string 
     if (prop === 'width' || prop === 'depth' || prop === 'height') piece[prop] = Math.max(0.02, num);
     else if (prop === 'rotation') piece.rotation = ((num + 180) % 360 + 360) % 360 - 180;
     else piece[prop] = num;
+  });
+};
+
+/** 지금 씬에서 세트나 사람 모형을 숨기거나 다시 보이게 한다 (다른 씬은 그대로) */
+export const setShownInScene = (kind: 'set' | 'actor', id: string, shown: boolean) => {
+  commitHistory();
+  setState(s => {
+    const cue = s.cues[s.active_cue_index];
+    if (!cue) return;
+    // 선택은 그대로 둔다: 속성 패널에서 바로 다시 보이게 할 수 있다 (무대에서는 숨긴 것의 손잡이를 그리지 않는다)
+    setHiddenIn(cue, kind === 'set' ? 'hidden_set_ids' : 'hidden_actor_ids', id, !shown);
   });
 };
 

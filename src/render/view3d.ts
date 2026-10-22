@@ -13,6 +13,7 @@ import { OCCLUDER_LAYER, buildCatwalk, buildSeating, buildVenueModel, venueModel
 import { pickShadowFixtures, renderFixtureShadows } from './fixtureShadows';
 import { openSelected, selectActor, selectFixture } from '../ui/selection';
 import type { Fixture, LampKey, Position2D, SetPiece, StageConfig } from '../types';
+import { visibleActors, visibleSetPieces } from '../state/sceneVisibility';
 
 type Vec3 = { x: number; y: number; z: number };
 
@@ -443,7 +444,7 @@ const rebuild = () => {
     dynamicGroup.add(box);
   }
 
-  (stage.set_pieces ?? []).forEach(piece => dynamicGroup!.add(buildSetPiece(piece, fixtureData!)));
+  visibleSetPieces(cue, stage).forEach(piece => dynamicGroup!.add(buildSetPiece(piece, fixtureData!)));
 
   // 조명기와 빛줄기
   fixtures.forEach(fix => {
@@ -459,7 +460,7 @@ const rebuild = () => {
 
   // 사람 모형마다 자기 키로 세운다
   actorObjects = [];
-  state.actors.filter(actor => actor.is_visible).forEach(actor => {
+  visibleActors(cue, state.actors).forEach(actor => {
     const object = buildActor(actor.x, actor.y, actor.height, actor.costume_color ?? DEFAULT_COSTUME_COLOR, fixtureData!);
     object.userData.actorId = actor.id;
     actorObjects.push(object);

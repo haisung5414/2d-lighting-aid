@@ -1,6 +1,7 @@
 // src/engine/geometry.ts
 
 import type { Cue, Fixture, LensDataMap, LensSpec, ParDataMap, Position2D, StageConfig, ZoomRangeType } from '../types';
+import { visibleSetPieces } from '../state/sceneVisibility';
 import { DEFAULT_LAMP, FACE_NORMAL, HORIZONTAL_NORMAL, PAR_LAMPS, getPhotometry, illuminanceAt } from './photometrics';
 
 // 2D 화면용 반각 값. 실제 값은 photometrics.ts의 사양서 데이터에서 온다.
@@ -128,7 +129,7 @@ export class GeometryEngine {
     const contributions = cue.fixtures
       .filter(fixture => fixture.is_visible !== false)
       .map(fixture => {
-        const sets = stageConfig.set_pieces ?? [];
+        const sets = visibleSetPieces(cue, stageConfig);
         const face = illuminanceAt(fixture, point, FACE_NORMAL, lamp, sets);
         const horizontal = illuminanceAt(fixture, point, HORIZONTAL_NORMAL, lamp, sets);
         return {
