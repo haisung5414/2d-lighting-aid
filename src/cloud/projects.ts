@@ -16,6 +16,8 @@ export interface ProjectSummary {
   venue_key: string | null;
   scene_count: number | null;
   thumbnail: string | null;
+  /** 공유 링크 (null = 공유 안 함). docs/cloud/CLOUD_SPEC.md §10 */
+  share_token: string | null;
 }
 
 const MAX_BYTES = 5_000_000;
@@ -54,7 +56,7 @@ const table = async () => (await getClient()).from('projects');
 
 export const listProjects = async (): Promise<ProjectSummary[]> => {
   const { data, error } = await (await table())
-    .select('id,name,updated_at,venue_key,scene_count,thumbnail')
+    .select('id,name,updated_at,venue_key,scene_count,thumbnail,share_token')
     .order('updated_at', { ascending: false });
   if (error) throw error;
   return data ?? [];
@@ -89,16 +91,16 @@ export const markNewWork = () => {
  * 지금 작업을 온라인에 저장한다.
  * asNew = 다른 이름으로 저장 / 내 컴퓨터 작업을 온라인에 처음 저장 (열린 행을 덮지 않고 새 행을 만든다)
  */
-export const saveOnline = async (name: string, asNew: boolean) => {
+export const saveOnline = async (name: string, asNew: boolean): Promise<boolean> => {
   if (!getUser()) {
     alert('온라인에 저장하려면 먼저 로그인해야 합니다. 오른쪽 위의 로그인 버튼을 눌러 주세요.');
-    return;
+    return false;
   }
   const state = getState();
   const json = JSON.stringify(state);
   if (new Blob([json]).size >= MAX_BYTES) {
     alert('작업 파일이 너무 커서 온라인에 저장할 수 없습니다 (최대 5MB). 배경 이미지를 줄이거나 내 컴퓨터에 저장해 주세요.');
-    return;
+    return false;
   }
   const data = JSON.parse(json);
   const editsBefore = editCount;
@@ -111,7 +113,7 @@ export const saveOnline = async (name: string, asNew: boolean) => {
     // 같은 이름의 다른 작업이 있으면 덮어쓸지 묻는다
     const sameName = await findByName(name);
     if (sameName && sameName.id !== targetId) {
-      if (!window.confirm('온라인에 같은 이름의 작업이 있습니다. 덮어쓸까요?')) return;
+      if (!window.confirm('온라인에 같은 이름의 작업이 있습니다. 덮어쓸까요?')) return false;
       if (targetId) {
         // 열린 작업의 이름을 바꿔 저장하면서 같은 이름의 작업을 덮는다 = 그 작업을 지우고 이 작업이 이름을 가져간다
         const { error } = await projects.delete().eq('id', sameName.id);
@@ -128,14 +130,14 @@ export const saveOnline = async (name: string, asNew: boolean) => {
       if (error) throw error;
       if (!remote) targetId = null; // 다른 곳에서 지워졌다: 새로 넣는다
       else if (remote.updated_at !== openRow.updatedAt
-        && !window.confirm('다른 곳에서 이 작업을 더 최근에 저장했습니다. 덮어쓸까요?')) return;
+        && !window.confirm('다른 곳에서 이 작업을 더 최근에 저장했습니다. 덮어쓸까요?')) return false;
     }
 
     // 새로 넣는 경우에만 작업 수를 센다 (덮어쓰기와 고쳐 저장하기는 늘 된다)
     if (!targetId) {
       const { count, error: countError } = await projects.select('id', { count: 'exact', head: true });
       if (countError) throw countError;
-      if ((count ?? 0) >= MAX_PROJECTS) { alert(LIMIT_MESSAGE); return; }
+      if ((count ?? 0) >= MAX_PROJECTS) { alert(LIMIT_MESSAGE); return false; }
     }
 
     const query = targetId
@@ -148,8 +150,10 @@ export const saveOnline = async (name: string, asNew: boolean) => {
     // 저장하는 동안 고친 것이 있으면 "저장 안 됨"을 남긴다
     announce(name, 'cloud', editCount !== editsBefore);
     changed();
+    return true;
   } catch (err) {
     reportError(err);
+    return false;
   }
 };
 
@@ -226,4 +230,37 @@ export const detachOnSignOut = () => {
   const { name, dirty, location } = getFileState();
   openRow = null;
   if (location === 'cloud') announce(name, 'local', dirty);
+};
+
+/* ---------- 공유 링크 (docs/cloud/CLOUD_SPEC.md §10) ---------- */
+
+/** 지금 열려 있는 온라인 작업의 행 id (내 컴퓨터 작업이거나 아직 저장 전이면 null) */
+export const getOpenRowId = () => openRow?.id ?? null;
+
+export const getShareToken = async (id: string): Promise<string | null> => {
+  const { data, error } = await (await table()).select('share_token').eq('id', id).single();
+  if (error) throw error;
+  return data.share_token ?? null;
+};
+
+/** 공유를 켜거나(새 토큰) 끈다(null). updated_at은 바뀌지 않는다 (DB 트리거) */
+export const setShareToken = async (id: string, token: string | null) => {
+  const { error } = await (await table()).update({ share_token: token }).eq('id', id);
+  if (error) throw error;
+  changed();
+};
+
+export interface SharedProject {
+  name: string;
+  data: unknown;
+  updated_at: string;
+  owner_name: string | null;
+}
+
+/** 링크로 공유된 작업을 받는다. 로그인하지 않아도 된다. 없거나 공유가 꺼졌으면 null */
+export const fetchSharedProject = async (token: string): Promise<SharedProject | null> => {
+  const { data, error } = await (await getClient()).rpc('get_shared_project', { token });
+  if (error) throw error;
+  const rows = (data ?? []) as SharedProject[];
+  return rows[0] ?? null;
 };

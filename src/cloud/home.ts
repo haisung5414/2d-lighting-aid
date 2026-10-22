@@ -10,6 +10,7 @@ import { VENUES, type VenueKey } from '../config/venues';
 import { avatar } from './account';
 import { getUser, hasSkippedLogin, isAuthResolved, onAuthChange, setSkippedLogin, signInWithGoogle, signOut, type CloudUser } from './auth';
 import { cloudConfig } from './config';
+import { openShareDialog } from './share';
 import {
   deleteProject, downloadProject, listProjects, markNewWork, MAX_PROJECTS, NETWORK_MESSAGE, onProjectsChange, openProject, renameProject,
   type ProjectSummary,
@@ -50,6 +51,7 @@ const SVG = {
   sort: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 4v16M3 17l3 3 3-3M12 6h9M12 10h7M12 14h5M12 18h3"/></svg>',
   list: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="4" height="4"/><rect x="3" y="10" width="4" height="4"/><rect x="3" y="16" width="4" height="4"/><path d="M10 6h11M10 12h11M10 18h11"/></svg>',
   grid: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="8" height="8"/><rect x="13" y="3" width="8" height="8"/><rect x="3" y="13" width="8" height="8"/><rect x="13" y="13" width="8" height="8"/></svg>',
+  link: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg>',
   cloud: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M7 18a5 5 0 1 1 1-9.9A6 6 0 0 1 19 10a4 4 0 0 1-1 8z"/></svg>',
   more: '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="12" cy="19" r="1.7"/></svg>',
   person: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.5-6.5 8-6.5s8 2.5 8 6.5"/></svg>',
@@ -323,6 +325,7 @@ const fileCard = (project: ProjectSummary) => {
 
   const menu = popupMenu([
     ['열기', () => void open()],
+    ['공유…', () => openShareDialog(project.id, project.name)],
     ['이름 바꾸기', () => startInlineRename(card, nameEl, project)],
     ['내 컴퓨터에 내려받기', () => void downloadProject(project.id)],
     ['삭제', () => {
@@ -335,12 +338,20 @@ const fileCard = (project: ProjectSummary) => {
   const cloudIcon = icon(SVG.cloud);
   cloudIcon.classList.add('lh-cloud');
   cloudIcon.title = '온라인에 저장됨';
+  const icons = h('span', { class: 'lh-icons' });
+  if (project.share_token) {
+    const linkIcon = icon(SVG.link);
+    linkIcon.classList.add('lh-cloud');
+    linkIcon.title = '링크로 공유 중';
+    icons.append(linkIcon);
+  }
+  icons.append(cloudIcon);
 
   card.append(
     fileThumb(project),
     h('div', { class: 'lh-file-body' },
       nameEl,
-      h('div', { class: 'lh-row' }, h('span', { class: 'lh-meta' }, `마지막 수정: ${formatUpdated(project.updated_at)}`), cloudIcon),
+      h('div', { class: 'lh-row' }, h('span', { class: 'lh-meta' }, `마지막 수정: ${formatUpdated(project.updated_at)}`), icons),
       h('div', { class: 'lh-row' }, h('span', { class: 'lh-meta' }, meta), h('div', { class: 'lh-popup-wrap' }, more, menu))),
     h('div', { class: 'lh-busy-label' }, '여는 중…'));
 
@@ -428,7 +439,15 @@ export const onHomeShown = (listener: () => void) => { homeShownListeners.add(li
 /** 지금 시작 화면에 홈이 보이는가 */
 export const isHomeShown = () => Boolean(root) && root.dataset.screen === 'home' && landingVisible();
 
+/** 공유 링크를 여는 동안에는 로그인 화면도 홈도 보이지 않게 붙잡아 둔다 (share.ts). 튜토리얼 자동 시작도 이 때문에 기다린다 */
+let held = false;
+export const holdHome = (on: boolean) => {
+  held = on;
+  if (root) render();
+};
+
 const currentScreen = (): 'pending' | 'login' | 'home' => {
+  if (held) return 'pending';
   if (!isAuthResolved() && !gaveUpWaiting) return 'pending';
   if (getUser()) return 'home';
   if (cloudConfig && !hasSkippedLogin()) return 'login';
