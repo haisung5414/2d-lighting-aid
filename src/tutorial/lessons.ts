@@ -9,7 +9,7 @@ import { dimmerLevel } from '../engine/photometrics';
 import { openSelected, selectFixture, selectSet } from '../ui/selection';
 import { resetCanvasZoom, worldToScreen } from '../render/canvas';
 import { getFileState, openPanel, setViewMode } from '../ui/shell';
-import { getTool, setTool } from '../ui/tools';
+import { getMeasure, getTool, setTool } from '../ui/tools';
 import { markNewWork } from '../cloud/projects';
 import { createFixture } from '../ui/fixture';
 import { VENUES } from '../config/venues';
@@ -51,15 +51,18 @@ const FRONT_PIPE: Position2D = (() => {
   return { x: ACTOR_SPOT.x, y: pipe.y };
 })();
 
+/** 배우 뒤(무대 안쪽)에 세우는 벽 자리 (5강에서 놓고, 6강은 미리 세워 둔다) */
+const WALL_SPOT: Position2D = { x: ACTOR_SPOT.x, y: ACTOR_SPOT.y - 1.5 };
+
 /** 지금 열린 작업이 튜토리얼 연습용인가. 새 작업·불러오기·저장(lighting:file)이 일어나면 아니게 된다 */
 let practiceOpen = false;
 window.addEventListener('lighting:file', () => { practiceOpen = false; });
 
 /**
- * 인문소극장, 배우 한 명. withLight면 배우를 앞에서 비추는 엘립소이달 하나를 미리 달아 둔다.
+ * 인문소극장, 배우 한 명. withLight면 배우를 앞에서 비추는 엘립소이달 하나를, withWall이면 배우 뒤에 벽 하나를 미리 놓아 둔다.
  * 편집 화면에 저장 안 된 작업이 있으면 먼저 묻는다 (홈에서 시작하면 묻지 않는다)
  */
-const setupPractice = (withLight: boolean): boolean => {
+const setupPractice = (withLight: boolean, withWall = false): boolean => {
   const editorOpen = document.getElementById('editor-screen')?.style.display === 'flex';
   // 열려 있는 것이 튜토리얼 연습용 작업이면 저장 여부를 묻지 않는다
   if (editorOpen && !practiceOpen && getFileState().dirty && !window.confirm('지금 작업에 저장하지 않은 내용이 있습니다.\n튜토리얼을 시작하면 연습용 작업으로 바뀝니다. 계속할까요?')) return false;
@@ -75,6 +78,10 @@ const setupPractice = (withLight: boolean): boolean => {
       light.position = { x: FRONT_PIPE.x, y: FRONT_PIPE.y, z: s.stage_config.default_z };
       light.target = { x: ACTOR_SPOT.x, y: ACTOR_SPOT.y };
       s.cues[s.active_cue_index].fixtures.push(light);
+    }
+    if (withWall) {
+      // 벽 놓기 도구의 기본 벽과 같은 크기 (tools.ts SET_PRESETS.wall)
+      s.stage_config.set_pieces = [{ id: 'set_tutorial_wall', label: '벽1', kind: 'wall', x: WALL_SPOT.x, y: WALL_SPOT.y, width: 1.22, depth: 0.05, height: 2.44, rotation: 0, color: '#5f6a76' }];
     }
   });
   setTool('select');
@@ -440,8 +447,6 @@ const lessonActors: TutorialLesson = {
 
 /* ---------- 5강: 세트와 그림자 ---------- */
 
-/** 배우 뒤(무대 안쪽)에 세우는 벽 자리 */
-const WALL_SPOT: Position2D = { x: ACTOR_SPOT.x, y: ACTOR_SPOT.y - 1.5 };
 let setSizeAtStart = '';
 const setSizeKey = () => { const piece = firstSet(); return piece ? `${piece.width}x${piece.depth}` : ''; };
 const keepSetSelected = () => { const piece = firstSet(); if (piece && getState().selected_set_id !== piece.id) selectSet(piece.id); };
@@ -450,7 +455,7 @@ const lessonSets: TutorialLesson = {
   id: 'sets',
   title: '5강 · 세트와 그림자',
   minutes: 5,
-  summary: '벽을 세우고, 높이·크기·각도를 바꾸고, 3D 그림자를 봅니다.',
+  summary: '벽을 세우고, 높이·크기·각도를 바꾸고, 줄자로 재고, 3D 그림자를 봅니다.',
   setup: () => setupPractice(true),
   steps: [
     {
@@ -498,6 +503,21 @@ const lessonSets: TutorialLesson = {
       afterBody: '<p>15°, 30°, 45° … 근처에서는 딱 맞게 붙습니다. 몸통을 끌면 옮겨집니다. 다 봤으면 <b>다음</b>을 누르세요.</p>'
     },
     {
+      title: '줄자 도구를 고르세요',
+      target: el('[data-tool="measure"]'),
+      done: () => getTool() === 'measure',
+      body: '<p>왼쪽 맨 아래의 <b>줄자</b>를 누르거나 <kbd>M</kbd>을 누르세요. 평면도에서 두 점 사이의 거리를 잽니다.</p>'
+    },
+    {
+      title: '벽에서 배우까지 재 보세요',
+      target: stageBox(() => { const piece = firstSet(); const actor = firstActor(); return piece && actor ? [piece, actor] : null; }, 24),
+      done: () => { const m = getMeasure(); return Boolean(m && !m.dragging && Math.hypot(m.end.x - m.start.x, m.end.y - m.start.y) > 0.3); },
+      manual: true,
+      body: '<p><b>벽</b>을 누른 채로 <b>초록 십자(배우)</b>까지 끌었다가 놓으세요.</p>',
+      afterBody: `<p>선 위에 거리(mm)가 나오고, 아래 상태 줄에는 가로·세로로 나눈 거리도 나옵니다. 줄자는 여러 번 잴 수 있게 그대로 남아 있습니다. 끝내려면 <kbd>Esc</kbd>를 누르거나 다른 도구를 고르세요.</p>
+        <p>잰 선은 작업에 저장되지 않습니다. 다 봤으면 <b>다음</b>을 누르세요.</p>`
+    },
+    {
       title: '3D로 보세요',
       target: el('#view-3d'),
       done: is3D,
@@ -516,7 +536,8 @@ const lessonSets: TutorialLesson = {
     {
       title: '세트와 그림자를 봤습니다',
       onEnter: () => { void setViewMode('2d'); },
-      body: `<p>벽을 세우고, 숫자로 높이를 정하고, 손잡이로 크기와 각도를 바꾸고, 3D 그림자를 봤습니다.</p>
+      body: `<p>벽을 세우고, 숫자로 높이를 정하고, 손잡이로 크기와 각도를 바꾸고, 줄자로 거리를 재고, 3D 그림자를 봤습니다.</p>
+        <p>필요 없는 조명·세트·배우는 골라 놓고 <kbd>Delete</kbd>를 누르면 지워집니다 (<kbd>Ctrl</kbd>+<kbd>Z</kbd>로 되돌릴 수 있음).</p>
         <p>다음 강의에서는 장면마다 조명을 바꾸는 <b>씬</b>을 만들어 봅니다.</p>`
     }
   ]
@@ -530,13 +551,19 @@ const drawerOpen = () => document.getElementById('scene-body')?.hidden === false
 const openDrawer = () => { if (!drawerOpen()) document.getElementById('scene-handle')?.click(); };
 let cueOrderAtStart = '';
 const cueOrder = () => cues().map(c => c.cue_id).join(',');
+/** 객체 전체 목록에서 첫 세트의 줄 (끝에 눈 버튼이 있다) */
+const setEyeButton = (): DOMRect | null => {
+  const piece = firstSet();
+  const row = piece ? document.querySelector<HTMLElement>(`[data-set-vis="${piece.id}"]`)?.closest<HTMLElement>('.sl-row') : null;
+  return row && !row.closest('[hidden]') ? row.getBoundingClientRect() : null;
+};
 
 const lessonScenes: TutorialLesson = {
   id: 'scenes',
   title: '6강 · 씬 만들기',
   minutes: 4,
-  summary: '씬을 복사하고, 이름을 바꾸고, 씬마다 조명을 다르게 하고, 순서를 바꿉니다.',
-  setup: () => setupPractice(true),
+  summary: '씬을 복사하고, 이름을 바꾸고, 씬마다 조명과 세트를 다르게 하고, 순서를 바꿉니다.',
+  setup: () => setupPractice(true, true),
   steps: [
     {
       title: '씬 서랍을 여세요',
@@ -572,13 +599,23 @@ const lessonScenes: TutorialLesson = {
         <p>다 봤으면 <b>다음</b>을 누르세요.</p>`
     },
     {
+      title: '이 씬에서 벽을 숨기세요',
+      target: first(setEyeButton, el('[data-panel="list"]'), el('[data-tray="list"]')),
+      onEnter: () => { if (!panelOpen('list')) openPanel('list'); },
+      done: () => { const piece = firstSet(); return Boolean(piece && activeCue()?.hidden_set_ids?.includes(piece.id)); },
+      manual: true,
+      body: '<p>2장에서는 배우 뒤의 벽을 치운다고 해 봅시다. <b>객체 전체 목록</b>의 <b>벽1</b> 줄 끝에 있는 <b>눈</b> 버튼을 누르세요.</p>',
+      afterBody: `<p>벽이 이 씬에서만 사라졌습니다. 세트와 배우는 <b>모든 씬이 함께</b> 쓰고, 씬마다 보이거나 숨길 수만 있습니다. 숨긴 것은 밝기와 3D 그림자 계산에서도 빠집니다.</p>
+        <p>고른 세트나 배우의 <b>선택한 객체 속성</b>에 있는 <b>이 씬에서 · 보이기</b>로도 같은 일을 합니다. 다 봤으면 <b>다음</b>을 누르세요.</p>`
+    },
+    {
       title: '앞 씬으로 돌아가 비교하세요',
       target: el('#cue-list'),
       onEnter: openDrawer,
       done: () => getState().active_cue_index === 0,
       manual: true,
       body: '<p>씬 서랍에서 첫 번째 카드(<b>Scene 1</b>)를 누르세요.</p>',
-      afterBody: `<p>Scene 1의 L1에는 젤이 없습니다. 카드를 번갈아 누르면서 장면마다 빛이 어떻게 바뀌는지 비교하세요.</p>
+      afterBody: `<p>Scene 1의 L1에는 젤이 없고, 벽도 그대로 서 있습니다. 카드를 번갈아 누르면서 장면마다 빛이 어떻게 바뀌는지 비교하세요.</p>
         <p>카드의 작은 그림(썸네일)에도 그 씬의 빛이 보입니다. 다 봤으면 <b>다음</b>을 누르세요.</p>`
     },
     {
@@ -592,7 +629,7 @@ const lessonScenes: TutorialLesson = {
     },
     {
       title: '씬을 만들었습니다',
-      body: `<p>씬을 복사하고, 이름을 바꾸고, 씬마다 조명을 다르게 하고, 순서를 바꿔 봤습니다.</p>
+      body: `<p>씬을 복사하고, 이름을 바꾸고, 씬마다 조명과 세트를 다르게 하고, 순서를 바꿔 봤습니다.</p>
         <p>다음 강의에서는 3D 보기를 더 자세히 써 봅니다.</p>`
     }
   ]
@@ -622,7 +659,8 @@ const lessonView3D: TutorialLesson = {
       title: '3D 극장 구조',
       target: first(el('[data-panel="venue3d"]'), el('[data-tray="venue3d"]')),
       onEnter: () => { if (!panelOpen('venue3d')) openPanel('venue3d'); },
-      body: `<p>3D로 들어가면 오른쪽에 <b>3D 극장 구조</b>가 열립니다. 극장 벽·천장, 캣워크, 객석, 작업등을 켜고 끕니다.</p>
+      body: `<p>3D로 들어가면 오른쪽에 <b>3D 극장 구조</b>가 열립니다. 극장 벽·천장, 캣워크·조명 그리드, 객석, 작업등을 켜고 끕니다.</p>
+        <p>인문소극장에서는 캣워크가, 캣워크가 없는 두레문예관에서는 천장의 조명 그리드가 보입니다.</p>
         <p>필요 없으면 패널 아래의 <b>3D로 들어갈 때 자동으로 열지 않기</b>를 켜 두세요.</p>`
     },
     {
@@ -717,6 +755,18 @@ const lessonSave: TutorialLesson = {
       target: first(el('#file-menu'), el('#file-menu-btn')),
       body: `<p>왼쪽 위 <b>☰</b> 메뉴의 <b>저장</b>으로 작업을 저장합니다. 로그인했으면 <b>온라인</b>에 저장되어 다른 컴퓨터에서도 열 수 있고, 로그인하지 않았으면 <b>내 컴퓨터</b>에 파일로 내려받습니다.</p>
         <p>파일 이름은 왼쪽 위 이름을 눌러 바꿉니다. <kbd>Ctrl</kbd>+<kbd>S</kbd>로도 저장됩니다. 지금은 연습용 작업이라 저장하지 않아도 됩니다.</p>`
+    },
+    {
+      title: '다른 작업의 씬 가져오기',
+      target: first(el('[data-menu="import"]'), el('#file-menu-btn')),
+      body: `<p>여러 사람이 장면을 나눠 그렸다면 <b>☰</b> 메뉴의 <b>씬 가져오기 (이어 붙이기)</b>로 한 작업에 모읍니다. 다른 작업의 씬을 골라 지금 작업의 맨 뒤에 붙입니다.</p>
+        <p><b>같은 공연장</b>의 작업만 가져올 수 있습니다. 함께 들어온 세트·배우는 원래 씬에서만 보이고 다른 씬에서는 숨겨지며, 채널이 겹치면 알려 줍니다. 잘못 가져왔으면 실행 취소 한 번으로 되돌립니다.</p>`
+    },
+    {
+      title: '링크로 보여 주기',
+      target: el('#share-btn'),
+      body: `<p>오른쪽 위 <b>공유</b>에서 링크를 켜면, 링크를 받은 사람은 로그인하지 않아도 작업을 열어 볼 수 있습니다. 온라인에 저장한 작업만 공유할 수 있습니다.</p>
+        <p>링크로 연 사람은 조명을 움직여 볼 수 있지만 <b>원본은 바뀌지 않습니다</b>. 남기고 싶으면 자기 컴퓨터나 계정에 사본으로 저장합니다.</p>`
     },
     {
       title: '홈으로 가기',

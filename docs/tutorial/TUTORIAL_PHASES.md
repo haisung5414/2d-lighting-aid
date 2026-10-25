@@ -62,5 +62,11 @@ Done notes:
 - Measurement gotcha: in a hidden preview pane CSS transitions and requestAnimationFrame freeze, so positions read mid-animation; the tutorial's 120 ms interval keeps step checks working, but layout tests must disable transitions.
 - Regression: lessons 1–2 again with real input and Enter; Esc keeps the lesson; quitting shows the note.
 
-## T5 — Catch up with features added after the tutorial `[ ]`
+## T5 — Catch up with features added after the tutorial `[x]`
 - Features added since T4 (두레문예관, per-scene hiding, 씬 가져오기, share links) and the lesson changes they need are listed in `TUTORIAL_BACKLOG.md`. Start there.
+
+Done notes:
+- User choice: lesson 5 tape measure + Delete key, lesson 6 per-scene hiding, lesson 8 explanations for 씬 가져오기 and 공유; lesson 7 text fix. Not done: hiding in lesson 5, lesson 9, lesson 2 pipe wording (see `TUTORIAL_BACKLOG.md`).
+- `setupPractice(withLight, withWall)`: lesson 6 starts with the default wall (`set_tutorial_wall`) behind the actor at `WALL_SPOT`.
+- Lesson 6 hide step spotlights the whole object-list row, not the eye button, so the bubble does not cover the row.
+- Verified in the browser: lesson 5 end to end with real input (tape drag showed 1,543 mm), lesson 6 hide step with a real click; the user checked the rest.
