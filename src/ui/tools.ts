@@ -10,9 +10,10 @@ import { unavailableReason } from '../config/fixtureAvailability';
 import { createFixture, nextFixtureNumber } from './fixture';
 import { selectActor, selectFixture, selectSet } from './selection';
 import { reportSetPlaced, resetVcb } from './statusbar';
+import { setMultiActive, startMulti, type MultiKind } from './multiSelect';
 import type { Fixture, LensType, PlaceableSetKind, Position2D, SetPiece } from '../types';
 
-export type ToolId = 'select' | 'ellip' | 'fresnel' | 'par' | PlaceableSetKind | 'actor' | 'measure';
+export type ToolId = 'select' | 'multi' | 'ellip' | 'fresnel' | 'par' | PlaceableSetKind | 'actor' | 'measure';
 
 interface ToolDef {
   id: ToolId;
@@ -26,7 +27,9 @@ interface ToolDef {
 
 const TOOLS: (ToolDef | 'sep')[] = [
   { id: 'select', name: '선택', key: ' ', keyLabel: '␣', icon: '<path d="M5 3l14 8-6 2-2 6z"/>',
-    hint: '선택: 조명·세트·사람 모형을 눌러 고르고 끌어서 옮기세요. 빈 곳을 끌면 화면이 움직이고, 휠로 확대·축소합니다.' },
+    hint: '선택: 조명·세트·사람 모형을 눌러 고르고 끌어서 옮기세요. 빈 곳을 끌면 화면이 움직이고, 휠로 확대·축소합니다. Ctrl+누르기로 여러 개를 고를 수 있습니다.' },
+  { id: 'multi', name: '다중 선택', key: 'v', keyLabel: 'V', icon: '<rect x="3" y="3" width="13" height="13" rx="1" stroke-dasharray="3 2"/><path d="M13 12l8 4.5-3.5 1-1.5 3.5z"/>',
+    hint: '다중 선택: 왼쪽→오른쪽으로 끌면 사각형 안에 다 든 것만, 오른쪽→왼쪽으로 끌면 걸친 것까지 고릅니다. Ctrl+누르기로 하나씩 넣고 뺍니다.' },
   'sep',
   { id: 'ellip', name: '엘립소이달 놓기', key: 'e', keyLabel: 'E', flyout: true, icon: '<path d="M3 9h9l5-3v12l-5-3H3z"/><path d="M17 12h4"/>',
     hint: '엘립소이달 놓기: 옆에서 렌즈를 고른 뒤 무대를 누르면, 가장 가까운 파이프에 조명이 놓입니다.' },
@@ -87,6 +90,7 @@ const VIEW3D_HINT = '3D 보기: 조명을 누르면 조명 설정이 열리고, 
 
 /** 도우미 패널의 "다음에 일어나는 일" */
 const TOOL_NEXT: Record<ToolId, string> = {
+  multi: '고른 것 중 하나를 끌면 모두 같이 움직입니다. 조명은 조준점도 함께 옮겨집니다. Delete로 한꺼번에 지우고, Ctrl+Z 한 번으로 되돌립니다. 2D 평면에서만 쓸 수 있고, Esc나 다른 도구를 고르면 선택이 풀립니다.',
   select: '고른 대상에 따라 오른쪽에 조명 설정이나 선택한 객체 속성이 열립니다. 조명·세트·사람 모형을 끈 직후 숫자를 치고 Enter를 누르면, 끈 방향으로 그 거리만큼 정확히 옮깁니다 (mm, 예: 2500).',
   ellip: '놓은 뒤에는 선택 도구로 돌아오고, 새 조명의 조명 설정이 열립니다. 조준점은 무대 앞쪽 연기 공간 가운데를 향합니다.',
   fresnel: '놓은 뒤에는 선택 도구로 돌아오고, 새 조명의 조명 설정이 열립니다.',
@@ -191,23 +195,26 @@ const renderRail = () => {
   changeListeners.forEach(listener => listener());
 };
 
-export const setTool = (id: ToolId, opts: { fromKey?: boolean } = {}) => {
+export const setTool = (id: ToolId, opts: { fromKey?: boolean; extra?: { kind: MultiKind; id: string } } = {}) => {
   if (view3D && id !== 'select') return;
   const missing = toolReason(id);
   if (missing) { showReason(missing); return; }
   // 엘립소이달 버튼을 누르면 옆에 렌즈 고르기가 펼쳐진다. 키보드 E는 마지막 렌즈로 바로 켠다
   flyoutOpen = id === 'ellip' && !opts.fromKey ? !(tool === 'ellip' && flyoutOpen) : false;
+  const wasMulti = tool === 'multi';
   tool = id;
   draft = null;
   if (id !== 'measure') measure = null;
   renderRail();
+  setMultiActive(id === 'multi');
+  if (id === 'multi' && !wasMulti) startMulti(opts.extra);
   redrawListeners.forEach(listener => listener());
 };
 
 /** 3D 보기에서는 선택 도구만 쓴다 */
 export const setToolsViewMode = (is3D: boolean) => {
   view3D = is3D;
-  if (is3D) { tool = 'select'; flyoutOpen = false; draft = null; }
+  if (is3D) { tool = 'select'; flyoutOpen = false; draft = null; setMultiActive(false); }
   renderRail();
 };
 
@@ -318,7 +325,7 @@ const placeActor = (point: Position2D): string => {
 /* ---------- 캔버스에서 부르는 함수 (선택 도구가 아니면 캔버스 마우스 입력을 여기서 처리) ---------- */
 
 export const toolPointerDown = (world: Position2D): boolean => {
-  if (tool === 'select' || view3D) return false;
+  if (tool === 'select' || tool === 'multi' || view3D) return false;
   if (tool === 'measure') {
     measure = { start: world, end: world, dragging: true };
     reportMeasure();
