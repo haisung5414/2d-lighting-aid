@@ -392,7 +392,7 @@ const lessonActors: TutorialLesson = {
       title: '사람 모형 놓기 도구를 고르세요',
       target: el('[data-tool="actor"]'),
       done: () => getTool() === 'actor',
-      body: '<p>왼쪽 맨 아래의 <b>사람 모형 놓기</b>를 누르거나 키보드 <kbd>A</kbd>를 누르세요. 배우는 여러 명 세울 수 있습니다.</p>'
+      body: '<p>왼쪽 아래쪽의 <b>사람 모형 놓기</b>를 누르거나 키보드 <kbd>A</kbd>를 누르세요. 배우는 여러 명 세울 수 있습니다.</p>'
     },
     {
       title: '표시한 곳을 누르세요',
@@ -538,6 +538,7 @@ const lessonSets: TutorialLesson = {
       onEnter: () => { void setViewMode('2d'); },
       body: `<p>벽을 세우고, 숫자로 높이를 정하고, 손잡이로 크기와 각도를 바꾸고, 줄자로 거리를 재고, 3D 그림자를 봤습니다.</p>
         <p>필요 없는 조명·세트·배우는 골라 놓고 <kbd>Delete</kbd>를 누르면 지워집니다 (<kbd>Ctrl</kbd>+<kbd>Z</kbd>로 되돌릴 수 있음).</p>
+        <p>여러 개를 한꺼번에 옮기거나 지우려면 <b>다중 선택</b>(<kbd>V</kbd>)으로 사각형을 끌어 고르세요. <kbd>Ctrl</kbd>+누르기로 하나씩 넣고 뺄 수 있습니다.</p>
         <p>다음 강의에서는 장면마다 조명을 바꾸는 <b>씬</b>을 만들어 봅니다.</p>`
     }
   ]

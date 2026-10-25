@@ -44,6 +44,7 @@ Behaviour changes that make existing tutorial text slightly off:
 - [-] **Lesson 5 (sets)**: after the shadow step, add "이 씬에서 숨기기": hide the wall with its eye button in 객체 전체 목록, see the light reach the actor again (face lux goes up), show it again. Teaches that sets are shared by all scenes but can be hidden per scene. (F5) (T5: not done, user decision: lesson 5 must not teach that sets block light; per-scene hiding is taught in lesson 6)
 - [x] **Lesson 6 (scenes)**: after comparing the two scenes, hide the wall in `2장 밤` only and switch back to Scene 1 to see it is still there. Natural place to say "set changes between scenes". (F5) (T5: the lesson 6 practice work now starts with a wall behind the actor; new step after the gel step)
 - [x] **Lesson 5 (sets)** or 1 (tour): mention the 줄자 tool (F12); lesson 5 could measure the wall's distance from the actor. Lesson 5's wall size text was updated to 두께 50 (F13). (T5: lesson 5 has two tape steps after the rotate step, measuring wall → actor; the last step mentions Delete / Ctrl+Z (F14))
+- [x] **Lesson 5 (sets)**: mention the 다중 선택 tool (F15) in one sentence, no new step. (T5: last step, next to the Delete line: drag a box with V, Ctrl+click to add/remove)
 - [x] **Lesson 8 (save)**: add explanation-only steps for
   - ☰ → **씬 가져오기 (이어 붙이기)**: joining two people's works into one show file, same venue only, imported items are hidden in the other scenes, channel clashes are reported (F6);
   - **공유** button: read-only link, viewers cannot change the original (F7, after it is merged).
