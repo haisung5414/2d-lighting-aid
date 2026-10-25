@@ -57,6 +57,9 @@ const WALL_SPOT: Position2D = { x: ACTOR_SPOT.x, y: ACTOR_SPOT.y - 1.5 };
 /** 지금 열린 작업이 튜토리얼 연습용인가. 새 작업·불러오기·저장(lighting:file)이 일어나면 아니게 된다 */
 let practiceOpen = false;
 window.addEventListener('lighting:file', () => { practiceOpen = false; });
+export const isPracticeOpen = () => practiceOpen;
+/** 연습용 작업을 다른 작업으로 바꿨을 때 (autostart.ts가 원래 새 작업으로 돌려놓을 때) */
+export const forgetPractice = () => { practiceOpen = false; };
 
 /**
  * 인문소극장, 배우 한 명. withLight면 배우를 앞에서 비추는 엘립소이달 하나를, withWall이면 배우 뒤에 벽 하나를 미리 놓아 둔다.
@@ -103,7 +106,7 @@ const lessonTour: TutorialLesson = {
   steps: [
     {
       title: '조명 도우미에 오신 것을 환영합니다',
-      body: `<p>이 튜토리얼은 <b>연습용 작업</b>(인문소극장, 배우 한 명, 배우를 비추는 조명 하나)에서 진행합니다. 원래 작업은 건드리지 않습니다.</p>
+      body: `<p>이 튜토리얼은 <b>연습용 작업</b>(인문소극장, 배우 한 명, 배우를 비추는 조명 하나)에서 진행합니다. 원래 작업은 건드리지 않습니다. 새 작업을 만들 때 튜토리얼이 시작됐다면, 끝내거나 그만할 때 그 새 작업으로 돌아갑니다.</p>
         <p>할 일이 있는 단계는 직접 해 보면 넘어갑니다. 설명이 더 있으면 다 읽고 <b>다음</b>을 누르세요. <kbd>Enter</kbd>로도 <b>다음</b>을 누를 수 있고, 언제든 <b>건너뛰기</b>나 <b>그만하기</b>를 누를 수 있습니다.</p>`
     },
     {

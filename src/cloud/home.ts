@@ -142,10 +142,15 @@ const popupMenu = (items: [label: string, action: () => void, danger?: boolean][
 
 /* ---------- 새 작업 ---------- */
 
+/** 홈에서 새 작업을 시작할 때마다 알린다. 튜토리얼 자동 시작이 쓴다 (src/tutorial/autostart.ts) */
+const newWorkListeners = new Set<(key: VenueKey) => void>();
+export const onNewWorkStarted = (listener: (key: VenueKey) => void) => { newWorkListeners.add(listener); };
+
 const startNewWork = (key: VenueKey) => {
   closePopup();
   initVenue(key);
   markNewWork();
+  newWorkListeners.forEach(listener => listener(key));
 };
 
 const openLocalFile = () => {
@@ -433,13 +438,13 @@ const loadList = async () => {
 
 /* ---------- 어떤 화면을 보일지 ---------- */
 
-/** 홈(로그인 화면이 아닌)이 그려질 때마다 알린다. 튜토리얼 자동 시작이 쓴다 (src/tutorial/autostart.ts) */
+/** 홈(로그인 화면이 아닌)이 그려질 때마다 알린다. 공유 링크 배너가 쓴다 (share.ts) */
 const homeShownListeners = new Set<() => void>();
 export const onHomeShown = (listener: () => void) => { homeShownListeners.add(listener); };
 /** 지금 시작 화면에 홈이 보이는가 */
 export const isHomeShown = () => Boolean(root) && root.dataset.screen === 'home' && landingVisible();
 
-/** 공유 링크를 여는 동안에는 로그인 화면도 홈도 보이지 않게 붙잡아 둔다 (share.ts). 튜토리얼 자동 시작도 이 때문에 기다린다 */
+/** 공유 링크를 여는 동안에는 로그인 화면도 홈도 보이지 않게 붙잡아 둔다 (share.ts) */
 let held = false;
 export const holdHome = (on: boolean) => {
   held = on;

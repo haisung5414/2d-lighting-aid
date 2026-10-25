@@ -129,9 +129,11 @@ const renderBubble = () => {
   bubble.querySelector('[data-tut="skip"]')?.addEventListener('click', () => goTo(index + 1));
   bubble.querySelector('[data-tut="next"]')?.addEventListener('click', () => goTo(index + 1));
   bubble.querySelector('[data-tut="finish"]')?.addEventListener('click', () => finishLesson());
+  // 다음 강의로 넘어갈 때는 튜토리얼을 끝내지 않고 이어 간다 (끝났다고 알리면 자동 시작이 원래 작업으로 돌려놓는다)
   bubble.querySelector('[data-tut="nextLesson"]')?.addEventListener('click', () => {
-    finishLesson();
-    if (nextLesson) startLesson(nextLesson.id);
+    if (!nextLesson) { finishLesson(); return; }
+    if (lesson) markFinished(lesson.id);
+    startLesson(nextLesson.id);
   });
 };
 
