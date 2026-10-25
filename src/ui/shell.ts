@@ -14,6 +14,7 @@ import { getSelectionKind, onOpenRequest, onSelect } from './selection';
 import { deleteFixture } from './fixture';
 import { deleteSetPiece } from './sets';
 import { deleteActor } from './properties';
+import { deleteMulti } from './multiSelect';
 
 let openPanelId: string | null = null;
 /** 조명 설정 패널: 조명을 고를 때마다 트레이 맨 위에서 펼쳐진다 */
@@ -376,6 +377,8 @@ const initDeleteKey = () => {
     const el = e.target instanceof Element ? e.target : null;
     if (el?.closest('input, textarea, select, [contenteditable="true"]')) return;
     if ($('editor-screen')?.style.display !== 'flex') return;
+    // 다중 선택 도구로 고른 것이 있으면 한꺼번에 지운다
+    if (deleteMulti()) { e.preventDefault(); return; }
     const state = getState();
     const kind = getSelectionKind();
     if (kind === 'fixture' && state.selected_fixture_id) deleteFixture(state.selected_fixture_id);

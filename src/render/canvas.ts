@@ -5,10 +5,12 @@ import { GeometryEngine } from '../engine/geometry';
 import { gelDisplayHex } from '../engine/gels';
 import { dimmerOutput, getPhotometry } from '../engine/photometrics';
 import { reportMove, reportPointer, type MovableKind } from '../ui/statusbar';
-import { getMeasure, getSetDraft, getTool, measureText, onToolRedraw, toolPointerDown, toolPointerMove, toolPointerUp } from '../ui/tools';
+import { getMeasure, getSetDraft, getTool, measureText, onToolRedraw, setTool, toolPointerDown, toolPointerMove, toolPointerUp } from '../ui/tools';
+import { getMultiSelection, getSelectBox, hitForCtrlClick, isCrossingBox, multiCursorAt, multiPointerDown, multiPointerMove, multiPointerUp, onMultiChange } from '../ui/multiSelect';
 import { clearSelection, openSelected, selectActor, selectFixture, selectSet } from '../ui/selection';
 import type { Actor, Position2D, Cue, Fixture, UIToggles, StageConfig, SetPiece } from '../types';
 import { isActorShown, visibleSetPieces } from '../state/sceneVisibility';
+import { pointInSetPiece, setPieceCorners } from './setShape';
 
 let canvas: HTMLCanvasElement | null = null;
 let ctx: CanvasRenderingContext2D | null = null;
@@ -152,26 +154,6 @@ const drawSetDragReadout = (targetCtx: CanvasRenderingContext2D, piece: SetPiece
   targetCtx.textAlign = 'center';
   targetCtx.fillText(text, x, y + 4);
   targetCtx.restore();
-};
-
-const setPieceCorners = (piece: SetPiece): Position2D[] => {
-  const r = piece.rotation * Math.PI / 180;
-  const cos = Math.cos(r);
-  const sin = Math.sin(r);
-  return [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(([sx, sy]) => {
-    const lx = sx * piece.width / 2;
-    const ly = sy * piece.depth / 2;
-    return { x: piece.x + lx * cos - ly * sin, y: piece.y + lx * sin + ly * cos };
-  });
-};
-
-const pointInSetPiece = (point: Position2D, piece: SetPiece): boolean => {
-  const r = -piece.rotation * Math.PI / 180;
-  const dx = point.x - piece.x;
-  const dy = point.y - piece.y;
-  const lx = dx * Math.cos(r) - dy * Math.sin(r);
-  const ly = dx * Math.sin(r) + dy * Math.cos(r);
-  return Math.abs(lx) <= piece.width / 2 && Math.abs(ly) <= piece.depth / 2;
 };
 
 // s, ox, oy: 기본은 지금 화면의 배율과 위치. 평면도 내보내기는 자기 값을 넘긴다
@@ -757,6 +739,65 @@ export const renderCanvas = () => {
 
   // 분리된 그리기 함수 호출
   drawCueToContext(ctx, currentCue, scale, offsetX, offsetY, state.ui_toggles, state.stage_config, state.selected_fixture_id, state.actors, state.selected_actor_id ?? null);
+  drawMultiSelection(ctx);
+};
+
+/** 다중 선택: 고른 것의 파란 테두리와 고르는 사각형 (왼쪽→오른쪽은 실선, 오른쪽→왼쪽은 점선) */
+const drawMultiSelection = (c: CanvasRenderingContext2D) => {
+  if (getTool() !== 'multi') return;
+  const picked = getMultiSelection();
+  const state = getState();
+  const cue = getCurrentCue();
+  const px = (p: Position2D) => [offsetX + toPx(p.x), offsetY + toPx(p.y)] as const;
+  c.save();
+  c.strokeStyle = '#4da3ff';
+  c.lineWidth = 2.5;
+  for (const piece of visibleSetPieces(cue, state.stage_config)) {
+    if (!picked.set.has(piece.id)) continue;
+    c.beginPath();
+    setPieceCorners(piece).forEach((p, i) => { const [x, y] = px(p); if (i) c.lineTo(x, y); else c.moveTo(x, y); });
+    c.closePath();
+    c.stroke();
+  }
+  // 조준점: 고른 것은 파란 원(같이 움직임), 조명만 고르고 조준점은 뺀 것은 회색 점선 원(제자리에 남음)
+  for (const fix of cue?.fixtures ?? []) {
+    const body = picked.fixture.has(fix.id);
+    const aim = picked.target.has(fix.id);
+    if (!body && !aim) continue;
+    const [x, y] = px(fix.position);
+    const [tx, ty] = px(fix.target);
+    if (body) { c.beginPath(); c.arc(x, y, Math.max(10, toPx(0.45)), 0, Math.PI * 2); c.stroke(); }
+    c.beginPath();
+    c.arc(tx, ty, 9, 0, Math.PI * 2);
+    if (aim) {
+      c.fillStyle = 'rgba(77, 163, 255, 0.35)';
+      c.fill();
+      c.stroke();
+    } else {
+      c.save();
+      c.strokeStyle = '#b8bec6';
+      c.lineWidth = 1.5;
+      c.setLineDash([3, 3]);
+      c.stroke();
+      c.restore();
+    }
+  }
+  for (const actor of state.actors) {
+    if (!picked.actor.has(actor.id)) continue;
+    const [x, y] = px(actor);
+    c.beginPath(); c.arc(x, y, Math.max(10, toPx(0.4)), 0, Math.PI * 2); c.stroke();
+  }
+  const box = getSelectBox();
+  if (box) {
+    const [x0, y0] = px(box.start);
+    const [x1, y1] = px(box.end);
+    c.lineWidth = 1.5;
+    c.fillStyle = 'rgba(77, 163, 255, 0.12)';
+    c.setLineDash(isCrossingBox(box) ? [6, 4] : []);
+    c.fillRect(Math.min(x0, x1), Math.min(y0, y1), Math.abs(x1 - x0), Math.abs(y1 - y0));
+    c.strokeRect(Math.min(x0, x1), Math.min(y0, y1), Math.abs(x1 - x0), Math.abs(y1 - y0));
+  }
+  c.restore();
 };
 
 export const initCanvas = (canvasEl: HTMLCanvasElement, wrapperEl: HTMLElement) => {
@@ -775,6 +816,7 @@ export const initCanvas = (canvasEl: HTMLCanvasElement, wrapperEl: HTMLElement) 
 
   subscribe(renderCanvas);
   onToolRedraw(renderCanvas);
+  onMultiChange(renderCanvas);
 
   canvas.addEventListener('mousedown', (e: MouseEvent) => {
     if (e.button !== 0) return;
@@ -786,8 +828,15 @@ export const initCanvas = (canvasEl: HTMLCanvasElement, wrapperEl: HTMLElement) 
     
     if (!cue) return;
 
+    // 다중 선택 도구: 사각형 고르기, Ctrl+누르기, 묶음 끌기
+    if (getTool() === 'multi') { multiPointerDown(worldPos, e.ctrlKey || e.metaKey); return; }
     // 선택 도구가 아니면 놓기·그리기 도구가 이 누름을 처리한다
     if (toolPointerDown(worldPos)) return;
+    // 선택 도구에서 Ctrl+누르기: 다중 선택 도구로 바꾸고, 골라 둔 것과 누른 것을 함께 담는다
+    if ((e.ctrlKey || e.metaKey) && getTool() === 'select') {
+      const hit = hitForCtrlClick(worldPos);
+      if (hit) { setTool('multi', { extra: hit }); return; }
+    }
 
     const selectedFix = cue.fixtures.find(f => f.id === state.selected_fixture_id);
     // 끌기는 실제로 움직였을 때만 실행 취소 기록을 남긴다 (그냥 누르기만 하면 기록하지 않음)
@@ -879,6 +928,11 @@ export const initCanvas = (canvasEl: HTMLCanvasElement, wrapperEl: HTMLElement) 
     {
       const rect = canvas!.getBoundingClientRect();
       reportPointer(toWorld(e.clientX - rect.left, e.clientY - rect.top));
+      if (getTool() === 'multi') {
+        const world = toWorld(e.clientX - rect.left, e.clientY - rect.top);
+        if (!multiPointerMove(world)) canvas!.style.cursor = multiCursorAt(world);
+        return;
+      }
       if (toolPointerMove(toWorld(e.clientX - rect.left, e.clientY - rect.top))) {
         canvas!.style.cursor = ''; // 놓기 도구의 십자 커서가 보이게 손잡이 커서를 지운다
         return;
@@ -1000,6 +1054,7 @@ export const initCanvas = (canvasEl: HTMLCanvasElement, wrapperEl: HTMLElement) 
     if (canvas) {
       const rect = canvas.getBoundingClientRect();
       if (toolPointerUp(toWorld(e.clientX - rect.left, e.clientY - rect.top))) return;
+      if (multiPointerUp(toWorld(e.clientX - rect.left, e.clientY - rect.top))) return;
     }
     const state = getState();
     dragHistoryPending = false;
