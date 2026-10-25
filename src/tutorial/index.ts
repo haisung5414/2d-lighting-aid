@@ -13,7 +13,7 @@ const renderList = () => {
   host.innerHTML = getLessons().map(lesson => `
     <div class="tut-row">
       <span class="tut-check" aria-label="${done.has(lesson.id) ? '마침' : ''}">${done.has(lesson.id) ? '✓' : ''}</span>
-      <span class="tut-name">${lesson.title}<small>${lesson.summary} · 약 ${lesson.minutes}분</small></span>
+      <span class="tut-name">${lesson.title}<small>${lesson.summary}</small></span>
       <button type="button" class="sbtn" data-lesson="${lesson.id}" ${isTutorialRunning() ? 'disabled' : ''}>${done.has(lesson.id) ? '다시 하기' : '시작'}</button>
     </div>`).join('');
   host.querySelectorAll<HTMLButtonElement>('[data-lesson]').forEach(button => {
