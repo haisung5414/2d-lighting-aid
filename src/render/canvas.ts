@@ -759,12 +759,28 @@ const drawMultiSelection = (c: CanvasRenderingContext2D) => {
     c.closePath();
     c.stroke();
   }
+  // 조준점: 고른 것은 파란 원(같이 움직임), 조명만 고르고 조준점은 뺀 것은 회색 점선 원(제자리에 남음)
   for (const fix of cue?.fixtures ?? []) {
-    if (!picked.fixture.has(fix.id)) continue;
+    const body = picked.fixture.has(fix.id);
+    const aim = picked.target.has(fix.id);
+    if (!body && !aim) continue;
     const [x, y] = px(fix.position);
     const [tx, ty] = px(fix.target);
-    c.beginPath(); c.arc(x, y, Math.max(10, toPx(0.45)), 0, Math.PI * 2); c.stroke();
-    c.beginPath(); c.arc(tx, ty, 7, 0, Math.PI * 2); c.stroke();
+    if (body) { c.beginPath(); c.arc(x, y, Math.max(10, toPx(0.45)), 0, Math.PI * 2); c.stroke(); }
+    c.beginPath();
+    c.arc(tx, ty, 9, 0, Math.PI * 2);
+    if (aim) {
+      c.fillStyle = 'rgba(77, 163, 255, 0.35)';
+      c.fill();
+      c.stroke();
+    } else {
+      c.save();
+      c.strokeStyle = '#b8bec6';
+      c.lineWidth = 1.5;
+      c.setLineDash([3, 3]);
+      c.stroke();
+      c.restore();
+    }
   }
   for (const actor of state.actors) {
     if (!picked.actor.has(actor.id)) continue;

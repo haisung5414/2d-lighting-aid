@@ -2,7 +2,9 @@
 // 다중 선택 도구 (2D 평면 전용): 끌어서 여러 객체를 고르고, 한꺼번에 옮기거나 지운다.
 // - 왼쪽→오른쪽으로 끌면 사각형 안에 다 들어온 것만, 오른쪽→왼쪽으로 끌면 사각형에 걸친 것까지 고른다 (SketchUp과 같다).
 // - Ctrl(Mac은 Cmd)을 누른 채 누르면 하나씩 넣고 빼고, 누른 채 끌면 지금 선택에 더한다.
-// - 조명을 옮기면 조준점도 같이 옮긴다 (조명 배치를 통째로 옮기는 일이 더 흔하다).
+// - 조준점도 따로 고르는 대상이다 (id는 조명 id). 조명을 고르면 그 조준점도 함께 골라져 같이 움직이고
+//   (조명 배치를 통째로 옮기는 일이 더 흔하다), Ctrl+누르기로 조준점만 빼면 조명만 움직인다.
+//   조준점만 골라 옮길 수도 있다. 조준점은 지우는 대상이 아니다.
 // - 조명은 지금 씬의 것만 고른다. 세트와 사람 모형은 모든 씬이 함께 쓰므로 모든 씬에서 같이 움직이고 지워진다.
 // 선택은 화면용이라 저장 파일과 실행 취소 기록에 들어가지 않는다. 숨긴 것은 고르지 않는다.
 
@@ -13,17 +15,29 @@ import { clearSelection, getSelectionKind } from './selection';
 import { resetVcb } from './statusbar';
 import type { Position2D } from '../types';
 
-export type MultiKind = 'fixture' | 'set' | 'actor';
+export type MultiKind = 'fixture' | 'target' | 'set' | 'actor';
 interface Hit { kind: MultiKind; id: string; }
 
-const picked = { fixture: new Set<string>(), set: new Set<string>(), actor: new Set<string>() };
+const picked = { fixture: new Set<string>(), target: new Set<string>(), set: new Set<string>(), actor: new Set<string>() };
+
+const clearPicked = () => { picked.fixture.clear(); picked.target.clear(); picked.set.clear(); picked.actor.clear(); };
+/** 조명을 넣고 빼면 그 조준점도 같이 넣고 뺀다 */
+const addHit = (hit: Hit) => {
+  picked[hit.kind].add(hit.id);
+  if (hit.kind === 'fixture') picked.target.add(hit.id);
+};
+const removeHit = (hit: Hit) => {
+  picked[hit.kind].delete(hit.id);
+  if (hit.kind === 'fixture') picked.target.delete(hit.id);
+};
 /** 고르는 사각형 (평면 좌표). additive면 지금 선택에 더한다 */
 let box: { start: Position2D; end: Position2D; additive: boolean } | null = null;
 /** 묶음 끌기: 시작점과 처음 위치 (끌기마다 처음 위치 + 총 이동량으로 놓아 오차가 쌓이지 않게 한다) */
 let drag: {
   start: Position2D;
   moved: boolean;
-  fixtures: Map<string, { px: number; py: number; tx: number; ty: number }>;
+  fixtures: Map<string, Position2D>;
+  targets: Map<string, Position2D>;
   sets: Map<string, Position2D>;
   actors: Map<string, Position2D>;
 } | null = null;
@@ -37,10 +51,10 @@ export const onMultiChange = (listener: () => void) => { listeners.add(listener)
 
 export const getMultiSelection = () => picked;
 export const getSelectBox = () => box;
-export const multiCount = () => picked.fixture.size + picked.set.size + picked.actor.size;
+export const multiCount = () => picked.fixture.size + picked.target.size + picked.set.size + picked.actor.size;
 export const isMultiDragging = () => Boolean(drag?.moved);
 
-/** 이 자리에 보이는 객체 (위에 그려진 것부터: 조명 → 사람 모형 → 세트, 선택 도구와 같은 순서) */
+/** 이 자리에 보이는 객체 (위에 그려진 것부터: 조명 → 조준점 → 사람 모형 → 세트, 선택 도구와 같은 순서) */
 const hitAt = (world: Position2D): Hit | null => {
   const state = getState();
   const cue = getCurrentCue();
@@ -48,6 +62,11 @@ const hitAt = (world: Position2D): Hit | null => {
   for (let j = cue.fixtures.length - 1; j >= 0; j--) {
     const fix = cue.fixtures[j];
     if (fix.is_visible !== false && Math.hypot(world.x - fix.position.x, world.y - fix.position.y) < 0.6) return { kind: 'fixture', id: fix.id };
+  }
+  // 조준점은 배우 얼굴에 겹치는 일이 많아 조금 작게 잡는다 (겹치면 조준점이 먼저)
+  for (let j = cue.fixtures.length - 1; j >= 0; j--) {
+    const fix = cue.fixtures[j];
+    if (fix.is_visible !== false && Math.hypot(world.x - fix.target.x, world.y - fix.target.y) < 0.4) return { kind: 'target', id: fix.id };
   }
   for (let a = state.actors.length - 1; a >= 0; a--) {
     const actor = state.actors[a];
@@ -87,8 +106,12 @@ const hitsInBox = (b: { start: Position2D; end: Position2D }): Hit[] => {
   const cue = getCurrentCue();
   if (!cue) return [];
   const hits: Hit[] = [];
-  // 조명과 사람 모형은 점(조명 몸체, 사람 위치)으로 본다
-  cue.fixtures.forEach(fix => { if (fix.is_visible !== false && inRect(fix.position, r)) hits.push({ kind: 'fixture', id: fix.id }); });
+  // 조명·조준점·사람 모형은 점(조명 몸체, 조준점, 사람 위치)으로 본다
+  cue.fixtures.forEach(fix => {
+    if (fix.is_visible === false) return;
+    if (inRect(fix.position, r)) hits.push({ kind: 'fixture', id: fix.id });
+    if (inRect(fix.target, r)) hits.push({ kind: 'target', id: fix.id });
+  });
   state.actors.forEach(actor => { if (isActorShown(cue, actor) && inRect(actor, r)) hits.push({ kind: 'actor', id: actor.id }); });
   const rc: Position2D[] = [{ x: r.x0, y: r.y0 }, { x: r.x1, y: r.y0 }, { x: r.x1, y: r.y1 }, { x: r.x0, y: r.y1 }];
   visibleSetPieces(cue, state.stage_config).forEach(piece => {
@@ -106,7 +129,7 @@ const hitsInBox = (b: { start: Position2D; end: Position2D }): Hit[] => {
 
 export const clearMulti = () => {
   if (!multiCount() && !box) return;
-  picked.fixture.clear(); picked.set.clear(); picked.actor.clear();
+  clearPicked();
   box = null;
   drag = null;
   changed();
@@ -116,10 +139,10 @@ export const clearMulti = () => {
 export const startMulti = (extra?: Hit) => {
   const state = getState();
   const kind = getSelectionKind();
-  if (kind === 'fixture' && state.selected_fixture_id) picked.fixture.add(state.selected_fixture_id);
+  if (kind === 'fixture' && state.selected_fixture_id) addHit({ kind: 'fixture', id: state.selected_fixture_id });
   if (kind === 'set' && state.selected_set_id) picked.set.add(state.selected_set_id);
   if (kind === 'actor' && state.selected_actor_id) picked.actor.add(state.selected_actor_id);
-  if (extra) picked[extra.kind].add(extra.id);
+  if (extra) addHit(extra);
   // 단일 선택의 손잡이·패널은 숨긴다 (묶음에는 크기·회전 손잡이가 없다)
   clearSelection();
   changed();
@@ -133,15 +156,14 @@ export const hitForCtrlClick = (world: Position2D): Hit | null => hitAt(world);
 export const multiPointerDown = (world: Position2D, ctrl: boolean) => {
   const hit = hitAt(world);
   if (hit && ctrl) {
-    const set = picked[hit.kind];
-    if (set.has(hit.id)) set.delete(hit.id); else set.add(hit.id);
+    if (picked[hit.kind].has(hit.id)) removeHit(hit); else addHit(hit);
     changed();
     return;
   }
   if (hit) {
     if (!picked[hit.kind].has(hit.id)) {
-      picked.fixture.clear(); picked.set.clear(); picked.actor.clear();
-      picked[hit.kind].add(hit.id);
+      clearPicked();
+      addHit(hit);
       changed();
     }
     startDrag(world);
@@ -171,8 +193,8 @@ export const multiPointerUp = (world: Position2D): boolean => {
     box = null;
     // 끌지 않고 빈 곳을 누르기만 하면 선택을 비운다 (Ctrl이면 그대로)
     const clicked = Math.hypot(b.end.x - b.start.x, b.end.y - b.start.y) < 0.05;
-    if (!b.additive) { picked.fixture.clear(); picked.set.clear(); picked.actor.clear(); }
-    if (!clicked) hitsInBox(b).forEach(hit => picked[hit.kind].add(hit.id));
+    if (!b.additive) clearPicked();
+    if (!clicked) hitsInBox(b).forEach(addHit);
     changed();
     return true;
   }
@@ -190,8 +212,11 @@ const startDrag = (world: Position2D) => {
   const state = getState();
   const cue = getCurrentCue();
   resetVcb(); // 묶음 끌기는 수치 칸으로 거리를 정하지 않는다
-  drag = { start: world, moved: false, fixtures: new Map(), sets: new Map(), actors: new Map() };
-  cue?.fixtures.forEach(f => { if (picked.fixture.has(f.id)) drag!.fixtures.set(f.id, { px: f.position.x, py: f.position.y, tx: f.target.x, ty: f.target.y }); });
+  drag = { start: world, moved: false, fixtures: new Map(), targets: new Map(), sets: new Map(), actors: new Map() };
+  cue?.fixtures.forEach(f => {
+    if (picked.fixture.has(f.id)) drag!.fixtures.set(f.id, { x: f.position.x, y: f.position.y });
+    if (picked.target.has(f.id)) drag!.targets.set(f.id, { x: f.target.x, y: f.target.y });
+  });
   (state.stage_config.set_pieces ?? []).forEach(p => { if (picked.set.has(p.id)) drag!.sets.set(p.id, { x: p.x, y: p.y }); });
   state.actors.forEach(a => { if (picked.actor.has(a.id)) drag!.actors.set(a.id, { x: a.x, y: a.y }); });
 };
@@ -217,9 +242,9 @@ const moveTo = (world: Position2D) => {
   setState(s => {
     s.cues[s.active_cue_index]?.fixtures.forEach(f => {
       const o = d.fixtures.get(f.id);
-      if (!o) return;
-      f.position.x = round3(o.px + dx); f.position.y = round3(o.py + dy);
-      f.target.x = round3(o.tx + dx); f.target.y = round3(o.ty + dy);
+      if (o) { f.position.x = round3(o.x + dx); f.position.y = round3(o.y + dy); }
+      const t = d.targets.get(f.id);
+      if (t) { f.target.x = round3(t.x + dx); f.target.y = round3(t.y + dy); }
     });
     (s.stage_config.set_pieces ?? []).forEach(p => {
       const o = d.sets.get(p.id);
@@ -235,7 +260,8 @@ const moveTo = (world: Position2D) => {
 /* ---------- 묶음 지우기 (실행 취소 한 번으로 돌아간다) ---------- */
 
 export const deleteMulti = (): boolean => {
-  if (!multiCount()) return false;
+  // 조준점만 고른 상태면 지울 것이 없다
+  if (!picked.fixture.size && !picked.set.size && !picked.actor.size) return false;
   const { fixture, set, actor } = picked;
   commitHistory();
   setState(s => {
@@ -268,11 +294,13 @@ const renderHint = () => {
   if (!n) { hint.textContent = '다중 선택: 왼쪽→오른쪽으로 끌면 사각형 안에 다 든 것만, 오른쪽→왼쪽으로 끌면 걸친 것까지 고릅니다. Ctrl+누르기로 하나씩 넣고 뺍니다.'; return; }
   const parts = [
     picked.fixture.size ? `조명 ${picked.fixture.size}` : '',
+    picked.target.size ? `조준점 ${picked.target.size}` : '',
     picked.set.size ? `세트 ${picked.set.size}` : '',
     picked.actor.size ? `사람 모형 ${picked.actor.size}` : ''
   ].filter(Boolean).join(' · ');
   const shared = (picked.set.size || picked.actor.size) && getState().cues.length > 1 ? ' 세트와 사람 모형은 모든 씬에서 함께 옮겨지고 지워집니다.' : '';
-  hint.textContent = `${n}개 선택 (${parts}). 고른 것을 끌어 한꺼번에 옮기고, Delete로 지웁니다.${shared}`;
+  const staying = [...picked.fixture].some(id => !picked.target.has(id)) ? ' 점선 조준점은 제자리에 남습니다.' : '';
+  hint.textContent = `${n}개 선택 (${parts}). 고른 것을 끌어 한꺼번에 옮기고, Delete로 지웁니다. Ctrl+누르기로 조준점을 넣고 빼면 조준점이 함께 움직일지 정할 수 있습니다.${staying}${shared}`;
 };
 
 /** 실행 취소나 씬 바꾸기로 사라졌거나 숨겨진 것은 선택에서 뺀다 */
@@ -286,6 +314,7 @@ subscribe(() => {
   let removed = false;
   const prune = (target: Set<string>, alive: Set<string>) => target.forEach(id => { if (!alive.has(id)) { target.delete(id); removed = true; } });
   prune(picked.fixture, fixtures);
+  prune(picked.target, fixtures);
   prune(picked.set, sets);
   prune(picked.actor, actors);
   if (removed) changed();
