@@ -242,7 +242,6 @@ const initFilePill = () => {
       if (action === 'load') $('file-upload')?.click();
       // 씬 가져오기 창은 처음 열 때만 불러온다
       if (action === 'import') void import('./importScenes').then(m => m.openImportDialog());
-      if (action === 'save') saveCurrent();
       if (action === 'saveas') startFileRename(name => saveTo(name, true));
       if (action === 'export-plan') exportPlanImage(fileName);
     });
@@ -255,6 +254,7 @@ const initFilePill = () => {
     showLanding();
   });
 
+  $('save-btn')?.addEventListener('click', () => saveCurrent());
   $('undo-btn')?.addEventListener('click', () => undo());
   $('redo-btn')?.addEventListener('click', () => redo());
 

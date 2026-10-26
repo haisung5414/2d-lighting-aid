@@ -186,7 +186,7 @@ const showBanner = (ownerName: string | null) => {
   const text = el('div', 'share-banner-text');
   text.append(
     el('b', undefined, ownerName ? `${ownerName} 님이 공유한 작업 · 보기 전용` : '공유받은 작업 · 보기 전용'),
-    el('span', undefined, '조명을 움직여 볼 수 있지만 원본에는 저장되지 않습니다. 남기려면 ☰ 메뉴에서 저장하세요.'),
+    el('span', undefined, '조명을 움직여 볼 수 있지만 원본에는 저장되지 않습니다. 남기려면 왼쪽 위 저장 버튼으로 저장하세요.'),
   );
   const close = button('ibtn share-banner-close', '✕', hideBanner);
   close.setAttribute('aria-label', '안내 닫기');

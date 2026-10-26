@@ -25,6 +25,9 @@ Feature status legend: **main** = merged and deployed · **branch** = built, not
 | F13 | 벽 놓기 default thickness 30 → 50 mm (easier to click) | tool rail | branch `feature/dure-legs` | `ui/tools.ts` |
 | F14 | **Delete / Backspace key** deletes the selected light, set piece or actor (undoable); ignored while typing in a field | 2D plan, 3D view | branch `feature/dure-legs` | `ui/shell.ts` `initDeleteKey` |
 | F15 | **다중 선택 tool**, key `V` (2D only): drag left→right selects objects fully inside, right→left also selects ones the box touches; Ctrl+click adds/removes (Ctrl+click in the select tool switches to it); aim points are their own selectable objects: selecting a light also selects its aim point, Ctrl+click the aim point to leave it in place (grey dashed ring) or pick an aim point alone; drag any selected object to move all; Delete removes all; one Ctrl+Z undoes. Sets and actors move/delete in every scene | tool rail (2nd) | branch `feature/multi-select` | `ui/multiSelect.ts` |
+| F16 | **저장 button** moved out of the ☰ menu to the file pill, between redo and the save state (Ctrl+S unchanged) | file pill | branch `feature/save-button` | `index.html`, `ui/shell.ts`; lesson 8 save step already points at it |
+| F17 | **Auto-save every 5 min** for signed-in users, only for works already saved online once, when there are unsaved changes; silent (skips instead of asking when another device saved newer); tooltip on the save state shows the last auto-save time | file pill | branch `feature/save-button` | `cloud/projects.ts` `initAutosave` |
+| F18 | **Lens angle on ellipsoidal plan symbols**: 19 / 26 / 36 / 50, zoom = Z, written upright on the body (also in plan export) | 2D plan | branch `feature/save-button` | `render/canvas.ts` `drawFixtureSymbol` |
 
 Behaviour changes that make existing tutorial text slightly off:
 - The actor's eye button used to hide an actor in **all** scenes; now it is per scene (F5). Old files are converted on load.

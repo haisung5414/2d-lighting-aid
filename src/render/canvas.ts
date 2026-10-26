@@ -8,7 +8,7 @@ import { reportMove, reportPointer, type MovableKind } from '../ui/statusbar';
 import { getMeasure, getSetDraft, getTool, measureText, onToolRedraw, setTool, toolPointerDown, toolPointerMove, toolPointerUp } from '../ui/tools';
 import { getMultiSelection, getSelectBox, hitForCtrlClick, isCrossingBox, multiCursorAt, multiPointerDown, multiPointerMove, multiPointerUp, onMultiChange } from '../ui/multiSelect';
 import { clearSelection, openSelected, selectActor, selectFixture, selectSet } from '../ui/selection';
-import type { Actor, Position2D, Cue, Fixture, UIToggles, StageConfig, SetPiece } from '../types';
+import type { Actor, Position2D, Cue, Fixture, LensType, UIToggles, StageConfig, SetPiece } from '../types';
 import { isActorShown, visibleSetPieces } from '../state/sceneVisibility';
 import { pointInSetPiece, setPieceCorners } from './setShape';
 
@@ -263,7 +263,24 @@ const drawFixtureSymbol = (targetCtx: CanvasRenderingContext2D, fix: Fixture, px
     targetCtx.stroke();
   }
   targetCtx.restore();
+
+  // 엘립소이달 몸통 위에 렌즈 각도. 조명이 어느 쪽을 보든 글자는 똑바로 세운다
+  const lensLabel = fix.type === 'zoom' ? 'Z' : fix.type === 'ellipsoidal' ? ELLIP_LENS_LABEL[fix.lens_type] : null;
+  if (lensLabel) {
+    const bx = px + Math.cos(angle) * -5;
+    const by = py + Math.sin(angle) * -5;
+    targetCtx.save();
+    targetCtx.font = '700 9px "IBM Plex Sans KR", "Segoe UI", sans-serif';
+    targetCtx.textAlign = 'center';
+    targetCtx.textBaseline = 'middle';
+    targetCtx.fillStyle = '#ffffff';
+    targetCtx.fillText(lensLabel, bx, by + 0.5);
+    targetCtx.restore();
+  }
 };
+
+/** 평면 기호에 적는 엘립소이달 렌즈 각도 (51° 렌즈는 흔히 부르는 50으로 적는다) */
+const ELLIP_LENS_LABEL: Record<LensType, string> = { '19deg': '19', '26deg': '26', '36deg': '36', '51deg': '50' };
 const toWorld = (px: number, py: number): Position2D => ({
   x: (px - offsetX) / scale,
   y: (py - offsetY) / scale

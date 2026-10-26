@@ -50,7 +50,6 @@
         <div class="float file-menu" id="file-menu" role="menu" hidden>
           <button type="button" role="menuitem" data-menu="load">불러오기</button>
           <button type="button" role="menuitem" data-menu="import">씬 가져오기 (이어 붙이기)</button>
-          <button type="button" role="menuitem" data-menu="save">저장</button>
           <button type="button" role="menuitem" data-menu="saveas">다른 이름으로 저장</button>
           <button type="button" role="menuitem" data-menu="export-plan" class="menu-sep-above">평면도 내보내기</button>
         </div>
@@ -61,6 +60,9 @@
       </button>
       <button class="ibtn" id="redo-btn" type="button" title="다시 실행 (Ctrl+Y)" aria-label="다시 실행">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 14 5-5-5-5"/><path d="M20 9H9a5 5 0 0 0 0 10h3"/></svg>
+      </button>
+      <button class="ibtn" id="save-btn" type="button" title="저장 (Ctrl+S)" aria-label="저장">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h11l3 3v13a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M7 3v5h8V3"/><rect x="7" y="13" width="10" height="8" rx="1"/></svg>
       </button>
       <span class="savestate" id="save-state">내 컴퓨터</span>
       <input type="file" id="file-upload" accept=".json" hidden>

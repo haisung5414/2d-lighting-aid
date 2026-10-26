@@ -7,11 +7,12 @@ import { initAccountUI } from './account';
 import { initAuth, onAuthChange } from './auth';
 import { initFileMenu } from './fileMenu';
 import { initHome } from './home';
-import { detachOnSignOut, initProjectTracking } from './projects';
+import { detachOnSignOut, initAutosave, initProjectTracking } from './projects';
 import { initShare } from './share';
 
 export const initCloud = () => {
   initProjectTracking();
+  initAutosave();
   initAccountUI();
   initFileMenu();
   initHome();

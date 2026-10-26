@@ -87,18 +87,34 @@ export const markNewWork = () => {
   if (getUser()) announce(null, 'cloud');
 };
 
+/** 저장 중이면 자동 저장을 건너뛴다 */
+let saving = false;
+
 /**
  * 지금 작업을 온라인에 저장한다.
  * asNew = 다른 이름으로 저장 / 내 컴퓨터 작업을 온라인에 처음 저장 (열린 행을 덮지 않고 새 행을 만든다)
+ * auto = 자동 저장: 묻는 창과 오류 알림을 띄우지 않는다. 덮어쓸지 물어야 하는 경우(다른 곳에서 더 최근에 저장)는 저장하지 않는다
  */
-export const saveOnline = async (name: string, asNew: boolean): Promise<boolean> => {
+export const saveOnline = async (name: string, asNew: boolean, auto = false): Promise<boolean> => {
+  if (saving) return false;
+  saving = true;
+  try {
+    return await saveOnlineNow(name, asNew, auto);
+  } finally {
+    saving = false;
+  }
+};
+
+const saveOnlineNow = async (name: string, asNew: boolean, auto: boolean): Promise<boolean> => {
   if (!getUser()) {
+    if (auto) return false;
     alert('온라인에 저장하려면 먼저 로그인해야 합니다. 오른쪽 위의 로그인 버튼을 눌러 주세요.');
     return false;
   }
   const state = getState();
   const json = JSON.stringify(state);
   if (new Blob([json]).size >= MAX_BYTES) {
+    if (auto) return false;
     alert('작업 파일이 너무 커서 온라인에 저장할 수 없습니다 (최대 5MB). 배경 이미지를 줄이거나 내 컴퓨터에 저장해 주세요.');
     return false;
   }
@@ -113,6 +129,7 @@ export const saveOnline = async (name: string, asNew: boolean): Promise<boolean>
     // 같은 이름의 다른 작업이 있으면 덮어쓸지 묻는다
     const sameName = await findByName(name);
     if (sameName && sameName.id !== targetId) {
+      if (auto) return false;
       if (!window.confirm('온라인에 같은 이름의 작업이 있습니다. 덮어쓸까요?')) return false;
       if (targetId) {
         // 열린 작업의 이름을 바꿔 저장하면서 같은 이름의 작업을 덮는다 = 그 작업을 지우고 이 작업이 이름을 가져간다
@@ -130,7 +147,7 @@ export const saveOnline = async (name: string, asNew: boolean): Promise<boolean>
       if (error) throw error;
       if (!remote) targetId = null; // 다른 곳에서 지워졌다: 새로 넣는다
       else if (remote.updated_at !== openRow.updatedAt
-        && !window.confirm('다른 곳에서 이 작업을 더 최근에 저장했습니다. 덮어쓸까요?')) return false;
+        && (auto || !window.confirm('다른 곳에서 이 작업을 더 최근에 저장했습니다. 덮어쓸까요?'))) return false;
     }
 
     // 새로 넣는 경우에만 작업 수를 센다 (덮어쓰기와 고쳐 저장하기는 늘 된다)
@@ -152,9 +169,33 @@ export const saveOnline = async (name: string, asNew: boolean): Promise<boolean>
     changed();
     return true;
   } catch (err) {
-    reportError(err);
+    if (auto) console.warn('자동 저장 실패', err);
+    else reportError(err);
     return false;
   }
+};
+
+/* ---------- 자동 저장 ---------- */
+
+const AUTOSAVE_MS = 5 * 60 * 1000;
+
+/**
+ * 로그인한 사람의 온라인 작업을 5분마다 저장한다.
+ * 이미 온라인에 저장된 작업(열린 행이 있음)이고 저장 안 된 변경이 있을 때만 한다.
+ * 이름 없는 새 작업, 내 컴퓨터 작업, 공유 링크로 연 작업은 자동 저장하지 않는다 (처음 한 번은 직접 저장해야 한다).
+ */
+export const initAutosave = () => {
+  window.setInterval(() => {
+    const { name, dirty, location } = getFileState();
+    if (!getUser() || location !== 'cloud' || !dirty || !name || !openRow) return;
+    if (document.getElementById('editor-screen')?.style.display !== 'flex') return;
+    void saveOnline(name, false, true).then(ok => {
+      if (!ok) return;
+      const time = new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+      const el = document.getElementById('save-state');
+      if (el) el.title = `5분마다 자동 저장합니다. 마지막 자동 저장 ${time}`;
+    });
+  }, AUTOSAVE_MS);
 };
 
 export const renameProject = async (id: string, name: string) => {

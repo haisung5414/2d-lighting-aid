@@ -46,7 +46,7 @@ export const startSignIn = () => {
     dialog.setAttribute('aria-labelledby', 'cloud-signin-title');
     const title = el('h2', undefined, '저장하지 않은 작업이 있습니다');
     title.id = 'cloud-signin-title';
-    const text = el('p', undefined, '로그인하면 Google 로그인 화면으로 넘어갔다가 홈으로 돌아옵니다. 지금 작업에서 저장하지 않은 내용은 사라집니다. 남기려면 먼저 ☰ 메뉴에서 저장해 주세요.');
+    const text = el('p', undefined, '로그인하면 Google 로그인 화면으로 넘어갔다가 홈으로 돌아옵니다. 지금 작업에서 저장하지 않은 내용은 사라집니다. 남기려면 먼저 왼쪽 위 저장 버튼으로 저장해 주세요.');
     const google = button('cloud-google-btn cloud-warn-btn', '저장하지 않고 로그인', () => {
       google.disabled = true;
       void signInWithGoogle().finally(() => { google.disabled = false; });

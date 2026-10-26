@@ -392,7 +392,7 @@ const renderFiles = () => {
       ? h('div', { class: 'lh-note' },
         h('p', {}, '로그인하면 작업을 온라인에 저장하고 어느 컴퓨터에서나 이어서 할 수 있습니다.'),
         (() => { const b = button('lh-google lh-google-small', null, () => void signInWithGoogle()); b.append(icon(SVG.google), 'Google로 로그인'); return b; })())
-      : h('div', { class: 'lh-note' }, h('p', {}, '작업은 편집 화면의 ☰ 메뉴에서 "저장"을 눌러 내 컴퓨터에 JSON 파일로 저장합니다. 다시 열 때는 위의 "기기에서 열기"를 누릅니다.')));
+      : h('div', { class: 'lh-note' }, h('p', {}, '작업은 편집 화면 왼쪽 위의 저장 버튼을 눌러 내 컴퓨터에 JSON 파일로 저장합니다. 다시 열 때는 위의 "기기에서 열기"를 누릅니다.')));
     return;
   }
 
