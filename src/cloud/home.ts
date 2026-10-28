@@ -162,8 +162,6 @@ const buildLogin = () => {
   stageView = h('div', { class: 'lh-stage' });
   const hero = h('section', { class: 'lh-hero' },
     stageView,
-    h('span', { class: 'lh-tag lh-tag-left' }, h('b', {}, '3D 보기'), ' · 두레문예관 무대'),
-    h('span', { class: 'lh-tag lh-tag-right' }, '끌어서 돌려 보기'),
     h('div', { class: 'lh-hero-text' },
       h('span', { class: 'lh-hero-name' }, 'Lighting Aid'),
       h('span', { class: 'lh-hero-sub' }, '조명 시뮬레이터'),

@@ -95,10 +95,6 @@
 .lh-stage { position: absolute; inset: 0; }
 .lh-stage > canvas { display: block; width: 100%; height: 100%; cursor: grab; touch-action: none; }
 .lh-stage > canvas:active { cursor: grabbing; }
-.lh-tag { position: absolute; z-index: 1; top: 24px; padding: 6px 10px; font-family: "IBM Plex Mono", ui-monospace, Consolas, monospace; font-size: 11.5px; letter-spacing: .06em; color: #a5b1be; background: rgba(13, 15, 18, .72); border: 1px solid rgba(255, 255, 255, .12); pointer-events: none; }
-.lh-tag b { color: #eef2f6; font-weight: 500; }
-.lh-tag-left { left: 24px; }
-.lh-tag-right { right: 24px; }
 .lh-hero-text { position: absolute; z-index: 1; left: 64px; right: 64px; bottom: 64px; display: flex; flex-direction: column; pointer-events: none; text-shadow: 0 2px 24px rgba(0, 0, 0, .5); }
 .lh-hero-name { font-family: var(--lh-wide); font-weight: 300; font-size: clamp(40px, 6vw, 76px); line-height: 1.1; letter-spacing: -.035em; }
 .lh-hero-sub { margin-top: 8px; font-size: clamp(18px, 2vw, 24px); letter-spacing: .02em; color: #a5b1be; }
@@ -125,7 +121,6 @@
   .lh-hero-text { left: 24px; right: 24px; bottom: 32px; }
   .lh-signin { max-width: none; border-left: 0; border-top: 1px solid var(--lh-line); padding: 40px 24px 24px; }
 }
-@media (max-width: 760px) { .lh-tag-right { display: none; } }
 
 /* ---------- 홈 ---------- */
 .lh-home { display: flex; min-height: 100vh; }
