@@ -1,5 +1,5 @@
 /* src/cloud/home.css
- * 로그인 화면과 홈. 시안: docs/design/sketchup-redesign/Login.dc.html, Home.dc.html (SketchUp Web 홈 허브).
+ * 로그인 화면과 홈. 구조는 docs/design/sketchup-redesign/, 지금 모습은 docs/design/landing-redesign/login-3d.html(P1)과 home-variants.html(K2).
  * 다크 테마는 ui/shell.css와 같은 규칙(운영체제 설정, data-theme)을 따른다. */
 
 :root {
@@ -15,11 +15,8 @@
   --lh-tile-fill: #f2f3f5;
   --lh-tile-line: #8a929c;
   --lh-thumb: #1f2329; /* 씬 썸네일은 편집 화면과 같은 어두운 바탕으로 그려진다 */
-  --lh-hero-1: #e3eef9;
-  --lh-hero-2: #ffffff;
-  --lh-faint: #c8cdd3;
-  --lh-faint-fill: #f2f2f5;
   --lh-danger: #c5221f;
+  --lh-wide: "Unbounded", "IBM Plex Sans KR", sans-serif;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
@@ -34,10 +31,6 @@
     --lh-tile: #2a3440;
     --lh-tile-fill: #222b35;
     --lh-tile-line: #75818f;
-    --lh-hero-1: #1c2d42;
-    --lh-hero-2: #161b21;
-    --lh-faint: #4a5563;
-    --lh-faint-fill: #2a3440;
     --lh-danger: #ff8a80;
   }
 }
@@ -53,10 +46,6 @@
   --lh-tile: #2a3440;
   --lh-tile-fill: #222b35;
   --lh-tile-line: #75818f;
-  --lh-hero-1: #1c2d42;
-  --lh-hero-2: #161b21;
-  --lh-faint: #4a5563;
-  --lh-faint-fill: #2a3440;
   --lh-danger: #ff8a80;
 }
 
@@ -85,8 +74,9 @@
 .lh-google:disabled { opacity: .6; cursor: progress; }
 .lh-google.lh-google-small { height: 40px; padding: 0 18px; font-size: 14px; display: inline-flex; }
 
-.lh-brand { display: flex; align-items: center; gap: 10px; color: var(--lh-blue); font-size: 24px; font-weight: 700; }
-.lh-brand > span:last-child { color: var(--lh-ink); }
+.lh-brand { color: var(--lh-ink); white-space: nowrap; }
+.lh-brand-name { display: block; font-family: var(--lh-wide); font-weight: 300; font-size: 18px; letter-spacing: -.02em; }
+.lh-brand small { display: block; margin-top: 3px; font-size: 12px; letter-spacing: .02em; color: var(--lh-meta); }
 
 /* ---------- 팝업 메뉴 ---------- */
 .lh-popup-wrap { position: relative; display: inline-flex; }
@@ -97,33 +87,50 @@
 .lh-popup button.lh-danger { color: var(--lh-danger); }
 .lh-popup-email { padding: 9px 12px 8px; margin-bottom: 4px; border-bottom: 1px solid var(--lh-line); font-size: 13px; color: var(--lh-meta); overflow-wrap: anywhere; }
 
-/* ---------- 로그인 화면 ---------- */
+/* ---------- 로그인 화면 ----------
+ * 왼쪽: 3D 무대(loginStage.ts)와 앱 이름. 무대는 늘 어두운 바탕이라 테마와 상관없이 같은 색을 쓴다.
+ * 오른쪽: 소개 문구와 로그인 버튼, 바탕에 옅은 도면 격자. */
 .lh-login { display: flex; flex-wrap: wrap; min-height: 100vh; background: var(--lh-surface); }
-.lh-hero { flex: 999 1 560px; min-width: 0; position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; padding: 0 64px 72px; min-height: 360px; }
-.lh-hero > .lh-icon { position: absolute; inset: 0; }
-.lh-hero > .lh-icon > svg { width: 100%; height: 100%; }
-.lh-hero-text { position: relative; display: flex; flex-direction: column; gap: 4px; }
-.lh-hero-line { font-size: clamp(40px, 6vw, 72px); line-height: 1.1; font-weight: 400; }
-.lh-hero-line.lh-strong { font-weight: 700; }
-.lh-hero-rule { display: block; height: 3px; background: var(--lh-blue); margin-top: 36px; max-width: 760px; }
-.lh-signin { flex: 1 1 380px; max-width: 520px; border-left: 1px solid var(--lh-line); display: flex; flex-direction: column; padding: 96px 48px 32px; }
-.lh-signin .lh-brand { font-size: 28px; }
-.lh-sub { margin: 6px 0 0 46px; font-size: 14px; color: var(--lh-meta); }
-.lh-signin h1 { margin: 36px 0 0; font-size: 30px; font-weight: 500; }
-.lh-lead { margin: 12px 0 0; font-size: 15px; line-height: 1.6; color: var(--lh-meta); }
-.lh-signin .lh-google { margin-top: 36px; }
+.lh-hero { flex: 999 1 560px; min-width: 0; position: relative; overflow: hidden; min-height: 380px; background: #0d0f12; color: #eef2f6; }
+.lh-stage { position: absolute; inset: 0; }
+.lh-stage > canvas { display: block; width: 100%; height: 100%; cursor: grab; touch-action: none; }
+.lh-stage > canvas:active { cursor: grabbing; }
+.lh-tag { position: absolute; z-index: 1; top: 24px; padding: 6px 10px; font-family: "IBM Plex Mono", ui-monospace, Consolas, monospace; font-size: 11.5px; letter-spacing: .06em; color: #a5b1be; background: rgba(13, 15, 18, .72); border: 1px solid rgba(255, 255, 255, .12); pointer-events: none; }
+.lh-tag b { color: #eef2f6; font-weight: 500; }
+.lh-tag-left { left: 24px; }
+.lh-tag-right { right: 24px; }
+.lh-hero-text { position: absolute; z-index: 1; left: 64px; right: 64px; bottom: 64px; display: flex; flex-direction: column; pointer-events: none; text-shadow: 0 2px 24px rgba(0, 0, 0, .5); }
+.lh-hero-name { font-family: var(--lh-wide); font-weight: 300; font-size: clamp(40px, 6vw, 76px); line-height: 1.1; letter-spacing: -.035em; }
+.lh-hero-sub { margin-top: 8px; font-size: clamp(18px, 2vw, 24px); letter-spacing: .02em; color: #a5b1be; }
+.lh-hero-rule { display: block; height: 3px; background: var(--lh-blue); margin-top: 30px; max-width: 640px; }
+.lh-signin { flex: 1 1 380px; max-width: 520px; position: relative; isolation: isolate; border-left: 1px solid var(--lh-line); display: flex; flex-direction: column; padding: 96px 48px 32px; }
+/* 도면 격자: 촘촘한 칸 + 5칸마다 진한 선, 아래로 갈수록 흐려진다 */
+.lh-signin::before { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background-image:
+    linear-gradient(color-mix(in srgb, var(--lh-blue) 16%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--lh-blue) 16%, transparent) 1px, transparent 1px),
+    linear-gradient(color-mix(in srgb, var(--lh-blue) 7%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--lh-blue) 7%, transparent) 1px, transparent 1px);
+  background-size: 120px 120px, 120px 120px, 24px 24px, 24px 24px; background-position: -1px -1px;
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, rgba(0, 0, 0, .55) 55%, transparent 100%);
+  mask-image: linear-gradient(180deg, #000 0%, rgba(0, 0, 0, .55) 55%, transparent 100%); }
+.lh-tagline { margin: 0; display: flex; flex-direction: column; font-size: 28px; font-weight: 500; line-height: 1.3; letter-spacing: -.01em; }
+.lh-tagline strong { font-weight: 700; }
+.lh-signin .lh-google { margin-top: 40px; }
 .lh-link { margin-top: 20px; border: 0; background: none; color: var(--lh-blue); font-size: 15px; cursor: pointer; padding: 6px; }
 .lh-link:hover { text-decoration: underline; }
 .lh-foot { display: flex; justify-content: center; gap: 16px; font-size: 14px; }
 @media (max-width: 960px) {
-  .lh-hero { padding: 0 24px 40px; min-height: 280px; }
+  .lh-hero { min-height: 340px; }
+  .lh-hero-text { left: 24px; right: 24px; bottom: 32px; }
   .lh-signin { max-width: none; border-left: 0; border-top: 1px solid var(--lh-line); padding: 40px 24px 24px; }
 }
+@media (max-width: 760px) { .lh-tag-right { display: none; } }
 
 /* ---------- 홈 ---------- */
 .lh-home { display: flex; min-height: 100vh; }
 .lh-nav { flex: 0 0 260px; background: var(--lh-surface); display: flex; flex-direction: column; padding: 24px 0 20px; border-right: 1px solid var(--lh-line); position: sticky; top: 0; height: 100vh; box-sizing: border-box; }
-.lh-nav .lh-brand { padding: 0 24px 56px; }
+.lh-nav .lh-brand { padding: 0 24px 48px; }
 .lh-nav-item { display: flex; align-items: center; gap: 14px; height: 52px; padding: 0 24px; font-size: 15px; color: var(--lh-blue); text-decoration: none; }
 .lh-nav-item:hover { background: var(--lh-blue-hover); }
 .lh-nav-item.lh-on { background: var(--lh-blue-on); box-shadow: inset 4px 0 0 var(--lh-blue); font-weight: 700; }
@@ -182,10 +189,56 @@
 @media (max-width: 760px) {
   .lh-home { flex-direction: column; }
   .lh-nav { position: static; height: auto; flex: 0 0 auto; flex-direction: row; align-items: center; padding: 10px 16px; border-right: 0; border-bottom: 1px solid var(--lh-line); }
-  .lh-nav .lh-brand { padding: 0 16px 0 0; font-size: 20px; }
+  .lh-nav .lh-brand { padding: 0 16px 0 0; }
+  .lh-nav .lh-brand small { display: none; }
+  .lh-nav { position: relative; }
   .lh-nav-item { height: 40px; padding: 0 12px; }
   .lh-nav .lh-grow, .lh-nav-item:last-child { display: none; }
   .lh-main { padding: 20px 16px 40px; }
   .lh-venue { width: calc(50% - 10px); min-width: 150px; }
   .lh-files.lh-list .lh-row:first-of-type { display: none; }
 }
+
+/* ---------- 홈의 무대색 (시안 K2) ----------
+ * 홈은 로그인 화면의 3D 무대와 같은 어두운 무대색으로 고정한다. 강조색은 앰버, 밝은 버튼은 '새로 만들기' 하나. */
+.lh-home {
+  --lh-bg: #0d1015;
+  --lh-surface: #151a21;
+  --lh-ink: #eef2f6;
+  --lh-meta: #a5b1be;
+  --lh-line: #262e38;
+  --lh-blue: #f5b841;
+  --lh-blue-hover: #1d2129;
+  --lh-blue-on: #2a2418;
+  --lh-tile: #1c222b;
+  --lh-tile-fill: #151a21;
+  --lh-tile-line: #6f7b89;
+  --lh-danger: #ff8a80;
+  color-scheme: dark;
+  background: var(--lh-bg);
+  color: var(--lh-ink);
+}
+.lh-home .lh-header h1 { color: var(--lh-ink); }
+.lh-home .lh-nav-item { color: var(--lh-meta); }
+.lh-home .lh-nav-item.lh-on { color: var(--lh-ink); }
+.lh-home .lh-outline { border-color: rgba(255, 255, 255, .22); background: transparent; color: var(--lh-ink); }
+.lh-home .lh-outline:hover { background: var(--lh-blue-hover); }
+.lh-home .lh-new { background: var(--lh-ink); border-color: var(--lh-ink); color: #14181e; font-weight: 700; }
+.lh-home .lh-new:hover { background: #fff; }
+.lh-home .lh-iconbtn { color: var(--lh-meta); }
+.lh-home .lh-iconbtn:hover { color: var(--lh-ink); }
+.lh-home .lh-card { border: 1px solid var(--lh-line); }
+.lh-home .lh-card:hover { box-shadow: 0 0 0 1px rgba(255, 255, 255, .35); }
+.lh-home .lh-cloud { color: var(--lh-meta); }
+.lh-home .lh-venue-thumb img { opacity: .55; }
+/* 왼쪽 메뉴에도 로그인 화면과 같은 도면 격자 (선은 로그인 화면 다크 테마의 블루) */
+.lh-home .lh-nav { isolation: isolate; }
+.lh-home .lh-nav::before { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background-image:
+    linear-gradient(rgba(106, 168, 255, .16) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(106, 168, 255, .16) 1px, transparent 1px),
+    linear-gradient(rgba(106, 168, 255, .07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(106, 168, 255, .07) 1px, transparent 1px);
+  background-size: 120px 120px, 120px 120px, 24px 24px, 24px 24px; background-position: -1px -1px;
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, rgba(0, 0, 0, .55) 55%, transparent 100%);
+  mask-image: linear-gradient(180deg, #000 0%, rgba(0, 0, 0, .55) 55%, transparent 100%); }

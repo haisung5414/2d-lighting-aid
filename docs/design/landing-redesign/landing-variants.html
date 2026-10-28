@@ -1,0 +1,541 @@
+<title>Lighting Aid 첫 화면 시안</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@400;500;700&family=Instrument+Serif:ital@0;1&display=swap">
+<style>
+/* 레이아웃: 시안 하나가 화면 전체를 차지하고, 위쪽 가운데 떠 있는 전환기로 A~D를 바꾼다.
+   팔레트는 앱의 home.css 토큰(--lh-*)을 그대로 가져왔다. */
+:root {
+  --bg: #f2f2f5;
+  --surface: #ffffff;
+  --ink: #222831;
+  --meta: #6b7280;
+  --line: #e1e4e8;
+  --blue: #0b5cad;
+  --blue-soft: #e3eef9;
+  --blue-hover: #ecf2fa;
+  --amber: #f5b841;
+  --stage: #12161c;       /* 무대 시안(B, C)의 어두운 바탕 */
+  --stage-ink: #eef2f6;
+  --stage-meta: #a5b1be;
+  /* A 워시 셰이더 색 */
+  --w0: #eef4fb; --w1: #8fbbe8; --w2: #f5b841; --w3: #0b5cad;
+  --font: "IBM Plex Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  --display: "Instrument Serif", "Times New Roman", serif;
+  --mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #161b21; --surface: #222b35; --ink: #e4eaf0; --meta: #a5b1be; --line: #36414e;
+    --blue: #6aa8ff; --blue-soft: #1c2d42; --blue-hover: #1c2d42; --amber: #f0b04a;
+    --w0: #141a22; --w1: #1f3a5c; --w2: #b9822a; --w3: #6aa8ff;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #161b21; --surface: #222b35; --ink: #e4eaf0; --meta: #a5b1be; --line: #36414e;
+  --blue: #6aa8ff; --blue-soft: #1c2d42; --blue-hover: #1c2d42; --amber: #f0b04a;
+  --w0: #141a22; --w1: #1f3a5c; --w2: #b9822a; --w3: #6aa8ff;
+  color-scheme: dark;
+}
+
+html, body { height: 100%; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font); font-size: 15px; overflow: hidden; }
+button { font: inherit; }
+:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+
+/* ---------- 시안 전환기 ---------- */
+.sw { position: fixed; z-index: 50; top: calc(14px + env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%);
+  display: flex; align-items: center; gap: 2px; padding: 4px; border-radius: 999px;
+  background: color-mix(in srgb, var(--surface) 82%, transparent); backdrop-filter: blur(12px);
+  border: 1px solid var(--line); box-shadow: 0 6px 24px rgba(0,0,0,.12); }
+.sw button { border: 0; background: none; color: var(--meta); height: 32px; padding: 0 14px; border-radius: 999px; cursor: pointer; font-size: 13px; white-space: nowrap; }
+.sw button b { font-family: var(--mono); font-weight: 500; margin-right: 6px; }
+.sw button[aria-pressed="true"] { background: var(--ink); color: var(--surface); }
+.sw-note { position: fixed; z-index: 50; left: 50%; transform: translateX(-50%); top: calc(62px + env(safe-area-inset-top, 0px));
+  max-width: min(560px, calc(100vw - 32px)); margin: 0; padding: 6px 12px; border-radius: 6px; font-size: 12.5px; line-height: 1.5; text-align: center;
+  background: color-mix(in srgb, var(--surface) 82%, transparent); backdrop-filter: blur(12px); color: var(--meta); transition: opacity .6s; }
+.sw-note.out { opacity: 0; pointer-events: none; }
+.v { overflow-x: hidden; }
+
+.v { position: fixed; inset: 0; overflow: auto; }
+.v canvas.bgc { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.grain { position: fixed; inset: -50%; pointer-events: none; background-image: var(--grain); opacity: .22; mix-blend-mode: overlay; animation: grain 0.6s steps(4) infinite; }
+@keyframes grain { 0% { transform: translate(0,0) } 25% { transform: translate(-3%,2%) } 50% { transform: translate(2%,-4%) } 75% { transform: translate(-1%,3%) } }
+
+/* 공통 부품 */
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 18px; line-height: 1.15; }
+.brand svg { width: 28px; height: 28px; flex: none; }
+.brand small { display: block; font-weight: 400; font-size: 12px; opacity: .75; }
+.g-btn { height: 48px; padding: 0 22px; display: inline-flex; align-items: center; justify-content: center; gap: 12px; cursor: pointer; font-size: 15px; font-weight: 700; white-space: nowrap; }
+.g-btn svg { width: 20px; height: 20px; flex: none; }
+.skip { border: 0; background: none; padding: 6px 0; cursor: pointer; font-size: 14px; text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 1px; }
+.privacy { font-size: 12.5px; opacity: .7; color: inherit; }
+
+/* ---------- A 워시 ---------- */
+#v-wash { color: var(--ink); background: var(--w0); }
+#v-wash .grain { opacity: .28; }
+.a-top { position: relative; z-index: 2; display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  padding-block: calc(18px + env(safe-area-inset-top, 0px)) 18px; padding-left: max(28px, env(safe-area-inset-left, 0px)); padding-right: max(28px, env(safe-area-inset-right, 0px));
+  border-bottom: 1px solid color-mix(in srgb, var(--ink) 14%, transparent); }
+.a-top .brand { font-size: 15px; }
+.a-top .brand svg { color: var(--blue); }
+.a-pill { height: 38px; padding: 0 8px 0 16px; border: 0; border-radius: 999px; background: var(--ink); color: var(--w0); display: inline-flex; align-items: center; gap: 10px; cursor: pointer; font-size: 13.5px; font-weight: 700; }
+.a-pill span { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; background: color-mix(in srgb, var(--w0) 18%, transparent); }
+.a-main { position: relative; z-index: 2; display: flex; flex-direction: column; gap: 22px;
+  padding-block: clamp(48px, 10vh, 110px) 64px; padding-left: max(28px, env(safe-area-inset-left, 0px)); padding-right: max(28px, env(safe-area-inset-right, 0px)); max-width: 1180px; }
+.a-eyebrow { font-size: 12px; letter-spacing: .24em; font-weight: 500; }
+.a-h1 { margin: 0; font-size: clamp(52px, 10.5vw, 148px); line-height: .92; letter-spacing: -.035em; font-weight: 500; text-wrap: balance; }
+.a-h1 em { font-family: var(--display); font-weight: 400; letter-spacing: -.01em; }
+.a-sub { margin: 4px 0 0; font-size: clamp(20px, 2.4vw, 30px); font-weight: 500; letter-spacing: -.01em; }
+.a-facts { display: flex; flex-direction: column; gap: 8px; font-size: 16px; }
+.a-facts div { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.tag { font-family: var(--mono); font-size: 11.5px; padding: 3px 7px; background: var(--ink); color: var(--w0); }
+.tag.ghost { background: none; color: inherit; border: 1px solid currentColor; }
+.a-cta { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; margin-top: 10px; }
+.a-cta .g-btn { border: 1px solid var(--ink); background: color-mix(in srgb, var(--w0) 70%, transparent); color: var(--ink); backdrop-filter: blur(6px); border-radius: 999px; }
+.a-cta .g-btn:hover { background: var(--w0); }
+.a-cta .skip { color: var(--ink); }
+.a-foot { position: absolute; z-index: 2; right: max(28px, env(safe-area-inset-right, 0px)); bottom: calc(20px + env(safe-area-inset-bottom, 0px)); }
+
+/* ---------- B 큐 ---------- */
+#v-cue { background: var(--stage); color: var(--stage-ink); }
+.b-wrap { position: relative; z-index: 2; min-height: 100%; box-sizing: border-box; display: grid; grid-template-rows: auto 1fr auto; gap: 24px;
+  padding-block: calc(22px + env(safe-area-inset-top, 0px)) calc(24px + env(safe-area-inset-bottom, 0px)); padding-left: max(32px, env(safe-area-inset-left, 0px)); padding-right: max(32px, env(safe-area-inset-right, 0px)); }
+.b-top { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+.b-top .brand svg { color: var(--amber); }
+.b-body { align-self: end; display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 32px; }
+.b-copy { display: flex; flex-direction: column; gap: 18px; min-width: 0; max-width: 760px; }
+.b-h1 { margin: 0; font-size: clamp(40px, 7vw, 96px); line-height: 1.04; font-weight: 700; letter-spacing: -.03em; text-wrap: balance; text-shadow: 0 2px 30px rgba(0,0,0,.4); }
+.b-h1 span { font-weight: 400; }
+.b-lead { margin: 0; max-width: 34em; color: var(--stage-meta); line-height: 1.65; }
+.b-cta { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+.b-cta .g-btn { border: 0; background: var(--stage-ink); color: #1a1f26; }
+.b-cta .g-btn:hover { background: #fff; }
+.b-cta .skip { color: var(--stage-ink); }
+.cue { width: 300px; max-width: 100%; font-family: var(--mono); font-size: 12px; color: var(--stage-meta); display: grid; gap: 8px; padding: 14px 16px; border: 1px solid rgba(255,255,255,.14); background: rgba(10,13,17,.55); backdrop-filter: blur(8px); }
+.cue-row { display: flex; justify-content: space-between; gap: 12px; }
+.cue-no { color: var(--stage-ink); font-size: 26px; line-height: 1; letter-spacing: -.02em; }
+.cue-name { color: var(--stage-ink); font-family: var(--font); font-size: 14px; }
+.cue-bar { height: 3px; background: rgba(255,255,255,.12); }
+.cue-bar i { display: block; height: 100%; width: 0; background: var(--amber); }
+.cue-list { display: flex; gap: 6px; }
+.cue-list span { flex: 1; height: 4px; background: rgba(255,255,255,.12); }
+.cue-list span.on { background: var(--stage-ink); }
+.b-foot { display: flex; justify-content: space-between; font-size: 12px; color: var(--stage-meta); }
+
+/* ---------- C 빔 ---------- */
+#v-beam { background: #07090c; color: var(--stage-ink); }
+.c-wrap { position: relative; z-index: 2; min-height: 100%; display: flex; flex-wrap: wrap; }
+.c-hero { flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; justify-content: flex-end; gap: 20px;
+  padding-block: calc(110px + env(safe-area-inset-top, 0px)) 64px; padding-left: max(56px, env(safe-area-inset-left, 0px)); padding-right: 32px; }
+.c-kicker { font-family: var(--mono); font-size: 12px; letter-spacing: .14em; color: var(--amber); }
+.c-h1 { margin: 0; font-size: clamp(44px, 7.4vw, 112px); line-height: .98; font-weight: 700; letter-spacing: -.04em; text-wrap: balance; }
+.c-h1 em { font-family: var(--display); font-style: italic; font-weight: 400; letter-spacing: -.01em; color: var(--amber); }
+.c-specs { display: flex; gap: 28px; flex-wrap: wrap; font-family: var(--mono); font-size: 12px; color: var(--stage-meta); }
+.c-specs b { display: block; font-family: var(--font); font-size: 22px; font-weight: 500; color: var(--stage-ink); }
+.c-panel { flex: 1 1 360px; max-width: 460px; box-sizing: border-box; display: flex; flex-direction: column; gap: 14px;
+  padding-block: calc(110px + env(safe-area-inset-top, 0px)) calc(28px + env(safe-area-inset-bottom, 0px)); padding-left: 40px; padding-right: max(40px, env(safe-area-inset-right, 0px));
+  background: rgba(14,17,22,.72); backdrop-filter: blur(18px); border-left: 1px solid rgba(255,255,255,.08); }
+.c-panel .brand svg { color: var(--stage-ink); }
+.c-panel h2 { margin: 28px 0 0; font-size: 26px; font-weight: 500; }
+.c-panel p { margin: 0; color: var(--stage-meta); line-height: 1.65; font-size: 14.5px; }
+.c-panel .g-btn { margin-top: 18px; border: 1px solid var(--stage-ink); background: transparent; color: var(--stage-ink); }
+.c-panel .g-btn:hover { background: rgba(255,255,255,.08); }
+.c-panel .skip { color: var(--stage-ink); align-self: flex-start; }
+.c-panel .grow { flex: 1; }
+
+/* ---------- D 플롯 ---------- */
+#v-plot { background: var(--surface); color: var(--ink); }
+.d-wrap { min-height: 100%; display: flex; flex-wrap: wrap; }
+.d-hero { flex: 999 1 560px; min-width: 0; position: relative; overflow: hidden; min-height: 420px; background: var(--bg); display: flex; flex-direction: column; justify-content: flex-end;
+  padding-block: 0 64px; padding-left: max(56px, env(safe-area-inset-left, 0px)); padding-right: 32px; }
+.d-text { position: relative; z-index: 2; display: flex; flex-direction: column; gap: 4px; }
+.d-line { font-size: clamp(38px, 5.6vw, 72px); line-height: 1.1; letter-spacing: -.02em; }
+.d-line.strong { font-weight: 700; }
+.d-rule { height: 3px; max-width: 760px; margin-top: 30px; background: var(--blue); }
+.d-legend { position: absolute; z-index: 2; top: calc(28px + env(safe-area-inset-top, 0px)); left: max(56px, env(safe-area-inset-left, 0px)); font-family: var(--mono); font-size: 11.5px; color: var(--meta); display: grid; gap: 4px; }
+.d-panel { flex: 1 1 380px; max-width: 520px; box-sizing: border-box; border-left: 1px solid var(--line); display: flex; flex-direction: column;
+  padding-block: calc(96px + env(safe-area-inset-top, 0px)) calc(28px + env(safe-area-inset-bottom, 0px)); padding-left: 48px; padding-right: max(48px, env(safe-area-inset-right, 0px)); }
+.d-panel .brand { font-size: 24px; }
+.d-panel .brand svg { color: var(--blue); width: 32px; height: 32px; }
+.d-panel h2 { margin: 36px 0 0; font-size: 30px; font-weight: 500; }
+.d-panel p { margin: 12px 0 0; color: var(--meta); line-height: 1.6; }
+.d-panel .g-btn { margin-top: 36px; border: 1px solid var(--ink); background: var(--surface); color: var(--ink); }
+.d-panel .g-btn:hover { background: var(--blue-hover); }
+.d-panel .skip { margin-top: 18px; color: var(--blue); text-decoration: none; align-self: center; }
+.d-panel .grow { flex: 1; }
+.d-panel .privacy { align-self: center; color: var(--blue); opacity: 1; }
+
+/* ---------- 좁은 화면 ---------- */
+@media (max-width: 760px) {
+  .sw { top: auto; bottom: calc(12px + env(safe-area-inset-bottom, 0px)); }
+  .sw button { padding: 0 10px; }
+  .sw button span { display: none; }
+  .sw-note { display: none; }
+  .a-top, .a-main { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  .a-main { padding-bottom: 120px; }
+  .a-top .a-skip { display: none; }
+  .a-foot { right: auto; left: max(16px, env(safe-area-inset-left, 0px)); bottom: calc(70px + env(safe-area-inset-bottom, 0px)); }
+  .b-wrap { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px)); }
+  .cue { width: 100%; box-sizing: border-box; }
+  .c-hero { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-top: 120px; padding-bottom: 32px; }
+  .c-panel { max-width: none; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-top: 28px; padding-bottom: 80px; border-left: 0; border-top: 1px solid rgba(255,255,255,.08); }
+  .d-hero { min-height: 340px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-bottom: 32px; }
+  .d-legend { left: max(16px, env(safe-area-inset-left, 0px)); }
+  .d-panel { max-width: none; border-left: 0; border-top: 1px solid var(--line); padding: 32px max(16px, env(safe-area-inset-right, 0px)) 80px max(16px, env(safe-area-inset-left, 0px)); }
+  .g-btn { width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) { .grain { animation: none; } }
+</style>
+
+<nav class="sw" aria-label="시안 선택">
+  <button data-v="wash" aria-pressed="true"><b>A</b><span>워시</span></button>
+  <button data-v="cue" aria-pressed="false"><b>B</b><span>큐 전환</span></button>
+  <button data-v="beam" aria-pressed="false"><b>C</b><span>무빙 빔</span></button>
+  <button data-v="plot" aria-pressed="false"><b>D</b><span>조명 도면</span></button>
+</nav>
+<p class="sw-note" id="sw-note"></p>
+
+<!-- A 워시: 참고 사이트에 가장 가까운 안. 흐르는 그레인 그라데이션 + 큰 타이포 -->
+<section class="v" id="v-wash" data-note="참고 사이트 구성을 그대로 따른 안입니다. 앱의 파랑과 앰버로 칠한 그라데이션이 쉬지 않고 흐르고, 그 위에 큰 제목을 얹었습니다.">
+  <canvas class="bgc" id="wash-gl"></canvas>
+  <div class="grain"></div>
+  <header class="a-top">
+    <div class="brand"><svg viewBox="0 0 32 32"><rect x="10" y="3" width="12" height="9" rx="1" fill="currentColor"/><path d="M12 12 5 29h22l-7-17z" fill="currentColor" opacity=".35"/></svg><div>Lighting Aid<small>조명 시뮬레이터</small></div></div>
+    <div style="display:flex;align-items:center;gap:18px">
+      <button class="skip a-skip" style="color:inherit;font-size:13px">로그인 없이 시작</button>
+      <button class="a-pill">Google로 계속 <span>↗</span></button>
+    </div>
+  </header>
+  <main class="a-main">
+    <div class="a-eyebrow">무대 조명 시뮬레이터</div>
+    <h1 class="a-h1"><em>(Stage)</em><br>Lighting Aid</h1>
+    <p class="a-sub">무대 조명을 미리 그려 보세요.</p>
+    <div class="a-facts">
+      <div>2D 평면도와 3D 뷰 <span class="tag">브라우저에서 바로</span></div>
+      <div style="opacity:.7">온라인 저장 한 사람당 20개 <span class="tag ghost">Google 로그인</span></div>
+    </div>
+    <div class="a-cta">
+      <button class="g-btn" id="a-google"></button>
+      <button class="skip">로그인 없이 시작하기 (이 기기에 저장)</button>
+    </div>
+  </main>
+  <a class="privacy a-foot" href="#wash">개인정보처리방침</a>
+</section>
+
+<!-- B 큐 전환: 배경이 조명 큐처럼 계속 바뀐다 -->
+<section class="v" id="v-cue" hidden data-note="배경이 계속 바뀌는 효과를 조명 큐로 해석한 안입니다. 무대 장면이 큐 번호와 페이드 시간에 맞춰 다음 장면으로 넘어갑니다.">
+  <canvas class="bgc" id="cue-c"></canvas>
+  <div class="grain" style="opacity:.16"></div>
+  <div class="b-wrap">
+    <header class="b-top">
+      <div class="brand"><svg viewBox="0 0 32 32"><rect x="10" y="3" width="12" height="9" rx="1" fill="currentColor"/><path d="M12 12 5 29h22l-7-17z" fill="currentColor" opacity=".35"/></svg><div>Lighting Aid<small>조명 시뮬레이터</small></div></div>
+    </header>
+    <div class="b-body">
+      <div class="b-copy">
+        <h1 class="b-h1">무대 조명을<br><span>미리 그려 보세요.</span></h1>
+        <p class="b-lead">Google 계정으로 로그인하면 작업을 온라인에 저장하고 어느 컴퓨터에서나 이어서 할 수 있습니다.</p>
+        <div class="b-cta">
+          <button class="g-btn" id="b-google"></button>
+          <button class="skip">로그인 없이 시작하기 (이 기기에 저장)</button>
+        </div>
+      </div>
+      <div class="cue" aria-live="polite">
+        <div class="cue-row"><span>CUE</span><span id="cue-time">↑ 3.0s</span></div>
+        <div class="cue-row" style="align-items:baseline"><span class="cue-no" id="cue-no">Q1</span><span class="cue-name" id="cue-name">프리셋 · 쿨 워시</span></div>
+        <div class="cue-bar"><i id="cue-bar"></i></div>
+        <div class="cue-list" id="cue-list"></div>
+      </div>
+    </div>
+    <footer class="b-foot"><span>두레문예관 프리셋 수록</span><a class="privacy" href="#cue">개인정보처리방침</a></footer>
+  </div>
+</section>
+
+<!-- C 무빙 빔: 어두운 무대 위로 빔이 움직이고, 오른쪽에 로그인 패널 -->
+<section class="v" id="v-beam" hidden data-note="무빙 라이트가 헤이즈 속에서 천천히 흔들리는 안입니다. 지금 화면처럼 오른쪽에 로그인 패널을 두어 구조 변경이 가장 적습니다.">
+  <canvas class="bgc" id="beam-c"></canvas>
+  <div class="grain" style="opacity:.2"></div>
+  <div class="c-wrap">
+    <section class="c-hero">
+      <div class="c-kicker">BLACKOUT → GO</div>
+      <h1 class="c-h1">무대에 걸기 전에,<br><em>light</em> it here.</h1>
+      <div class="c-specs">
+        <div><b>2D</b>평면도</div>
+        <div><b>3D</b>객석 시점</div>
+        <div><b>20</b>온라인 작업</div>
+      </div>
+    </section>
+    <aside class="c-panel">
+      <div class="brand"><svg viewBox="0 0 32 32"><rect x="10" y="3" width="12" height="9" rx="1" fill="currentColor"/><path d="M12 12 5 29h22l-7-17z" fill="currentColor" opacity=".35"/></svg><div>Lighting Aid<small>조명 시뮬레이터</small></div></div>
+      <h2>환영합니다</h2>
+      <p>Google 계정으로 로그인하면 작업을 온라인에 저장하고 어느 컴퓨터에서나 이어서 할 수 있습니다.</p>
+      <button class="g-btn" id="c-google"></button>
+      <button class="skip">로그인 없이 시작하기 (이 기기에 저장)</button>
+      <div class="grow"></div>
+      <a class="privacy" href="#beam">개인정보처리방침</a>
+    </aside>
+  </div>
+</section>
+
+<!-- D 조명 도면: 지금 화면 구조를 지키고 왼쪽 그림만 살아 있는 조명 도면으로 -->
+<section class="v" id="v-plot" hidden data-note="지금 로그인 화면 구조를 유지하고, 왼쪽 그림만 움직이는 조명 도면으로 바꾼 가장 조용한 안입니다. 다크 모드도 앱 토큰을 따릅니다.">
+  <div class="d-wrap">
+    <section class="d-hero">
+      <canvas class="bgc" id="plot-c"></canvas>
+      <div class="d-legend"><span>PLAN · 1:100</span><span id="plot-ch">CH 1–8 · 1st ELEC</span></div>
+      <div class="d-text">
+        <span class="d-line">무대 조명을</span>
+        <span class="d-line strong">미리 그려 보세요.</span>
+        <span class="d-rule"></span>
+      </div>
+    </section>
+    <aside class="d-panel">
+      <div class="brand"><svg viewBox="0 0 32 32"><rect x="10" y="3" width="12" height="9" rx="1" fill="currentColor"/><path d="M12 12 5 29h22l-7-17z" fill="currentColor" opacity=".35"/></svg><div>Lighting Aid<small>조명 시뮬레이터</small></div></div>
+      <h2>환영합니다</h2>
+      <p>Google 계정으로 로그인하면 작업을 온라인에 저장하고 어느 컴퓨터에서나 이어서 할 수 있습니다.</p>
+      <button class="g-btn" id="d-google"></button>
+      <button class="skip">로그인 없이 시작하기 (이 기기에 저장)</button>
+      <div class="grow"></div>
+      <a class="privacy" href="#plot">개인정보처리방침</a>
+    </aside>
+  </div>
+</section>
+
+<script>
+(() => {
+const G = '<svg viewBox="0 0 24 24"><path d="M21.6 12.2c0-.7-.1-1.4-.2-2H12v3.8h5.4a4.6 4.6 0 0 1-2 3v2.5h3.2c1.9-1.7 3-4.3 3-7.3z" fill="#4285F4"/><path d="M12 22c2.7 0 5-.9 6.6-2.4l-3.2-2.5c-.9.6-2 1-3.4 1-2.6 0-4.8-1.8-5.6-4.1H3.1v2.6A10 10 0 0 0 12 22z" fill="#34A853"/><path d="M6.4 14c-.2-.6-.3-1.3-.3-2s.1-1.4.3-2V7.4H3.1A10 10 0 0 0 2 12c0 1.6.4 3.1 1.1 4.6z" fill="#FBBC05"/><path d="M12 5.9c1.5 0 2.8.5 3.8 1.5l2.9-2.9A10 10 0 0 0 3.1 7.4L6.4 10c.8-2.4 3-4.1 5.6-4.1z" fill="#EA4335"/></svg>';
+for (const id of ['a-google', 'b-google', 'c-google', 'd-google']) document.getElementById(id).innerHTML = G + 'Google로 계속 진행';
+
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const css = () => getComputedStyle(document.documentElement);
+const hex = (s) => { s = s.trim().replace('#', ''); const n = parseInt(s, 16); return [(n >> 16 & 255) / 255, (n >> 8 & 255) / 255, (n & 255) / 255]; };
+
+// 필름 그레인: 작은 노이즈 타일 하나를 만들어 모든 시안에 깐다
+{
+  const c = document.createElement('canvas'); c.width = c.height = 160;
+  const x = c.getContext('2d'), d = x.createImageData(160, 160);
+  for (let i = 0; i < d.data.length; i += 4) { const v = Math.random() * 255; d.data[i] = d.data[i + 1] = d.data[i + 2] = v; d.data[i + 3] = 255; }
+  x.putImageData(d, 0, 0);
+  document.documentElement.style.setProperty('--grain', `url(${c.toDataURL()})`);
+}
+
+const fit = (cv, scale = Math.min(devicePixelRatio || 1, 1.5)) => {
+  const r = cv.getBoundingClientRect(); const w = Math.max(1, Math.round(r.width * scale)), h = Math.max(1, Math.round(r.height * scale));
+  if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; }
+  return [w, h];
+};
+
+/* ---------- A 워시: 도메인 워핑 fbm 셰이더 ---------- */
+const wash = (() => {
+  const cv = document.getElementById('wash-gl');
+  const gl = cv.getContext('webgl', { antialias: false, preserveDrawingBuffer: true });
+  if (!gl) return { draw() {} };
+  const vs = 'attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}';
+  const fs = `precision mediump float;uniform vec2 r;uniform float t;uniform vec3 c0,c1,c2,c3;
+  float h(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+  float n(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(h(i),h(i+vec2(1,0)),f.x),mix(h(i+vec2(0,1)),h(i+vec2(1,1)),f.x),f.y);}
+  float fbm(vec2 p){float v=0.,a=.5;for(int i=0;i<5;i++){v+=a*n(p);p=p*2.03+vec2(1.7,9.2);a*=.5;}return v;}
+  void main(){vec2 uv=gl_FragCoord.xy/r;vec2 p=uv*vec2(r.x/r.y,1.)*1.5;float s=t*.045;
+    vec2 q=vec2(fbm(p+vec2(0.,s)),fbm(p+vec2(5.2,1.3)-s));
+    vec2 w=vec2(fbm(p+3.*q+vec2(1.7,9.2)+s*1.3),fbm(p+3.*q+vec2(8.3,2.8)-s*.9));
+    float f=fbm(p+3.2*w);
+    vec3 col=mix(c0,c1,smoothstep(.25,.75,f));
+    col=mix(col,c2,smoothstep(.42,.85,q.x*1.1)*.95);
+    col=mix(col,c3,smoothstep(.62,.95,w.y)*.75);
+    col+=(h(gl_FragCoord.xy+fract(t*7.)*91.)-.5)*.10;
+    gl_FragColor=vec4(col,1.);}`;
+  const sh = (type, src) => { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); return s; };
+  const pr = gl.createProgram(); gl.attachShader(pr, sh(gl.VERTEX_SHADER, vs)); gl.attachShader(pr, sh(gl.FRAGMENT_SHADER, fs)); gl.linkProgram(pr); gl.useProgram(pr);
+  gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer()); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+  const loc = gl.getAttribLocation(pr, 'p'); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+  const U = (k) => gl.getUniformLocation(pr, k);
+  const ur = U('r'), ut = U('t'), uc = ['c0', 'c1', 'c2', 'c3'].map(U);
+  return {
+    draw(t) {
+      const [w, h] = fit(cv, 0.6); gl.viewport(0, 0, w, h);
+      const s = css(); ['--w0', '--w1', '--w2', '--w3'].forEach((k, i) => gl.uniform3fv(uc[i], hex(s.getPropertyValue(k))));
+      gl.uniform2f(ur, w, h); gl.uniform1f(ut, t / 1000 + 40); gl.drawArrays(gl.TRIANGLES, 0, 3);
+    },
+  };
+})();
+
+/* 무대 조명 하나(빔 + 바닥 풀)를 그린다. 색은 [r,g,b] 0~255 */
+const light = (x, sx, sy, px, py, rw, col, k, haze = .16) => {
+  if (k <= 0.01) return;
+  const [r, g, b] = col.map(Math.round);
+  const spread = rw * 0.92;
+  const gr = x.createLinearGradient(sx, sy, px, py);
+  gr.addColorStop(0, `rgba(${r},${g},${b},${haze * k})`);
+  gr.addColorStop(1, `rgba(${r},${g},${b},${haze * .35 * k})`);
+  x.fillStyle = gr; x.beginPath(); x.moveTo(sx - 4, sy); x.lineTo(sx + 4, sy); x.lineTo(px + spread, py); x.lineTo(px - spread, py); x.closePath(); x.fill();
+  x.save(); x.translate(px, py); x.scale(1, .32);
+  const rg = x.createRadialGradient(0, 0, 0, 0, 0, rw);
+  rg.addColorStop(0, `rgba(${r},${g},${b},${.95 * k})`); rg.addColorStop(.55, `rgba(${r},${g},${b},${.5 * k})`); rg.addColorStop(1, `rgba(${r},${g},${b},0)`);
+  x.fillStyle = rg; x.beginPath(); x.arc(0, 0, rw, 0, Math.PI * 2); x.fill(); x.restore();
+};
+
+/* ---------- B 큐 전환 ---------- */
+const cue = (() => {
+  const cv = document.getElementById('cue-c'), x = cv.getContext('2d');
+  const C = { cool: [106, 168, 255], deep: [40, 90, 200], amber: [245, 184, 65], warm: [255, 214, 150], white: [255, 248, 236], mag: [214, 72, 160], off: [0, 0, 0] };
+  // 픽스처 6대. 각 큐는 [색, 세기, 바닥 목표 x(0~1)]
+  const cues = [
+    { name: '프리셋 · 쿨 워시', fade: 3, f: [['cool', .8, .18], ['cool', .9, .34], ['cool', .9, .5], ['cool', .9, .66], ['cool', .8, .82], ['deep', .5, .5]] },
+    { name: '앰버 사이드', fade: 4, f: [['amber', 1, .3], ['warm', .55, .42], ['off', 0, .5], ['off', 0, .5], ['warm', .55, .58], ['amber', 1, .7]] },
+    { name: '센터 스페셜', fade: 2.5, f: [['off', 0, .3], ['off', 0, .4], ['white', 1, .5], ['off', 0, .6], ['off', 0, .7], ['deep', .35, .5]] },
+    { name: '매젠타 백라이트', fade: 5, f: [['mag', .9, .22], ['cool', .7, .4], ['mag', .7, .5], ['cool', .7, .6], ['mag', .9, .78], ['amber', .35, .5]] },
+  ];
+  const HOLD = 4.5;
+  const list = document.getElementById('cue-list');
+  cues.forEach(() => list.append(document.createElement('span')));
+  const elNo = document.getElementById('cue-no'), elName = document.getElementById('cue-name'), elTime = document.getElementById('cue-time'), elBar = document.getElementById('cue-bar');
+  let idx = 0, start = null, shown = -1;
+  const ease = (u) => u < .5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2;
+  const lerp = (a, b, u) => a + (b - a) * u;
+  return {
+    draw(t) {
+      const [W, H] = fit(cv);
+      if (start === null) start = t;
+      let el = (t - start) / 1000;
+      const cur = cues[idx], next = cues[(idx + 1) % cues.length];
+      if (el > HOLD + next.fade && !reduce) { idx = (idx + 1) % cues.length; start = t; el = 0; }
+      const fading = !reduce && el > HOLD;
+      const u = fading ? ease(Math.min(1, (el - HOLD) / next.fade)) : 0;
+      const label = fading ? (idx + 1) % cues.length : idx;
+      if (label !== shown) {
+        shown = label; const q = cues[label];
+        elNo.textContent = 'Q' + (label + 1); elName.textContent = q.name; elTime.textContent = '↑ ' + q.fade.toFixed(1) + 's';
+        [...list.children].forEach((s, i) => s.classList.toggle('on', i === label));
+      }
+      elBar.style.width = fading ? (u * 100).toFixed(1) + '%' : '0%';
+
+      // 무대: 뒷벽 + 바닥
+      const horizon = H * .58;
+      x.globalCompositeOperation = 'source-over';
+      const wall = x.createLinearGradient(0, 0, 0, horizon); wall.addColorStop(0, '#07090c'); wall.addColorStop(1, '#141920');
+      x.fillStyle = wall; x.fillRect(0, 0, W, horizon);
+      const floor = x.createLinearGradient(0, horizon, 0, H); floor.addColorStop(0, '#1b2028'); floor.addColorStop(1, '#0a0c10');
+      x.fillStyle = floor; x.fillRect(0, horizon, W, H - horizon);
+      x.globalCompositeOperation = 'lighter';
+      // 뒷벽 사이클로라마에 큐 색이 은은하게 번진다
+      cur.f.forEach((a, i) => {
+        const b = next.f[i];
+        const col = C[a[0]].map((v, j) => lerp(v, C[b[0]][j], u)); const k = lerp(a[1], b[1], u) * .22;
+        const gx = W * lerp(a[2], b[2], u), rg = x.createRadialGradient(gx, horizon * .8, 0, gx, horizon * .8, W * .3);
+        rg.addColorStop(0, `rgba(${col.map(Math.round).join(',')},${k})`); rg.addColorStop(1, 'rgba(0,0,0,0)');
+        x.fillStyle = rg; x.fillRect(0, 0, W, horizon);
+      });
+      cur.f.forEach((a, i) => {
+        const b = next.f[i];
+        const col = C[a[0]].map((v, j) => lerp(v, C[b[0]][j], u)); const k = lerp(a[1], b[1], u);
+        const sx = W * (.12 + i * .152), px = W * lerp(a[2], b[2], u), py = H * (.74 + (i % 2) * .05);
+        light(x, sx, -10, px, py, W * .13, col, k, .13);
+      });
+      // 트러스
+      x.globalCompositeOperation = 'source-over';
+      x.fillStyle = '#1f252e'; x.fillRect(0, 0, W, Math.max(6, H * .012));
+    },
+  };
+})();
+
+/* ---------- C 무빙 빔 ---------- */
+const beam = (() => {
+  const cv = document.getElementById('beam-c'), x = cv.getContext('2d');
+  const cols = [[106, 168, 255], [245, 184, 65], [240, 244, 250], [245, 184, 65], [106, 168, 255], [240, 244, 250], [106, 168, 255]];
+  return {
+    draw(t) {
+      const [W, H] = fit(cv); const s = reduce ? 0 : t / 1000;
+      x.globalCompositeOperation = 'source-over'; x.fillStyle = '#07090c'; x.fillRect(0, 0, W, H);
+      x.globalCompositeOperation = 'lighter';
+      const n = cols.length, len = Math.hypot(W, H) * 1.1;
+      for (let i = 0; i < n; i++) {
+        const sx = W * (.08 + i * (.84 / (n - 1))), sy = H * .04;
+        // 짝수 번호와 홀수 번호가 반대로 흔들리는 팬 동작
+        const a = Math.PI / 2 + Math.sin(s * .42 + i * .9) * .38 * (i % 2 ? 1 : -1) + Math.sin(s * .17) * .12;
+        const pulse = .65 + .35 * Math.sin(s * .8 + i * 1.7);
+        const ex = sx + Math.cos(a) * len, ey = sy + Math.sin(a) * len, half = len * .07;
+        const nx = -Math.sin(a) * half, ny = Math.cos(a) * half;
+        const [r, g, b] = cols[i];
+        const gr = x.createLinearGradient(sx, sy, ex, ey);
+        gr.addColorStop(0, `rgba(${r},${g},${b},${.55 * pulse})`); gr.addColorStop(.35, `rgba(${r},${g},${b},${.14 * pulse})`); gr.addColorStop(1, `rgba(${r},${g},${b},0)`);
+        x.fillStyle = gr; x.beginPath(); x.moveTo(sx, sy); x.lineTo(ex + nx, ey + ny); x.lineTo(ex - nx, ey - ny); x.closePath(); x.fill();
+        // 렌즈
+        const lg = x.createRadialGradient(sx, sy, 0, sx, sy, W * .025);
+        lg.addColorStop(0, `rgba(255,255,255,${.9 * pulse})`); lg.addColorStop(.3, `rgba(${r},${g},${b},${.5 * pulse})`); lg.addColorStop(1, 'rgba(0,0,0,0)');
+        x.fillStyle = lg; x.beginPath(); x.arc(sx, sy, W * .025, 0, Math.PI * 2); x.fill();
+      }
+      x.globalCompositeOperation = 'source-over';
+      x.fillStyle = '#161b21'; x.fillRect(0, 0, W, H * .025);
+    },
+  };
+})();
+
+/* ---------- D 조명 도면 ---------- */
+const plot = (() => {
+  const cv = document.getElementById('plot-c'), x = cv.getContext('2d');
+  const chEl = document.getElementById('plot-ch');
+  let pal = null, frame = 0;
+  return {
+    draw(t) {
+      const [W, H] = fit(cv); const dpr = W / cv.getBoundingClientRect().width;
+      if (!pal || frame++ % 60 === 0) { const s = css(); pal = { bg: s.getPropertyValue('--bg').trim(), line: s.getPropertyValue('--line').trim(), blue: hex(s.getPropertyValue('--blue')), amber: hex(s.getPropertyValue('--amber')), ink: s.getPropertyValue('--meta').trim() }; }
+      const s = reduce ? 2 : t / 1000;
+      x.globalCompositeOperation = 'source-over'; x.fillStyle = pal.bg; x.fillRect(0, 0, W, H);
+      // 1m 격자
+      const g = 28 * dpr; x.strokeStyle = pal.line; x.lineWidth = 1;
+      x.beginPath(); for (let gx = (W % g) / 2; gx < W; gx += g) { x.moveTo(gx, 0); x.lineTo(gx, H); } for (let gy = (H % g) / 2; gy < H; gy += g) { x.moveTo(0, gy); x.lineTo(W, gy); } x.stroke();
+      const rgb = (c, a) => `rgba(${c.map(v => Math.round(v * 255)).join(',')},${a})`;
+      // 무대 바닥 외곽
+      const sx0 = W * .14, sx1 = W * .86, sy0 = H * .3, sy1 = H * .58;
+      x.strokeStyle = rgb(pal.blue, .55); x.lineWidth = 1.5 * dpr; x.setLineDash([]); x.strokeRect(sx0, sy0, sx1 - sx0, sy1 - sy0);
+      // 1st ELEC 배튼
+      const by = H * .16; x.beginPath(); x.moveTo(W * .1, by); x.lineTo(W * .9, by); x.stroke();
+      // 풀과 픽스처 8대: 순서대로 켜지는 체이스
+      const N = 8; let lit = [];
+      for (let i = 0; i < N; i++) {
+        const fx = W * (.18 + i * (.64 / (N - 1)));
+        const px = W * (.2 + ((i * 3) % N) * (.6 / (N - 1))), py = sy0 + (sy1 - sy0) * (i % 2 ? .62 : .38);
+        const k = Math.pow(Math.max(0, Math.sin(s * .9 - i * .7)), 2);
+        const c = i % 3 === 2 ? pal.amber : pal.blue;
+        if (k > .5) lit.push(i + 1);
+        const rw = W * .075;
+        const rg = x.createRadialGradient(px, py, 0, px, py, rw);
+        rg.addColorStop(0, rgb(c, .38 * k + .05)); rg.addColorStop(1, rgb(c, 0));
+        x.fillStyle = rg; x.beginPath(); x.ellipse(px, py, rw, rw * .78, 0, 0, Math.PI * 2); x.fill();
+        x.strokeStyle = rgb(c, .2 + .5 * k); x.lineWidth = dpr; x.setLineDash([4 * dpr, 4 * dpr]);
+        x.beginPath(); x.moveTo(fx, by + 10 * dpr); x.lineTo(px, py); x.stroke();
+        x.setLineDash([]);
+        // 엘립소이달 기호: 몸통 + 배럴
+        x.save(); x.translate(fx, by); x.rotate(Math.atan2(py - by, px - fx) - Math.PI / 2);
+        x.fillStyle = rgb(c, .35 + .65 * k); x.fillRect(-6 * dpr, -8 * dpr, 12 * dpr, 12 * dpr); x.fillRect(-4 * dpr, 4 * dpr, 8 * dpr, 9 * dpr); x.restore();
+        x.fillStyle = pal.ink; x.font = `${10.5 * dpr}px "IBM Plex Mono", monospace`; x.textAlign = 'center';
+        x.fillText(String(i + 1), fx, by - 14 * dpr);
+      }
+      if (frame % 15 === 0) chEl.textContent = lit.length ? `CH ${lit.join(' + ')} @ FL · 1st ELEC` : 'CH 1–8 · 1st ELEC';
+    },
+  };
+})();
+
+/* ---------- 전환과 루프 ---------- */
+const views = { wash, cue, beam, plot };
+const note = document.getElementById('sw-note');
+let cur = 'wash';
+const show = (k) => {
+  if (!views[k]) k = 'wash';
+  cur = k;
+  for (const v of Object.keys(views)) document.getElementById('v-' + v).hidden = v !== k;
+  document.querySelectorAll('.sw button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === k)));
+  note.textContent = document.getElementById('v-' + k).dataset.note;
+  // 설명은 잠깐 보였다가 사라져서 시안 화면을 가리지 않는다
+  note.classList.remove('out'); clearTimeout(show.timer); show.timer = setTimeout(() => note.classList.add('out'), 6000);
+  try { history.replaceState(null, '', '#' + k); } catch (e) {}
+  if (reduce) requestAnimationFrame(t => views[cur].draw(t));
+};
+document.querySelectorAll('.sw button').forEach(b => b.addEventListener('click', () => show(b.dataset.v)));
+show(location.hash.slice(1) || 'wash');
+const loop = (t) => { views[cur].draw(t); requestAnimationFrame(loop); };
+if (reduce) addEventListener('resize', () => views[cur].draw(performance.now()));
+else requestAnimationFrame(loop);
+})();
+</script>

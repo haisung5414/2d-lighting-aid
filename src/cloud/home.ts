@@ -1,6 +1,7 @@
 // src/cloud/home.ts
 // 시작 화면 자리(#landing-screen)에 그리는 두 화면: 로그인 화면과 홈(극장에서 시작 + 내 작업).
-// SketchUp Web의 로그인 페이지와 홈 허브를 따른다. 시안: docs/design/sketchup-redesign/Login.dc.html, Home.dc.html
+// 구조는 SketchUp Web의 로그인 페이지와 홈 허브를 따른다 (docs/design/sketchup-redesign/).
+// 로그인 화면 왼쪽의 3D 무대와 홈의 무대색은 docs/design/landing-redesign/login-3d.html(P1), home-variants.html(K2)을 따른다.
 // 예전 작업 공간 카드(.landing-card)는 DOM에 남아 있지만 home.css가 감춘다. 화면 전환(시작 화면 ↔ 편집 화면)은 기존 코드 그대로 쓴다.
 // 사양: docs/cloud/CLOUD_SPEC.md §4.1, §4.2, §9
 
@@ -43,7 +44,6 @@ const readPref = (key: string, fallback: string) => { try { return localStorage.
 const writePref = (key: string, value: string) => { try { localStorage.setItem(key, value); } catch { /* 이번 세션만 */ } };
 
 const SVG = {
-  logo: '<svg viewBox="0 0 32 32" width="32" height="32"><rect x="10" y="3" width="12" height="9" rx="1" fill="currentColor"/><path d="M12 12 5 29h22l-7-17z" fill="currentColor" opacity=".35"/></svg>',
   google: '<svg width="20" height="20" viewBox="0 0 24 24"><path d="M21.6 12.2c0-.7-.1-1.4-.2-2H12v3.8h5.4a4.6 4.6 0 0 1-2 3v2.5h3.2c1.9-1.7 3-4.3 3-7.3z" fill="#4285F4"/><path d="M12 22c2.7 0 5-.9 6.6-2.4l-3.2-2.5c-.9.6-2 1-3.4 1-2.6 0-4.8-1.8-5.6-4.1H3.1v2.6A10 10 0 0 0 12 22z" fill="#34A853"/><path d="M6.4 14c-.2-.6-.3-1.3-.3-2s.1-1.4.3-2V7.4H3.1A10 10 0 0 0 2 12c0 1.6.4 3.1 1.1 4.6z" fill="#FBBC05"/><path d="M12 5.9c1.5 0 2.8.5 3.8 1.5l2.9-2.9A10 10 0 0 0 3.1 7.4L6.4 10c.8-2.4 3-4.1 5.6-4.1z" fill="#EA4335"/></svg>',
   home: '<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3 3 10.5V21h6v-6h6v6h6V10.5z"/></svg>',
   info: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/></svg>',
@@ -57,19 +57,6 @@ const SVG = {
   person: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.5-6.5 8-6.5s8 2.5 8 6.5"/></svg>',
   stage: '<svg viewBox="0 0 240 110" preserveAspectRatio="xMidYMid meet"><rect x="80" y="15" width="80" height="80" fill="var(--lh-tile-fill)" stroke="var(--lh-tile-line)" stroke-dasharray="5 4"/></svg>',
   emptyThumb: '<svg viewBox="0 0 300 150" preserveAspectRatio="xMidYMid meet"><rect x="95" y="20" width="110" height="110" fill="none" stroke="#5b6878" stroke-dasharray="5 4"/><ellipse cx="150" cy="75" rx="30" ry="26" fill="#F5B841" opacity=".35"/></svg>',
-  hero: `<svg viewBox="0 0 800 600" preserveAspectRatio="xMidYMid slice">
-    <ellipse cx="330" cy="250" rx="300" ry="210" fill="var(--lh-hero-1)"/>
-    <ellipse cx="330" cy="250" rx="170" ry="120" fill="var(--lh-hero-2)" opacity=".55"/>
-    <ellipse cx="420" cy="270" rx="150" ry="110" fill="#F5B841" opacity=".18"/>
-    <rect x="320" y="40" width="24" height="24" fill="none" stroke="var(--lh-blue)" stroke-width="2"/>
-    <line x1="332" y1="64" x2="332" y2="250" stroke="var(--lh-blue)" stroke-dasharray="4 5"/>
-    <circle cx="332" cy="250" r="6" fill="none" stroke="#D93025" stroke-width="2"/>
-    <rect x="640" y="90" width="18" height="18" fill="none" stroke="var(--lh-faint)"/>
-    <rect x="560" y="420" width="40" height="40" fill="var(--lh-faint-fill)"/>
-    <circle cx="110" cy="80" r="6" fill="none" stroke="var(--lh-faint)"/>
-    <path d="M700 300h30M715 285v30" stroke="var(--lh-faint)"/>
-    <rect x="150" y="470" width="12" height="12" fill="none" stroke="#F5B841" stroke-width="2"/>
-  </svg>`,
 };
 
 const privacyUrl = () => `${import.meta.env.BASE_URL}privacy.html`;
@@ -160,12 +147,26 @@ const openLocalFile = () => {
 
 /* ---------- 로그인 화면 ---------- */
 
+/** 왼쪽 3D 무대. three를 불러오는 일은 로그인 화면이 처음 보일 때 한 번만 한다 */
+let stageView: HTMLElement;
+let stageMounted = false;
+const mountStage = () => {
+  if (stageMounted) return;
+  stageMounted = true;
+  void import('./loginStage')
+    .then(({ mountLoginStage }) => mountLoginStage(stageView))
+    .catch(err => console.error('로그인 화면의 3D 무대를 그리지 못했습니다', err));
+};
+
 const buildLogin = () => {
+  stageView = h('div', { class: 'lh-stage' });
   const hero = h('section', { class: 'lh-hero' },
-    icon(SVG.hero),
+    stageView,
+    h('span', { class: 'lh-tag lh-tag-left' }, h('b', {}, '3D 보기'), ' · 두레문예관 무대'),
+    h('span', { class: 'lh-tag lh-tag-right' }, '끌어서 돌려 보기'),
     h('div', { class: 'lh-hero-text' },
-      h('span', { class: 'lh-hero-line' }, '무대 조명을'),
-      h('span', { class: 'lh-hero-line lh-strong' }, '미리 그려 보세요.'),
+      h('span', { class: 'lh-hero-name' }, 'Lighting Aid'),
+      h('span', { class: 'lh-hero-sub' }, '조명 시뮬레이터'),
       h('span', { class: 'lh-hero-rule' })));
 
   const google = button('lh-google', null, () => {
@@ -180,10 +181,7 @@ const buildLogin = () => {
   });
 
   const panel = h('section', { class: 'lh-signin' },
-    h('div', { class: 'lh-brand' }, icon(SVG.logo), h('span', {}, 'Lighting Aid')),
-    h('p', { class: 'lh-sub' }, '조명 시뮬레이터'),
-    h('h1', {}, '환영합니다'),
-    h('p', { class: 'lh-lead' }, 'Google 계정으로 로그인하면 작업을 온라인에 저장하고 어느 컴퓨터에서나 이어서 할 수 있습니다.'),
+    h('h1', { class: 'lh-tagline' }, h('span', {}, '무대 조명을'), h('strong', {}, '미리 그려 보세요.')),
     google,
     skip,
     h('div', { class: 'lh-grow' }),
@@ -217,7 +215,7 @@ const venueKeys = (): VenueKey[] => {
 
 const buildHome = () => {
   const nav = h('nav', { class: 'lh-nav', ariaLabel: '홈 메뉴' },
-    h('div', { class: 'lh-brand' }, icon(SVG.logo), h('span', {}, 'Lighting Aid')),
+    h('div', { class: 'lh-brand' }, h('span', { class: 'lh-brand-name' }, 'Lighting Aid'), h('small', {}, '조명 시뮬레이터')),
     h('a', { class: 'lh-nav-item lh-on', href: '#', ariaCurrent: 'page' } as Partial<HTMLAnchorElement>, icon(SVG.home), '홈'),
     h('div', { class: 'lh-grow' }),
     h('a', { class: 'lh-nav-item', href: privacyUrl(), target: '_blank', rel: 'noopener' }, icon(SVG.info), '개인정보처리방침'));
@@ -465,6 +463,7 @@ const render = () => {
   root.dataset.screen = screen;
   loginView.hidden = screen !== 'login';
   homeView.hidden = screen !== 'home';
+  if (screen === 'login') mountStage();
   if (screen !== 'home') return;
   renderAccount(getUser());
   renderFiles();

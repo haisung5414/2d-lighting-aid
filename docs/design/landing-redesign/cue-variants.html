@@ -1,0 +1,396 @@
+<title>Lighting Aid 큐 시안</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@400;500;700&family=Instrument+Serif:ital@0;1&family=Unbounded:wght@300;500&display=swap">
+<style>
+/* 레이아웃: 시안 B(큐 전환)의 구성을 고정하고 배경 렌더러만 바꿔 끼운다.
+   위쪽 전환기에서 배경 B1~B4를, '로고' 패널에서 글씨체와 아이콘을 고른다. 무대 시안이라 어두운 화면 하나로 고정한다. */
+:root {
+  --stage: #0d1015;
+  --ink: #eef2f6;
+  --meta: #a5b1be;
+  --line: rgba(255, 255, 255, .14);
+  --glass: rgba(16, 20, 26, .62);
+  --amber: #f5b841;
+  --blue: #6aa8ff;
+  --font: "IBM Plex Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  --serif: "Instrument Serif", "Times New Roman", serif;
+  --batang: "Gowun Batang", "Nanum Myeongjo", serif;
+  --wide: "Unbounded", "IBM Plex Sans KR", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+  color-scheme: dark;
+}
+[hidden] { display: none !important; }
+html, body { height: 100%; }
+body { background: var(--stage); color: var(--ink); font-family: var(--font); font-size: 15px; overflow: hidden; }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+
+/* ---------- 배경 ---------- */
+.bg { position: fixed; inset: 0; overflow: hidden; }
+.bg canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+/* 윤곽을 흐리게: 저해상도로 그린 뒤 CSS 블러를 걸고, 가장자리가 비치지 않게 조금 키운다 */
+.bg canvas.soft { filter: blur(var(--blur, 16px)) saturate(1.15); transform: scale(1.12); }
+.grain { position: fixed; inset: -50%; pointer-events: none; background-image: var(--grain); opacity: .2; mix-blend-mode: overlay; animation: grain .6s steps(4) infinite; }
+@keyframes grain { 0% { transform: translate(0,0) } 25% { transform: translate(-3%,2%) } 50% { transform: translate(2%,-4%) } 75% { transform: translate(-1%,3%) } }
+
+/* ---------- 상단 전환기와 로고 패널 ---------- */
+.sw { position: fixed; z-index: 50; top: calc(14px + env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%);
+  display: flex; align-items: center; gap: 2px; padding: 4px; border-radius: 999px; background: rgba(28, 33, 41, .78); backdrop-filter: blur(12px); border: 1px solid var(--line); }
+.sw button { border: 0; background: none; color: var(--meta); height: 32px; padding: 0 13px; border-radius: 999px; cursor: pointer; font-size: 13px; white-space: nowrap; }
+.sw button b { font-family: var(--mono); font-weight: 500; margin-right: 6px; }
+.sw button[aria-pressed="true"] { background: var(--ink); color: #14181e; }
+.sw .sep { width: 1px; height: 20px; background: var(--line); margin: 0 4px; }
+.sw .logo-btn[aria-expanded="true"] { background: rgba(245, 184, 65, .18); color: var(--amber); }
+.note { position: fixed; z-index: 49; top: calc(62px + env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%); width: max-content; max-width: min(560px, calc(100vw - 32px));
+  margin: 0; padding: 6px 12px; border-radius: 6px; font-size: 12.5px; line-height: 1.5; text-align: center; background: rgba(28, 33, 41, .78); backdrop-filter: blur(12px); color: var(--meta); transition: opacity .6s; }
+.note.out { opacity: 0; pointer-events: none; }
+
+.panel { position: fixed; z-index: 51; top: calc(62px + env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%); width: min(620px, calc(100vw - 32px)); box-sizing: border-box;
+  padding: 16px; display: grid; gap: 14px; background: rgba(22, 26, 33, .92); backdrop-filter: blur(16px); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 16px 40px rgba(0,0,0,.4); }
+.panel h3 { margin: 0 0 8px; font-size: 11.5px; font-weight: 500; letter-spacing: .14em; color: var(--meta); }
+.opts { display: grid; gap: 6px; }
+.opts.fonts { grid-template-columns: repeat(auto-fill, minmax(176px, 1fr)); }
+.opts.icons { grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); }
+.opt { border: 1px solid var(--line); background: rgba(255,255,255,.03); border-radius: 6px; padding: 10px; cursor: pointer; text-align: left; display: grid; gap: 6px; min-width: 0; }
+.opt:hover { background: rgba(255,255,255,.07); }
+.opt[aria-pressed="true"] { border-color: var(--amber); background: rgba(245, 184, 65, .1); }
+.opt .cap { font-size: 11px; color: var(--meta); font-family: var(--font); }
+.opts.icons .opt { justify-items: center; text-align: center; }
+.opts.icons .opt .ico { width: 30px; height: 30px; color: var(--amber); display: grid; place-items: center; }
+.opts.icons .opt .ico svg { width: 100%; height: 100%; }
+.opts.icons .opt .ico.none { font-family: var(--mono); font-size: 12px; color: var(--meta); }
+.opts.fonts .brand { pointer-events: none; }
+
+/* ---------- 로고: 글씨체 5종 ---------- */
+.brand { display: flex; align-items: center; gap: 10px; color: var(--ink); min-width: 0; }
+.brand .bi { width: 28px; height: 28px; flex: none; color: var(--amber); display: grid; place-items: center; }
+.brand .bi svg { width: 100%; height: 100%; display: block; }
+.brand .bi:empty { display: none; }
+.brand .bt { display: grid; gap: 2px; min-width: 0; }
+.brand .bn { white-space: nowrap; }
+.brand small { display: block; font-size: 12px; color: var(--meta); white-space: nowrap; }
+.brand[data-font="sans"] .bn { font-family: var(--font); font-weight: 700; font-size: 18px; letter-spacing: -.01em; }
+.brand[data-font="serif"] .bn { font-family: var(--serif); font-style: italic; font-size: 27px; line-height: .9; letter-spacing: -.005em; }
+.brand[data-font="serif"] small { font-family: var(--mono); font-size: 10.5px; letter-spacing: .14em; }
+.brand[data-font="mono"] .bn { font-family: var(--mono); font-weight: 500; font-size: 14px; letter-spacing: .22em; text-transform: uppercase; }
+.brand[data-font="mono"] small { font-size: 11.5px; letter-spacing: .06em; }
+.brand[data-font="batang"] .bn { font-family: var(--batang); font-weight: 700; font-size: 20px; letter-spacing: -.01em; }
+.brand[data-font="batang"] small { font-family: var(--batang); font-size: 12.5px; }
+.brand[data-font="wide"] .bn { font-family: var(--wide); font-weight: 300; font-size: 17px; letter-spacing: -.02em; }
+.brand[data-font="wide"] small { font-size: 11.5px; letter-spacing: .02em; }
+
+/* ---------- 본문(시안 B 구성) ---------- */
+.wrap { position: fixed; inset: 0; z-index: 2; overflow: auto; overflow-x: hidden; box-sizing: border-box; display: grid; grid-template-rows: auto 1fr auto; gap: 24px;
+  padding-block: calc(22px + env(safe-area-inset-top, 0px)) calc(24px + env(safe-area-inset-bottom, 0px)); padding-left: max(32px, env(safe-area-inset-left, 0px)); padding-right: max(32px, env(safe-area-inset-right, 0px)); }
+.body { align-self: end; display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 32px; }
+.copy { display: flex; flex-direction: column; gap: 18px; min-width: 0; max-width: 760px; }
+.h1 { margin: 0; font-size: clamp(40px, 7vw, 96px); line-height: 1.04; font-weight: 700; letter-spacing: -.03em; text-wrap: balance; text-shadow: 0 2px 30px rgba(0,0,0,.35); }
+.h1 span { font-weight: 400; }
+.lead { margin: 0; max-width: 34em; color: var(--meta); line-height: 1.65; }
+.cta { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+.g-btn { height: 48px; padding: 0 22px; display: inline-flex; align-items: center; justify-content: center; gap: 12px; cursor: pointer; font-size: 15px; font-weight: 700; white-space: nowrap; border: 0; background: var(--ink); color: #1a1f26; }
+.g-btn:hover { background: #fff; }
+.g-btn svg { width: 20px; height: 20px; flex: none; }
+.skip { border: 0; background: none; padding: 6px 0; cursor: pointer; font-size: 14px; color: var(--ink); text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 1px; }
+.cue { width: 300px; max-width: 100%; box-sizing: border-box; font-family: var(--mono); font-size: 12px; color: var(--meta); display: grid; gap: 8px; padding: 14px 16px; border: 1px solid var(--line); background: var(--glass); backdrop-filter: blur(8px); }
+.cue-row { display: flex; justify-content: space-between; gap: 12px; }
+.cue-no { color: var(--ink); font-size: 26px; line-height: 1; letter-spacing: -.02em; }
+.cue-name { color: var(--ink); font-family: var(--font); font-size: 14px; }
+.cue-bar { height: 3px; background: rgba(255,255,255,.12); }
+.cue-bar i { display: block; height: 100%; width: 0; background: var(--amber); }
+.cue-list { display: flex; gap: 6px; }
+.cue-list span { flex: 1; height: 4px; background: rgba(255,255,255,.12); }
+.cue-list span.on { background: var(--ink); }
+.foot { display: flex; justify-content: space-between; gap: 16px; font-size: 12px; color: var(--meta); }
+.foot a { color: inherit; }
+
+@media (max-width: 760px) {
+  .sw { top: auto; bottom: calc(12px + env(safe-area-inset-bottom, 0px)); }
+  .sw button { padding: 0 9px; }
+  .sw button span { display: none; }
+  .note { display: none; }
+  .panel { top: auto; bottom: calc(64px + env(safe-area-inset-bottom, 0px)); max-height: 60vh; overflow: auto; }
+  .opts.fonts { grid-template-columns: 1fr; }
+  .wrap { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px)); }
+  .cue { width: 100%; }
+  .g-btn { width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) { .grain { animation: none; } }
+</style>
+
+<div class="bg">
+  <canvas id="c2d" class="soft"></canvas>
+  <canvas id="cgl"></canvas>
+</div>
+<div class="grain"></div>
+
+<nav class="sw" aria-label="시안 선택">
+  <button data-v="haze" aria-pressed="true"><b>B1</b><span>헤이즈</span></button>
+  <button data-v="field" aria-pressed="false"><b>B2</b><span>색면</span></button>
+  <button data-v="shaft" aria-pressed="false"><b>B3</b><span>빛줄기</span></button>
+  <button data-v="trail" aria-pressed="false"><b>B4</b><span>잔상</span></button>
+  <i class="sep"></i>
+  <button class="logo-btn" id="logo-btn" aria-expanded="false" aria-controls="panel">로고</button>
+</nav>
+<p class="note" id="note"></p>
+
+<div class="panel" id="panel" hidden>
+  <div><h3>글씨체</h3><div class="opts fonts" id="opt-fonts"></div></div>
+  <div><h3>아이콘</h3><div class="opts icons" id="opt-icons"></div></div>
+</div>
+
+<div class="wrap">
+  <header><div class="brand" id="brand"></div></header>
+  <div class="body">
+    <div class="copy">
+      <h1 class="h1">무대 조명을<br><span>미리 그려 보세요.</span></h1>
+      <div class="cta">
+        <button class="g-btn" id="google"><svg viewBox="0 0 24 24"><path d="M21.6 12.2c0-.7-.1-1.4-.2-2H12v3.8h5.4a4.6 4.6 0 0 1-2 3v2.5h3.2c1.9-1.7 3-4.3 3-7.3z" fill="#4285F4"/><path d="M12 22c2.7 0 5-.9 6.6-2.4l-3.2-2.5c-.9.6-2 1-3.4 1-2.6 0-4.8-1.8-5.6-4.1H3.1v2.6A10 10 0 0 0 12 22z" fill="#34A853"/><path d="M6.4 14c-.2-.6-.3-1.3-.3-2s.1-1.4.3-2V7.4H3.1A10 10 0 0 0 2 12c0 1.6.4 3.1 1.1 4.6z" fill="#FBBC05"/><path d="M12 5.9c1.5 0 2.8.5 3.8 1.5l2.9-2.9A10 10 0 0 0 3.1 7.4L6.4 10c.8-2.4 3-4.1 5.6-4.1z" fill="#EA4335"/></svg>Google로 계속 진행</button>
+        <button class="skip">로그인 없이 시작하기 (이 기기에 저장)</button>
+      </div>
+    </div>
+    <div class="cue" aria-live="polite">
+      <div class="cue-row"><span>CUE</span><span id="cue-time">↑ 3.0s</span></div>
+      <div class="cue-row" style="align-items:baseline"><span class="cue-no" id="cue-no">Q1</span><span class="cue-name" id="cue-name">프리셋 · 쿨 워시</span></div>
+      <div class="cue-bar"><i id="cue-bar"></i></div>
+      <div class="cue-list" id="cue-list"></div>
+    </div>
+  </div>
+  <footer class="foot"><span>두레문예관 프리셋 수록</span><a href="#haze">개인정보처리방침</a></footer>
+</div>
+
+<script>
+(() => {
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const store = { get(k, d) { try { return localStorage.getItem(k) || d; } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
+
+/* ---------- 로고: 글씨체와 아이콘 ---------- */
+const FONTS = [
+  ['sans', 'IBM Plex Sans KR · 지금과 가장 가까움'],
+  ['serif', 'Instrument Serif 이탤릭'],
+  ['mono', 'IBM Plex Mono 대문자'],
+  ['batang', '고운바탕 · 명조'],
+  ['wide', 'Unbounded · 넓은 고딕'],
+];
+const ICONS = [
+  ['classic', '지금', '<svg viewBox="0 0 32 32"><rect x="10" y="3" width="12" height="9" rx="1" fill="currentColor"/><path d="M12 12 5 29h22l-7-17z" fill="currentColor" opacity=".35"/></svg>'],
+  ['halo', '번짐', '<svg viewBox="0 0 32 32" fill="currentColor"><circle cx="16" cy="16" r="14" opacity=".14"/><circle cx="16" cy="16" r="9.5" opacity=".28"/><circle cx="16" cy="16" r="5"/></svg>'],
+  ['cone', '빔', '<svg viewBox="0 0 32 32" fill="currentColor"><path d="M13 7 3 30h26L19 7z" opacity=".16"/><path d="M14.2 7 9 30h14L17.8 7z" opacity=".3"/><circle cx="16" cy="5" r="3.2"/></svg>'],
+  ['pool', '바닥 풀', '<svg viewBox="0 0 32 32" fill="currentColor"><circle cx="16" cy="5.5" r="2.6"/><path d="M15 9h2l1 9h-4z" opacity=".35"/><ellipse cx="16" cy="23" rx="14" ry="6" opacity=".22"/><ellipse cx="16" cy="23" rx="7.5" ry="3.2"/></svg>'],
+  ['cue', '큐 막대', '<svg viewBox="0 0 32 32" fill="currentColor"><rect x="4" y="20" width="5" height="8" opacity=".35"/><rect x="11" y="14" width="5" height="14" opacity=".6"/><rect x="18" y="8" width="5" height="20"/><rect x="25" y="3" width="3" height="25" opacity=".22"/></svg>'],
+  ['symbol', '도면 기호', '<svg viewBox="0 0 32 32" fill="currentColor"><rect x="8" y="3" width="16" height="13" rx="2.5"/><rect x="11.5" y="16" width="9" height="8" opacity=".6"/><path d="M10 24h12l3 6H7z" opacity=".3"/></svg>'],
+  ['none', '없음', ''],
+];
+let font = store.get('la.brand.font', 'sans'), iconKey = store.get('la.brand.icon', 'halo');
+const brandHTML = (f, ic) => {
+  const svg = (ICONS.find(i => i[0] === ic) || ICONS[0])[2];
+  return { font: f, html: `<span class="bi">${svg}</span><span class="bt"><span class="bn">Lighting Aid</span><small>조명 시뮬레이터</small></span>` };
+};
+const paintBrand = (el, f, ic) => { const b = brandHTML(f, ic); el.dataset.font = b.font; el.innerHTML = b.html; };
+const fontsEl = document.getElementById('opt-fonts'), iconsEl = document.getElementById('opt-icons');
+const renderOpts = () => {
+  paintBrand(document.getElementById('brand'), font, iconKey);
+  fontsEl.innerHTML = ''; iconsEl.innerHTML = '';
+  for (const [k, cap] of FONTS) {
+    const b = document.createElement('button'); b.className = 'opt'; b.setAttribute('aria-pressed', String(k === font));
+    const br = document.createElement('div'); br.className = 'brand'; paintBrand(br, k, iconKey);
+    const c = document.createElement('span'); c.className = 'cap'; c.textContent = cap;
+    b.append(br, c); b.addEventListener('click', () => { font = k; store.set('la.brand.font', k); renderOpts(); });
+    fontsEl.append(b);
+  }
+  for (const [k, cap, svg] of ICONS) {
+    const b = document.createElement('button'); b.className = 'opt'; b.setAttribute('aria-pressed', String(k === iconKey));
+    b.innerHTML = `<span class="ico${svg ? '' : ' none'}">${svg || '—'}</span><span class="cap">${cap}</span>`;
+    b.addEventListener('click', () => { iconKey = k; store.set('la.brand.icon', k); renderOpts(); });
+    iconsEl.append(b);
+  }
+};
+renderOpts();
+const panel = document.getElementById('panel'), logoBtn = document.getElementById('logo-btn'), note = document.getElementById('note');
+logoBtn.addEventListener('click', () => {
+  panel.hidden = !panel.hidden; logoBtn.setAttribute('aria-expanded', String(!panel.hidden));
+  if (!panel.hidden) note.classList.add('out');
+});
+addEventListener('keydown', (e) => { if (e.key === 'Escape' && !panel.hidden) logoBtn.click(); });
+
+/* ---------- 그레인 ---------- */
+{
+  const c = document.createElement('canvas'); c.width = c.height = 160;
+  const x = c.getContext('2d'), d = x.createImageData(160, 160);
+  for (let i = 0; i < d.data.length; i += 4) { const v = Math.random() * 255; d.data[i] = d.data[i + 1] = d.data[i + 2] = v; d.data[i + 3] = 255; }
+  x.putImageData(d, 0, 0);
+  document.documentElement.style.setProperty('--grain', `url(${c.toDataURL()})`);
+}
+
+/* ---------- 큐 엔진: 어떤 배경이든 같은 큐 상태를 받아 그린다 ---------- */
+const COL = { cool: [106, 168, 255], deep: [40, 90, 200], amber: [245, 184, 65], warm: [255, 214, 150], white: [255, 246, 232], mag: [214, 72, 160], off: [0, 0, 0] };
+// 픽스처 6대. 각 큐는 [색, 세기, 바닥 목표 x(0~1)]
+const CUES = [
+  { name: '프리셋 · 쿨 워시', fade: 3, f: [['cool', .8, .18], ['cool', .9, .34], ['cool', .9, .5], ['cool', .9, .66], ['cool', .8, .82], ['deep', .5, .5]] },
+  { name: '앰버 사이드', fade: 4, f: [['amber', 1, .28], ['warm', .55, .42], ['off', 0, .5], ['off', 0, .5], ['warm', .55, .58], ['amber', 1, .72]] },
+  { name: '센터 스페셜', fade: 2.5, f: [['off', 0, .3], ['off', 0, .4], ['white', 1, .5], ['off', 0, .6], ['off', 0, .7], ['deep', .35, .5]] },
+  { name: '매젠타 백라이트', fade: 5, f: [['mag', .9, .22], ['cool', .7, .4], ['mag', .7, .5], ['cool', .7, .6], ['mag', .9, .78], ['amber', .35, .5]] },
+];
+const HOLD = 4.5;
+const list = document.getElementById('cue-list');
+CUES.forEach(() => list.append(document.createElement('span')));
+const elNo = document.getElementById('cue-no'), elName = document.getElementById('cue-name'), elTime = document.getElementById('cue-time'), elBar = document.getElementById('cue-bar');
+let idx = 0, start = null, shown = -1;
+const ease = (u) => u < .5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2;
+const lerp = (a, b, u) => a + (b - a) * u;
+const cueState = (t) => {
+  if (start === null) start = t;
+  let el = (t - start) / 1000;
+  const next = CUES[(idx + 1) % CUES.length];
+  if (el > HOLD + next.fade && !reduce) { idx = (idx + 1) % CUES.length; start = t; el = 0; }
+  const cur = CUES[idx], nx = CUES[(idx + 1) % CUES.length];
+  const fading = !reduce && el > HOLD;
+  const u = fading ? ease(Math.min(1, (el - HOLD) / nx.fade)) : 0;
+  const label = fading ? (idx + 1) % CUES.length : idx;
+  if (label !== shown) {
+    shown = label; const q = CUES[label];
+    elNo.textContent = 'Q' + (label + 1); elName.textContent = q.name; elTime.textContent = '↑ ' + q.fade.toFixed(1) + 's';
+    [...list.children].forEach((s, i) => s.classList.toggle('on', i === label));
+  }
+  elBar.style.width = fading ? (u * 100).toFixed(1) + '%' : '0%';
+  return cur.f.map((a, i) => { const b = nx.f[i]; return { col: COL[a[0]].map((v, j) => lerp(v, COL[b[0]][j], u)), k: lerp(a[1], b[1], u), x: lerp(a[2], b[2], u) }; });
+};
+
+const c2d = document.getElementById('c2d'), x = c2d.getContext('2d'), cgl = document.getElementById('cgl');
+const fit = (cv, scale) => {
+  const w = Math.max(1, Math.round(innerWidth * scale)), h = Math.max(1, Math.round(innerHeight * scale));
+  if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; return true; }
+  return false;
+};
+const rgba = (c, a) => `rgba(${c.map(Math.round).join(',')},${a})`;
+const blob = (cx, cy, r, sy, col, a) => {
+  x.save(); x.translate(cx, cy); x.scale(1, sy);
+  const g = x.createRadialGradient(0, 0, 0, 0, 0, r);
+  g.addColorStop(0, rgba(col, a)); g.addColorStop(.5, rgba(col, a * .45)); g.addColorStop(1, rgba(col, 0));
+  x.fillStyle = g; x.beginPath(); x.arc(0, 0, r, 0, Math.PI * 2); x.fill(); x.restore();
+};
+const wob = (s, i, f = 1) => Math.sin(s * .31 * f + i * 1.9) * .5 + Math.sin(s * .17 * f + i * 4.1) * .5;
+
+/* B1 헤이즈: 원래 장면을 그대로 두되 빔을 넓고 흐리게, 연기 속에서 일렁이게 */
+const haze = {
+  blur: '14px',
+  draw(t, L) {
+    fit(c2d, .25); const W = c2d.width, H = c2d.height, s = reduce ? 3 : t / 1000;
+    x.globalCompositeOperation = 'source-over';
+    const bg = x.createLinearGradient(0, 0, 0, H); bg.addColorStop(0, '#07090c'); bg.addColorStop(.58, '#131820'); bg.addColorStop(1, '#090b0f');
+    x.fillStyle = bg; x.fillRect(0, 0, W, H);
+    x.globalCompositeOperation = 'lighter';
+    L.forEach((l, i) => {
+      if (l.k < .01) return;
+      const sx = W * (.12 + i * .152) + wob(s, i) * W * .03, px = W * l.x + wob(s, i + 3) * W * .05, py = H * (.74 + (i % 2) * .05);
+      const sp = W * (.16 + .04 * wob(s, i + 7));
+      const g = x.createLinearGradient(0, 0, 0, py);
+      g.addColorStop(0, rgba(l.col, .3 * l.k)); g.addColorStop(1, rgba(l.col, .1 * l.k));
+      x.fillStyle = g; x.beginPath(); x.moveTo(sx - W * .03, -H * .05); x.lineTo(sx + W * .03, -H * .05); x.lineTo(px + sp, py); x.lineTo(px - sp, py); x.closePath(); x.fill();
+      blob(px, py, W * .2, .38, l.col, .9 * l.k);
+      blob(W * l.x, H * .45, W * .28, .9, l.col, .16 * l.k);
+    });
+  },
+};
+
+/* B2 색면: 빔을 없애고 큐 색만 큰 덩어리로 떠다닌다 */
+const field = {
+  blur: '28px',
+  draw(t, L) {
+    fit(c2d, .2); const W = c2d.width, H = c2d.height, s = reduce ? 3 : t / 1000;
+    x.globalCompositeOperation = 'source-over'; x.fillStyle = '#0a0c10'; x.fillRect(0, 0, W, H);
+    x.globalCompositeOperation = 'lighter';
+    L.forEach((l, i) => {
+      if (l.k < .01) return;
+      const cx = W * (l.x + wob(s, i, .7) * .12), cy = H * (.42 + (i % 3) * .14 + wob(s, i + 5, .6) * .08);
+      blob(cx, cy, W * (.26 + .06 * wob(s, i + 2)), .8 + .2 * wob(s, i + 9), l.col, .55 * l.k);
+    });
+  },
+};
+
+/* B4 잔상: 화면을 다 지우지 않아서, 큐가 바뀌며 움직인 빛이 번진 자국으로 남는다 */
+const trail = {
+  blur: '10px',
+  draw(t, L) {
+    if (fit(c2d, .3)) { x.fillStyle = '#0a0c10'; x.fillRect(0, 0, c2d.width, c2d.height); }
+    const W = c2d.width, H = c2d.height, s = reduce ? 3 : t / 1000;
+    x.globalCompositeOperation = 'source-over'; x.fillStyle = 'rgba(10,12,16,.045)'; x.fillRect(0, 0, W, H);
+    x.globalCompositeOperation = 'lighter';
+    L.forEach((l, i) => {
+      if (l.k < .01) return;
+      const cx = W * (l.x + wob(s, i, 2.2) * .07), cy = H * (.5 + (i % 2) * .12 + wob(s, i + 4, 1.8) * .14);
+      blob(cx, cy, W * .07, 1.4, l.col, .22 * l.k);
+    });
+  },
+};
+
+/* B3 빛줄기: WebGL. 위에서 내려오는 세로 빛줄기를 노이즈가 갉아먹어 윤곽이 계속 풀린다 */
+const shaft = (() => {
+  const gl = cgl.getContext('webgl', { antialias: false });
+  if (!gl) return null;
+  const vs = 'attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}';
+  const fs = `precision mediump float;uniform vec2 r;uniform float t;uniform vec3 C[6];uniform float K[6];uniform float X[6];
+  float h(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+  float n(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(h(i),h(i+vec2(1,0)),f.x),mix(h(i+vec2(0,1)),h(i+vec2(1,1)),f.x),f.y);}
+  float fbm(vec2 p){float v=0.,a=.5;for(int i=0;i<5;i++){v+=a*n(p);p=p*2.03+vec2(1.7,9.2);a*=.5;}return v;}
+  void main(){vec2 uv=gl_FragCoord.xy/r;float y=1.-uv.y;float asp=r.x/r.y;
+    vec3 col=vec3(.035,.045,.06);
+    float smoke=fbm(vec2(uv.x*asp*2.2,uv.y*1.4)+vec2(t*.03,-t*.05));
+    for(int i=0;i<6;i++){
+      float sx=.12+float(i)*.152;float px=X[i];
+      float cx=mix(sx,px,y);
+      float w=mix(.035,.16,y)*(1.+.35*sin(t*.4+float(i)));
+      float d=(uv.x-cx)*asp/w;
+      float beam=exp(-d*d)*(.35+.9*smoke)*smoothstep(1.05,.0,y)*.55;
+      float py=.76+mod(float(i),2.)*.05;
+      vec2 q=vec2((uv.x-px)*asp,(y-py)*2.8);
+      float pool=exp(-dot(q,q)*9.)*(.6+.6*smoke);
+      col+=C[i]*K[i]*(beam+pool);
+    }
+    col=col/(1.+col*.55);
+    col+=(h(gl_FragCoord.xy+fract(t*7.)*91.)-.5)*.06;
+    gl_FragColor=vec4(col,1.);}`;
+  const sh = (type, src) => { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); return s; };
+  const pr = gl.createProgram(); gl.attachShader(pr, sh(gl.VERTEX_SHADER, vs)); gl.attachShader(pr, sh(gl.FRAGMENT_SHADER, fs)); gl.linkProgram(pr); gl.useProgram(pr);
+  gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer()); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+  const loc = gl.getAttribLocation(pr, 'p'); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+  const U = (k) => gl.getUniformLocation(pr, k);
+  const ur = U('r'), ut = U('t'), uC = U('C'), uK = U('K'), uX = U('X');
+  return {
+    gl: true,
+    draw(t, L) {
+      fit(cgl, .5); gl.viewport(0, 0, cgl.width, cgl.height);
+      gl.uniform2f(ur, cgl.width, cgl.height); gl.uniform1f(ut, reduce ? 3 : t / 1000);
+      gl.uniform3fv(uC, new Float32Array(L.flatMap(l => l.col.map(v => v / 255))));
+      gl.uniform1fv(uK, new Float32Array(L.map(l => l.k))); gl.uniform1fv(uX, new Float32Array(L.map(l => l.x)));
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+    },
+  };
+})();
+
+const VIEWS = {
+  haze: [haze, '원래 B안 장면을 그대로 두고 빔을 넓고 흐리게 만들었습니다. 연기 속에서 빛이 천천히 일렁입니다.'],
+  field: [field, '빔을 없애고 큐 색만 큰 색면으로 남겼습니다. 가장 추상적인 안입니다.'],
+  shaft: [shaft || haze, '위에서 내려오는 빛줄기를 노이즈가 계속 갉아먹어서 윤곽이 고정되지 않습니다.'],
+  trail: [trail, '화면을 다 지우지 않아서 큐가 바뀔 때 움직인 빛이 번진 자국으로 남습니다.'],
+};
+let cur = 'haze';
+const show = (k) => {
+  if (!VIEWS[k]) k = 'haze';
+  cur = k; const r = VIEWS[k][0];
+  cgl.hidden = !r.gl; c2d.hidden = !!r.gl;
+  if (!r.gl) { c2d.style.setProperty('--blur', r.blur); x.globalCompositeOperation = 'source-over'; x.fillStyle = '#0a0c10'; x.fillRect(0, 0, c2d.width, c2d.height); }
+  document.querySelectorAll('.sw button[data-v]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === k)));
+  note.textContent = VIEWS[k][1];
+  if (panel.hidden) { note.classList.remove('out'); clearTimeout(show.timer); show.timer = setTimeout(() => note.classList.add('out'), 6000); }
+  try { history.replaceState(null, '', '#' + k); } catch (e) {}
+  if (reduce) requestAnimationFrame(t => r.draw(t, cueState(t)));
+};
+document.querySelectorAll('.sw button[data-v]').forEach(b => b.addEventListener('click', () => show(b.dataset.v)));
+show(location.hash.slice(1) || 'haze');
+const loop = (t) => { VIEWS[cur][0].draw(t, cueState(t)); requestAnimationFrame(loop); };
+if (reduce) addEventListener('resize', () => { const t = performance.now(); VIEWS[cur][0].draw(t, cueState(t)); });
+else requestAnimationFrame(loop);
+})();
+</script>

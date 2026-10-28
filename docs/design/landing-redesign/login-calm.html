@@ -1,0 +1,197 @@
+<title>Lighting Aid 로그인 시안</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@400;500;700&family=Unbounded:wght@300;400&display=swap">
+<style>
+/* 레이아웃: 지금 로그인 화면(왼쪽 그림 + 오른쪽 로그인 패널)을 그대로 두고, 움직임 없이 그림과 색만 바꾼다.
+   토큰은 src/cloud/home.css의 --lh-* 값. 홈 시안 K1~K3와 짝을 이룬다. */
+:root {
+  --bg: #f2f2f5;
+  --surface: #ffffff;
+  --ink: #222831;
+  --meta: #6b7280;
+  --line: #e1e4e8;
+  --accent: #0b5cad;
+  --accent-hover: #ecf2fa;
+  --hero-1: #e3eef9;
+  --hero-2: #ffffff;
+  --faint: #c8cdd3;
+  --faint-fill: #f2f2f5;
+  --amber: #f5b841;
+  --red: #d93025;
+  --font: "IBM Plex Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  --wide: "Unbounded", "IBM Plex Sans KR", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #161b21; --surface: #222b35; --ink: #e4eaf0; --meta: #a5b1be; --line: #36414e;
+    --accent: #6aa8ff; --accent-hover: #1c2d42; --hero-1: #1c2d42; --hero-2: #161b21; --faint: #4a5563; --faint-fill: #2a3440;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #161b21; --surface: #222b35; --ink: #e4eaf0; --meta: #a5b1be; --line: #36414e;
+  --accent: #6aa8ff; --accent-hover: #1c2d42; --hero-1: #1c2d42; --hero-2: #161b21; --faint: #4a5563; --faint-fill: #2a3440;
+  color-scheme: dark;
+}
+/* L2는 로그인 B2·홈 K2와 같은 무대색으로 고정 */
+.l2 {
+  --bg: #0d1015; --surface: #151a21; --ink: #eef2f6; --meta: #a5b1be; --line: #262e38;
+  --accent: #f5b841; --accent-hover: #1d2129;
+  color-scheme: dark;
+}
+[hidden] { display: none !important; }
+html, body { height: 100%; }
+body { margin: 0; background: var(--surface); color: var(--ink); font-family: var(--font); font-size: 15px; }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ---------- 시안 전환기 ---------- */
+.sw { position: fixed; z-index: 50; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); left: 50%; transform: translateX(-50%);
+  display: flex; align-items: center; gap: 2px; padding: 4px; border-radius: 999px; background: #222831; color: #c9d1da; box-shadow: 0 8px 24px rgba(0,0,0,.25); }
+.sw button { border: 0; background: none; color: inherit; height: 32px; padding: 0 13px; border-radius: 999px; cursor: pointer; font-size: 13px; white-space: nowrap; }
+.sw button b { font-family: var(--mono); font-weight: 500; margin-right: 6px; }
+.sw button[aria-pressed="true"] { background: #eef2f6; color: #14181e; }
+.sw i { width: 1px; height: 18px; background: rgba(255,255,255,.2); margin: 0 4px; }
+.note { position: fixed; z-index: 49; bottom: calc(62px + env(safe-area-inset-bottom, 0px)); left: 50%; transform: translateX(-50%); width: max-content; max-width: min(560px, calc(100vw - 32px));
+  margin: 0; padding: 6px 12px; border-radius: 6px; background: #222831; color: #c9d1da; font-size: 12.5px; line-height: 1.5; text-align: center; transition: opacity .5s; }
+.note.out { opacity: 0; pointer-events: none; }
+
+/* ---------- 로그인 (지금 구조) ---------- */
+.login { display: flex; flex-wrap: wrap; min-height: 100vh; background: var(--surface); color: var(--ink); }
+.hero { flex: 999 1 560px; min-width: 0; position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; min-height: 360px; background: var(--bg);
+  padding-block: 0 72px; padding-left: max(64px, env(safe-area-inset-left, 0px)); padding-right: 64px; }
+.art { position: absolute; inset: 0; }
+.art > svg, .art > canvas { width: 100%; height: 100%; display: block; }
+.hero-text { position: relative; display: flex; flex-direction: column; gap: 4px; }
+.hero-line { font-size: clamp(40px, 6vw, 72px); line-height: 1.1; font-weight: 400; letter-spacing: -.02em; }
+.hero-line.strong { font-weight: 700; }
+.hero-rule { display: block; height: 3px; background: var(--accent); margin-top: 36px; max-width: 760px; }
+.signin { flex: 1 1 380px; max-width: 520px; box-sizing: border-box; border-left: 1px solid var(--line); display: flex; flex-direction: column;
+  padding-block: calc(96px + env(safe-area-inset-top, 0px)) calc(32px + env(safe-area-inset-bottom, 0px)); padding-left: 48px; padding-right: max(48px, env(safe-area-inset-right, 0px)); }
+.logo { font-family: var(--wide); font-weight: 300; font-size: 26px; letter-spacing: -.02em; }
+.sub { margin: 6px 0 0; font-size: 14px; color: var(--meta); }
+.signin h1 { margin: 40px 0 0; font-size: 30px; font-weight: 500; }
+.google { margin-top: 32px; height: 48px; display: flex; align-items: center; justify-content: center; gap: 12px; border: 1px solid var(--ink); background: var(--surface); color: var(--ink); font-size: 16px; font-weight: 700; cursor: pointer; }
+.google:hover { background: var(--accent-hover); }
+.google svg { width: 20px; height: 20px; }
+.skip { margin-top: 20px; border: 0; background: none; color: var(--accent); font-size: 15px; cursor: pointer; padding: 6px; }
+.skip:hover { text-decoration: underline; }
+.grow { flex: 1; }
+.foot { display: flex; justify-content: center; font-size: 14px; }
+.foot a { color: var(--accent); }
+
+/* L2: 무대색 */
+.l2 .hero { background: #0b0e12; }
+.l2 .hero-rule { background: linear-gradient(90deg, #6aa8ff, #f5b841 55%, #d648a0); opacity: .9; }
+.l2 .google { background: var(--ink); color: #14181e; border-color: var(--ink); }
+.l2 .google:hover { background: #fff; }
+.l2 .skip, .l2 .foot a { color: var(--ink); }
+.l2 .skip { text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 1px; }
+
+/* L3: 그림 없이 */
+.l3 .hero { justify-content: space-between; padding-top: calc(64px + env(safe-area-inset-top, 0px)); }
+.l3 .spec { position: relative; font-family: var(--mono); font-size: 12px; color: var(--meta); display: grid; gap: 6px; }
+.l3 .spec b { font-weight: 500; color: var(--ink); }
+.spec { display: none; }
+
+@media (max-width: 960px) {
+  .hero { min-height: 280px; padding-left: max(24px, env(safe-area-inset-left, 0px)); padding-right: 24px; padding-bottom: 40px; }
+  .signin { max-width: none; border-left: 0; border-top: 1px solid var(--line); padding: 40px max(24px, env(safe-area-inset-right, 0px)) 90px max(24px, env(safe-area-inset-left, 0px)); }
+  .l3 .hero { padding-top: 32px; }
+}
+@media (max-width: 760px) { .note { display: none; } .sw button { padding: 0 10px; } }
+</style>
+
+<nav class="sw" aria-label="시안 선택">
+  <button data-v="l1" aria-pressed="true"><b>L1</b>지금 그대로</button>
+  <button data-v="l2" aria-pressed="false"><b>L2</b>무대색</button>
+  <button data-v="l3" aria-pressed="false"><b>L3</b>그림 없이</button>
+  <i></i>
+  <button id="theme" title="라이트/다크 바꾸기">테마: 시스템</button>
+</nav>
+<p class="note" id="note"></p>
+
+<div class="login l1" id="login">
+  <section class="hero">
+    <div class="art" id="art"></div>
+    <div class="spec"><span><b>2D 평면도</b> · 위에서 보며 조명기를 배치</span><span><b>3D 뷰</b> · 객석에서 보는 무대</span><span><b>극장 프리셋</b> · 두레문예관 16.4 × 23.1 m · 인문소극장 12 × 22.7 m</span></div>
+    <div class="hero-text">
+      <span class="hero-line">무대 조명을</span>
+      <span class="hero-line strong">미리 그려 보세요.</span>
+      <span class="hero-rule"></span>
+    </div>
+  </section>
+  <section class="signin">
+    <div class="logo">Lighting Aid</div>
+    <p class="sub">조명 시뮬레이터</p>
+    <h1>환영합니다</h1>
+    <button class="google"><svg viewBox="0 0 24 24"><path d="M21.6 12.2c0-.7-.1-1.4-.2-2H12v3.8h5.4a4.6 4.6 0 0 1-2 3v2.5h3.2c1.9-1.7 3-4.3 3-7.3z" fill="#4285F4"/><path d="M12 22c2.7 0 5-.9 6.6-2.4l-3.2-2.5c-.9.6-2 1-3.4 1-2.6 0-4.8-1.8-5.6-4.1H3.1v2.6A10 10 0 0 0 12 22z" fill="#34A853"/><path d="M6.4 14c-.2-.6-.3-1.3-.3-2s.1-1.4.3-2V7.4H3.1A10 10 0 0 0 2 12c0 1.6.4 3.1 1.1 4.6z" fill="#FBBC05"/><path d="M12 5.9c1.5 0 2.8.5 3.8 1.5l2.9-2.9A10 10 0 0 0 3.1 7.4L6.4 10c.8-2.4 3-4.1 5.6-4.1z" fill="#EA4335"/></svg>Google로 계속 진행</button>
+    <button class="skip">로그인 없이 시작하기 (이 기기에 저장)</button>
+    <div class="grow"></div>
+    <div class="foot"><a href="#l1">개인정보처리방침</a></div>
+  </section>
+</div>
+
+<script>
+(() => {
+// L1: 지금 앱의 히어로 그림 그대로 (home.ts SVG.hero)
+const HERO = `<svg viewBox="0 0 800 600" preserveAspectRatio="xMidYMid slice">
+  <ellipse cx="330" cy="250" rx="300" ry="210" fill="var(--hero-1)"/>
+  <ellipse cx="330" cy="250" rx="170" ry="120" fill="var(--hero-2)" opacity=".55"/>
+  <ellipse cx="420" cy="270" rx="150" ry="110" fill="#F5B841" opacity=".18"/>
+  <rect x="320" y="40" width="24" height="24" fill="none" stroke="var(--accent)" stroke-width="2"/>
+  <line x1="332" y1="64" x2="332" y2="250" stroke="var(--accent)" stroke-dasharray="4 5"/>
+  <circle cx="332" cy="250" r="6" fill="none" stroke="var(--red)" stroke-width="2"/>
+  <rect x="640" y="90" width="18" height="18" fill="none" stroke="var(--faint)"/>
+  <rect x="560" y="420" width="40" height="40" fill="var(--faint-fill)"/>
+  <circle cx="110" cy="80" r="6" fill="none" stroke="var(--faint)"/>
+  <path d="M700 300h30M715 285v30" stroke="var(--faint)"/>
+  <rect x="150" y="470" width="12" height="12" fill="none" stroke="#F5B841" stroke-width="2"/>
+</svg>`;
+
+// L2: B2 색면의 한 장면을 멈춘 채로, 채도를 낮춰 그린다
+const stillField = () => {
+  const c = document.createElement('canvas'); c.width = 160; c.height = 120; const x = c.getContext('2d');
+  x.fillStyle = '#0b0e12'; x.fillRect(0, 0, 160, 120);
+  x.globalCompositeOperation = 'lighter';
+  [[[106, 168, 255], 40, 70, 58, .32], [[245, 184, 65], 98, 58, 52, .3], [[214, 72, 160], 128, 88, 40, .18], [[40, 90, 200], 70, 96, 46, .22]].forEach(([col, cx, cy, r, a]) => {
+    const g = x.createRadialGradient(cx, cy, 0, cx, cy, r);
+    g.addColorStop(0, `rgba(${col},${a})`); g.addColorStop(1, `rgba(${col},0)`);
+    x.fillStyle = g; x.beginPath(); x.arc(cx, cy, r, 0, 7); x.fill();
+  });
+  c.style.filter = 'blur(18px)'; c.style.transform = 'scale(1.15)';
+  return c;
+};
+
+const NOTES = {
+  l1: '지금 로그인 화면을 그대로 두고 로고만 Unbounded로 바꿨습니다. 안내 문구는 지운 상태입니다.',
+  l2: 'B2의 색면을 멈춘 한 장면으로 낮게 깔고, 색은 홈 K2와 같은 무대색입니다. 움직임은 없습니다.',
+  l3: '왼쪽 그림을 없애고 이 앱으로 할 수 있는 일을 짧게 적었습니다. 가장 담백한 안입니다.',
+};
+const login = document.getElementById('login'), art = document.getElementById('art'), note = document.getElementById('note');
+let timer;
+const show = (k) => {
+  if (!NOTES[k]) k = 'l1';
+  login.className = 'login ' + k;
+  art.replaceChildren();
+  if (k === 'l1') art.innerHTML = HERO;
+  if (k === 'l2') art.append(stillField());
+  document.querySelectorAll('.sw button[data-v]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === k)));
+  document.querySelector('.foot a').href = '#' + k;
+  note.textContent = NOTES[k]; note.classList.remove('out'); clearTimeout(timer); timer = setTimeout(() => note.classList.add('out'), 6000);
+  try { history.replaceState(null, '', '#' + k); } catch (e) {}
+};
+document.querySelectorAll('.sw button[data-v]').forEach(b => b.addEventListener('click', () => show(b.dataset.v)));
+show(location.hash.slice(1) || 'l1');
+
+const THEMES = [[null, '시스템'], ['light', '라이트'], ['dark', '다크']];
+let ti = 0;
+document.getElementById('theme').addEventListener('click', (e) => {
+  ti = (ti + 1) % THEMES.length; const [val, label] = THEMES[ti];
+  if (val) document.documentElement.dataset.theme = val; else delete document.documentElement.dataset.theme;
+  e.currentTarget.textContent = '테마: ' + label;
+});
+})();
+</script>
