@@ -51,16 +51,18 @@ interface TutorialStep {
 
 ## 4. Lessons
 
-| # | Title | The user does |
-|---|---|---|
-| 1 | 화면 둘러보기 | tool rail, right tray (open 빛 범위 표시), scene drawer, 2D ↔ 3D, the ? help button |
-| 2 | 첫 조명 달기 | E (ellipsoidal) + lens, click the stage, drag the aim point to the actor, read `얼굴 N lux`, close and reopen 조명 설정 by double-click |
-| 3 | 조명 다듬기 | lens, gel, dimmer, shutter corners |
-| 4 | 배우 얼굴 밝기 읽기 | place a second actor, set 키, read contributions in 선택한 객체 속성 |
-| 5 | 세트와 그림자 | place a wall behind the actor, type its height in 수치 (mm), resize and rotate with handles, 3D shadow (no set-blocks-light explanation, user decision) |
-| 6 | 씬 만들기 | copy a scene, rename, reorder |
-| 7 | 3D로 확인하기 | 3D view, 3D 극장 구조 toggles, 3D shadow |
-| 8 | 저장과 채널 검사 | save (local / online), channel check panel |
+Steps are in `src/tutorial/lessons.ts`; this table is the outline (updated after T5, 2026-10-31). (explain) = explanation-only step, no action.
+
+| # | Title | Practice work | The user does |
+|---|---|---|---|
+| 1 | 화면 둘러보기 | actor + front light | tool rail, plan, right tray (open 빛 범위 표시), scene drawer, 3D and back to 2D, the ? help button |
+| 2 | 첫 조명 달기 | actor only | E (ellipsoidal; lens choice explained, zoom greyed out in 인문소극장), click the front pipe, drag the aim point to the actor, click the actor to read `얼굴 N lux`, close 조명 설정 with ✕ and reopen it by double-clicking the light |
+| 3 | 조명 다듬기 | actor + front light | change lens, add a gel, lower the dimmer (square law explained), turn the shutter on, drag a red shutter corner |
+| 4 | 배우 얼굴 밝기 읽기 | actor + front light | A, place a second actor at a marked spot, change its 키 in 선택한 객체 속성, drag it into the light, read the per-light contribution table |
+| 5 | 세트와 그림자 | actor + front light | W, place a wall behind the actor, type `1200` + Enter in 수치 (mm), drag a corner handle, rotate with the yellow handle, M (줄자) and measure wall → actor, 3D, turn on 3D shadow for the light; closing text mentions Delete / Ctrl+Z and 다중 선택 (V). No set-blocks-light explanation (user decision) |
+| 6 | 씬 만들기 | actor + front light + wall | open the scene drawer, copy the scene, rename it `2장 밤`, add a gel in that scene, hide the wall in that scene with the eye button in 객체 전체 목록, go back to Scene 1 (gel gone, wall still there), drag a card to reorder |
+| 7 | 3D로 확인하기 | actor + front light | 3D, 3D 극장 구조 panel (캣워크·조명 그리드 explained), turn on 작업등, toggle 객석, orbit / zoom / pan (explain), drag the actor in 3D, back to 2D |
+| 8 | 저장과 채널 검사 | actor + front light | set channel 4 in 선택한 객체 속성, open 채널 검사, click cell 4 for the detail; then (explain) the 저장 button (online with 5-minute auto-save when signed in, JSON download otherwise), ☰ 씬 가져오기 (이어 붙이기), the 공유 button, the home button |
 
 ## 5. Out of scope
 
